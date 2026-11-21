@@ -1,5 +1,7 @@
 # Produk dan cakupan
 
+**Titip Mimi** adalah nama produk; **Ruang Iqlima** adalah ruang pribadi pertamanya. Syarat pilot terhubung dirinci dalam [MVP](MVP.md). Alur web ditargetkan memakai Astro + TypeScript. Status fitur yang sudah berjalan ada di [roadmap](ROADMAP.md).
+
 **Untuk siapa** • Iqlima sering menitipkan sesuatu di Telegram ketika sedang mengurus banyak hal. Ia membutuhkan satu tempat untuk mencari kembali foto, catatan akun, atau rencana dan memilih kapan ingin diingatkan.
 
 **Skenario pengikat** • Iqlima meneruskan foto nota ke Mimi, mengonfirmasi “Jumat jam empat sore”, lalu menerima foto yang sama ketika waktunya mengambil jahitan. Di HP ataupun web ia bisa membuka titipan dan menandai selesai.

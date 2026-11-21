@@ -2,7 +2,7 @@
 
 **Saat ini** • Situs statis menyimpan titipan di localStorage dengan kunci ruang-iqlima-demo-v1. Agenda lama memuat title, note, time dan done. Impor kalender dapat menambahkan UID, informasi acara seharian dan waktu UTC. Situs memakai aset ilustrasi demo. Foto contoh pada kartu belum membuktikan alur unggah media.
 
-**Usulan untuk implementasi** • Pertahankan web prototipe selama pilot. Gunakan klien Flutter untuk Android/iOS, satu backend Node.js, Telegraf untuk bot, serta SQLite pada volume persisten dengan backup dan uji pemulihan. Tim boleh meninjau kembali pilihan teknis bila kebutuhan operasional berubah. Semua klien memakai API dan pemeriksaan kepemilikan yang sama.
+**Arah implementasi yang disepakati** • Migrasikan web ke Astro + TypeScript dengan mempertahankan perilaku prototipe. Gunakan klien Flutter untuk Android/iOS, satu backend NestJS + TypeScript pada Node.js, Telegraf untuk bot, serta SQLite pada volume persisten dengan backup dan uji pemulihan. Tim boleh meninjau kembali pilihan teknis bila kebutuhan operasional berubah. Semua klien memakai API dan pemeriksaan kepemilikan yang sama.
 
 | Data | Tempat dan identitas |
 |---|---|

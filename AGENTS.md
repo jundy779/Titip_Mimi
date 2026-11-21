@@ -1,6 +1,6 @@
 # Panduan kerja Ruang Iqlima
 
-Tujuan setiap perubahan adalah membantu Iqlima menitipkan sesuatu saat sibuk, menemukannya kembali, atau mengingatnya tepat waktu. Mulai dari [rencana rilis](docs/ROADMAP.md) dan [batas produk](docs/PRD.md).
+Tujuan setiap perubahan adalah membantu Iqlima menitipkan sesuatu saat sibuk, menemukannya kembali, atau mengingatnya tepat waktu. Mulai dari [rencana rilis](docs/ROADMAP.md) dan [batas produk](docs/PRD.md). Untuk mengerjakan pilot, baca [MVP](docs/MVP.md) dan [indeks dokumentasi](docs/README.md).
 
 1. Tentukan satu hasil yang bisa dicoba pengguna. Sebut tahap dan kriteria lulusnya dari [QA](docs/QA.md).
 2. Untuk perubahan antarmuka, buka [panduan desain dan gambar acuan](docs/DESIGN.md). Pertahankan bahasa Indonesia sehari-hari, empat menu utama, serta cara masuk yang disepakati.

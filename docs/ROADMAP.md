@@ -13,7 +13,7 @@ Baseline 21 November 2026 • Prototipe web [Ruang Iqlima](https://ruang-iqlima-
 **Pekerjaan terdekat secara berurutan**
 
 1. Jundy dan Iqlima mencoba “Titip sesuatu”, “Cari titipan”, lalu “Tandai selesai” di ponsel. Catat layar, perangkat, dan revisi visual.
-2. Pengembang menyiapkan konfigurasi Google untuk lingkungan uji, skema pemilik/titipan, migrasi database, serta sesi API.
+2. Pengembang memindahkan web ke Astro + TypeScript, menguji tampilan serta data lokal lama, lalu menyiapkan konfigurasi Google untuk lingkungan uji, skema pemilik/titipan, migrasi database, serta sesi API.
 3. Hubungkan satu alur simpan dan cari lintas perangkat. Uji dua akun, koneksi putus, dan data prototipe lama sebelum memperluas fitur.
 4. Setelah tahap 1 lulus, bangun satu alur Telegram lengkap untuk foto nota, baru lanjut ke variasi media dan pengingat.
 

@@ -24,4 +24,4 @@ Buka [localhost:8000](http://localhost:8000). Situs ini berisi HTML, CSS, JavaSc
 
 ## Panduan proyek
 
-Mulai dari [AGENTS.md](AGENTS.md) untuk aturan kerja dan [roadmap](docs/ROADMAP.md) untuk urutan pengembangan. Keputusan produk, acuan visual Mimi, rancangan teknis, dan skenario pengujian tersedia di [docs](docs/).
+Mulai dari [AGENTS.md](AGENTS.md) untuk aturan kerja dan [roadmap](docs/ROADMAP.md) untuk urutan pengembangan. Keputusan produk, acuan visual Mimi, rancangan teknis, dan skenario pengujian tersedia di [peta dokumentasi](docs/README.md).
