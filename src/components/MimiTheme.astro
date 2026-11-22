@@ -1,10 +1,35 @@
 ---
 import tokens from '../../design/tokens.json';
+const dark = Object.entries(tokens.darkColor).map(([key,value]) => `--mimi-${key}:${value}`).join(";");
 const vars = [
+  ...Object.entries(tokens.motion).map(([key,value]) => `--mimi-motion-${key}:${value}ms`),
   ...Object.entries(tokens.color).map(([key,value]) => `--mimi-${key}:${value}`),
   ...['space','radius','type'].flatMap(group =>
     Object.entries(tokens[group as 'space' | 'radius' | 'type']).map(([key,value]) => `--mimi-${group}-${key}:${value / 16}rem`)),
   `--mimi-target:${tokens.target / 16}rem`
 ];
 ---
-<style is:inline set:html={`:root{${vars.join(';')}}`}></style>
+<style is:inline set:html={`:root{color-scheme:light;${vars.join(';')}}:root[data-theme=dark]{color-scheme:dark;${dark}}`}></style>
+<script is:inline>
+  (() => {
+    const key = 'titip-mimi-theme';
+    const root = document.documentElement;
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    let mode = 'system';
+    function apply(value) {
+      mode = ['light', 'dark'].includes(value) ? value : 'system';
+      root.dataset.preference = mode;
+      root.dataset.theme = mode === 'system' ? (media.matches ? 'dark' : 'light') : mode;
+      document.querySelectorAll('[data-theme-choice]').forEach(field => field.value = mode);
+    }
+    try { apply(localStorage.getItem(key)); } catch { apply('system'); }
+    media.addEventListener('change', () => apply(mode));
+    window.addEventListener('storage', event => { if (event.key === key || event.key === null) apply(event.newValue); });
+    document.addEventListener('change', event => {
+      if (!event.target.matches('[data-theme-choice]')) return;
+      apply(event.target.value);
+      try { localStorage.setItem(key, mode); } catch {}
+    });
+    document.addEventListener('DOMContentLoaded', () => apply(mode));
+  })();
+</script>

@@ -60,3 +60,9 @@ Lokasi status selalu dekat dengan tindakan terkait. Untuk alur simpan, bedakan k
 4. Catat perbedaan yang disengaja antara Android, iOS dan web di handoff. Perubahan identitas dan navigasi mengikuti catatan keputusan.
 
 Rujukan: [Peran warna Material 3](https://m3.material.io/styles/color/roles), [tema Flutter](https://docs.flutter.dev/cookbook/design/themes), [kontras teks](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html).
+
+### Tema dan gerakan v1.1
+
+Profil dan panduan komponen menyediakan Terang, Gelap, serta Ikuti perangkat (default). Simpan pilihan pada browser. Gunakan warna dari color dan darkColor dengan nama peran yang sama. Aset Mimi mempertahankan warna ilustrasi. Untuk Flutter kelak, padankan pilihan dengan ThemeMode.system, light dan dark.
+
+Gunakan tombol filled untuk komitmen utama, tonal untuk aksi pendamping dan teks untuk navigasi ringan. Tampilkan outline saat fokus keyboard, lapisan warna saat hover/tekan, dan status disabled melalui atribut native. Efek tekan berlangsung 120 ms, masuk panel atau dialog 180 ms. Hormati pengaturan kurangi gerakan dengan tampilan langsung. Animasi maskot dan umpan balik untuk operasi jaringan tetap bergantung pada implementasi fitur masing-masing.

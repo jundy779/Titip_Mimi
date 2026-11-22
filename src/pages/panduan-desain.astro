@@ -1,4 +1,5 @@
 ---
+import ThemeChoice from "../components/ThemeChoice.astro";
 import MimiTheme from '../components/MimiTheme.astro';
 import tokens from '../../design/tokens.json';
 import planner from '../../assets/mimi/v1/planner.webp?url';
@@ -17,8 +18,9 @@ const samples = [
 <main class="guide">
 <a href="/">Kembali ke Ruang Iqlima</a>
 <div class="lead"><div><h1>Panduan desain</h1><p>Warna, komponen, dan bahasa untuk ruang pribadi Iqlima.</p></div><img src={planner} alt="Mimi memeluk agenda" width="132" height="132" /></div>
-<section class="card"><h2>Warna dan perannya</h2><div class="swatches">{samples.map(([id,label])=><div><i style={`background:var(--mimi-${id})`}></i><b>{label}</b><code>{tokens.color[id]}</code></div>)}</div></section>
-<section class="card"><h2>Contoh titipan</h2><form id="example"><label for="sample">Judul titipan</label><input id="sample" placeholder="Ambil jahitan" required maxlength="100" /><div class="actions"><button class="primary" type="submit">Simpan contoh</button><button type="reset">Ulangi</button></div><p role="status" id="result">Coba tombol dan fokus keyboard di sini. Contoh hanya tampil di halaman ini.</p></form></section>
+<section class="card"><ThemeChoice /></section>
+<section class="card"><h2>Warna dan perannya</h2><div class="swatches">{samples.map(([id,label])=><div><i style={`background:var(--mimi-${id})`}></i><b>{label}</b><code class="light-code">{tokens.color[id]}</code><code class="dark-code">{tokens.darkColor[id]}</code></div>)}</div></section>
+<section class="card"><h2>Contoh titipan</h2><form id="example"><label for="sample">Judul titipan</label><input id="sample" placeholder="Ambil jahitan" required maxlength="100" /><div class="actions"><button class="primary" type="submit">Simpan contoh</button><button type="reset">Ulangi</button><button type="button" disabled>Nonaktif</button></div><p role="status" id="result">Coba tombol dan fokus keyboard di sini. Contoh hanya tampil di halaman ini.</p></form></section>
 <section class="card"><h2>Bahasa Mimi</h2><p><b>Saat berhasil</b><br/>Udah Mimi simpan di Koleksi ♡</p><p><b>Saat gagal</b><br/>Titipannya belum tersimpan. Coba lagi, ya.</p><p><b>Saat kosong</b><br/>Belum ada titipan. Mau titip sesuatu?</p></section>
 </main>
 <script>
@@ -30,7 +32,7 @@ const samples = [
 </script>
 <style>
 main.guide{width:min(900px,100%);margin:auto;padding:clamp(16px,4vw,48px);color:var(--mimi-on-surface)}
-.guide a{color:var(--mimi-primary)}.lead,.actions{display:flex;align-items:center;gap:var(--mimi-space-3)}.lead{justify-content:space-between}.lead h1{font-size:clamp(32px,6vw,56px)}.lead img{width:min(26vw,132px);height:auto}
+.guide a{color:var(--mimi-primary)}.lead,.actions{display:flex;align-items:center;gap:var(--mimi-space-3)}.actions{flex-wrap:wrap}.lead{justify-content:space-between}.lead h1{font-size:clamp(32px,6vw,56px)}.lead img{width:min(26vw,132px);height:auto}
 .swatches{display:grid;grid-template-columns:repeat(auto-fit,minmax(116px,1fr));gap:var(--mimi-space-4)}
 .swatches i,.swatches code,.swatches b{display:block}.swatches i{height:48px;border-radius:var(--mimi-radius-field);border:1px solid var(--mimi-outline)}
 .swatches b,.swatches code,.guide p,.guide label{font-family:system-ui,sans-serif}.swatches b{font-size:var(--mimi-type-label);margin-top:4px}.actions{margin-top:var(--mimi-space-4)}.guide p{overflow-wrap:anywhere}

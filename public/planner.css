@@ -14,3 +14,25 @@ input, textarea { border-color:var(--mimi-outline); border-radius:var(--mimi-rad
 button:enabled:active { box-shadow:inset 0 0 0 100vmax #40162816; }
 button:disabled { opacity:.55; cursor:default; }
 @media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }
+
+.theme-choice select {
+  display:block; margin-top:4px; padding:8px 12px; min-height:var(--mimi-target);
+  border:1px solid var(--mimi-outline); border-radius:var(--mimi-radius-field);
+  background:var(--mimi-surface-container); color:var(--mimi-on-surface); font:inherit;
+}
+.theme-choice select:focus-visible { outline:3px solid var(--mimi-primary); outline-offset:3px; }
+:root:not([data-theme=dark]) .dark-code, :root[data-theme=dark] .light-code { display:none; }
+:root[data-theme=dark] body { background-image:none; }
+:root[data-theme=dark] :is(header,nav,.tile,dialog,input,textarea,.tile span) {
+  color:var(--mimi-on-surface); background:var(--mimi-surface-container); border-color:var(--mimi-outline);
+}
+:root[data-theme=dark] :is(nav button:not(.active),.all,.date,small) {color:var(--mimi-on-surface-variant)}
+:root[data-theme=dark] :is(.card,.sheet,.quick,.entry) {outline-color:var(--line);border-color:var(--line)}
+:root[data-theme=dark] :is(.intro picture img,header strong img,header:after) {mix-blend-mode:normal}
+:root[data-theme=dark] ::placeholder {color:var(--mimi-on-surface-variant)}
+@media (prefers-reduced-motion:no-preference) {
+  button:enabled { transition:transform var(--mimi-motion-press) ease-out,box-shadow var(--mimi-motion-press) ease-out; }
+  button:enabled:active { transform:scale(.98); }
+  dialog[open], #page > .card, #page > .spread { animation:mimi-enter var(--mimi-motion-enter) ease-out; }
+  @keyframes mimi-enter { from { opacity:.72; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+}

@@ -1,4 +1,5 @@
 ---
+import ThemeChoice from "../components/ThemeChoice.astro";
 import MimiTheme from '../components/MimiTheme.astro';
 import Today from '../components/Today.astro';
 import CaptureDialog from '../components/CaptureDialog.astro';
@@ -20,6 +21,7 @@ import CaptureDialog from '../components/CaptureDialog.astro';
       <p id="notice" role="status"></p>
     </main>
     <template id="today-template"><Today /></template>
+    <template id="theme-choice"><ThemeChoice /></template>
     <CaptureDialog />
     <script>
       import '../scripts/planner.js';
