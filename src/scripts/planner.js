@@ -59,7 +59,19 @@ function capture(kind, item = null){
 }
 el('jenis').onchange = configureForm;
 function list(target,rows){target.replaceChildren();if(!rows.length)target.append(make('p',tab==='Koleksi'?'Belum ada titipan yang cocok.':'Belum ada agenda di sini ♡'));for(const x of rows){const a=make('article','');a.className='entry';a.append(make('b',x.title),make('p',x.note));if(x.time){a.append(make('p',x.allDay?x.time.slice(0,10)+' · Seharian':new Date(x.time).toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short'})));const b=make('button',x.done?'Sudah selesai · Batalkan':'Tandai selesai');b.onclick=()=>{if(save(items.map(i=>i===x?{...i,done:!i.done}:i)))render()};a.append(b,calendarButton(x))}target.append(a)}}
-function render(){refreshReminder();document.body.dataset.page=tab;const nav=document.querySelector('nav');nav.replaceChildren();for(const name of names){const b=make('button',name);if(name===tab){b.className='active';b.setAttribute('aria-current','page')};b.onclick=()=>{tab=name;el('notice').textContent='';render()};nav.append(b)}
+function render(){refreshReminder();document.body.dataset.page=tab;const nav=document.querySelector('nav');
+if(!nav.children.length){
+  for(const name of names){
+    const button=make('button',name);
+    button.onclick=()=>{if(tab!==name){tab=name;el('notice').textContent='';render()}};
+    nav.append(button);
+  }
+}
+for(const button of nav.children){
+  const active=button.textContent===tab;
+  button.classList.toggle('active',active);
+  if(active)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');
+}
 const p=el('page');p.replaceChildren();if(tab==='Profil'){p.innerHTML='<section class="card"><h2>Profil Iqlima</h2><p>Ini ruang coba Iqlima. Titipan disimpan di browser ini.</p><p>Pengingat muncul selama halaman ini terbuka.</p></section>';
  const choice = document.querySelector('#theme-choice').content.cloneNode(true);
  choice.querySelector('select').value = document.documentElement.dataset.preference || 'system';
@@ -142,7 +154,10 @@ function refreshReminder(){
   el('reminder').hidden=!due;
 }
 function respond(patch){
-  if(shown && save(items.map(item=>item===shown?{...item,...patch}:item)))render();
+  if(shown && save(items.map(item=>item===shown?{...item,...patch}:item))){
+    render();
+    el('notice').textContent=patch.done?'Agenda ditandai selesai.':'Mimi ingetin lagi 10 menit dari sekarang.';
+  }
 }
 el('due-open').onclick=()=>{if(shown)detail(shown)};
 el('due-snooze').onclick=()=>respond({snoozeUntil:Date.now()+600000});

@@ -30,6 +30,28 @@ void main() {
     expect(Entries(prefs).state.single.title, 'Bawa buku');
     await tester.pumpWidget(const SizedBox());
   });
+  testWidgets('Navigasi menyesuaikan lebar layar', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    addTearDown(() => tester.view.reset());
+    tester.view.devicePixelRatio = 1;
+    for (final width in [390.0, 820.0, 1280.0]) {
+      tester.view.physicalSize = Size(width, 800);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [prefsProvider.overrideWithValue(prefs)],
+          child: const MimiApp(),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.byType(width < 720 ? NavigationBar : NavigationRail),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+    }
+    await tester.pumpWidget(const SizedBox());
+  });
   test('Tunda tidak mengubah waktu agenda', () {
     final now = DateTime(2026, 11, 22, 16);
     final item = Entry(

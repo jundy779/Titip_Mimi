@@ -60,7 +60,16 @@ final router = GoRouter(
     for (var i = 0; i < paths.length; i++)
       GoRoute(
         path: paths[i],
-        builder: (context, state) => Room(index: paths.indexOf(state.uri.path)),
+        pageBuilder: (context, state) => CustomTransitionPage<void>(
+          key: state.pageKey,
+          transitionDuration: MediaQuery.disableAnimationsOf(context)
+              ? Duration.zero
+              : const Duration(milliseconds: 180),
+          reverseTransitionDuration: Duration.zero,
+          transitionsBuilder: (context, animation, secondary, child) =>
+              FadeTransition(opacity: animation, child: child),
+          child: Room(index: paths.indexOf(state.uri.path)),
+        ),
       ),
   ],
 );
@@ -208,6 +217,15 @@ class _RoomState extends ConsumerState<Room> {
 
   Widget row(Entry e) => Card(
     child: ListTile(
+      leading: Icon(
+        e.done
+            ? Icons.check_circle_outline
+            : switch (e.kind) {
+                'Agenda' => Icons.event_outlined,
+                'Akun' => Icons.person_outline,
+                _ => Icons.edit_note_outlined,
+              },
+      ),
       title: Text(e.title),
       subtitle: Text(
         [
@@ -278,16 +296,20 @@ class _RoomState extends ConsumerState<Room> {
       ),
       _ => agenda,
     };
+    final width = MediaQuery.sizeOf(context).width;
+    final wide = width >= 720;
     return Scaffold(
       appBar: AppBar(title: Text(pages[widget.index])),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: widget.index,
-        onDestinationSelected: (i) => context.go(paths[i]),
-        destinations: [
-          for (var i = 0; i < pages.length; i++)
-            NavigationDestination(icon: Icon(icons[i]), label: pages[i]),
-        ],
-      ),
+      bottomNavigationBar: wide
+          ? null
+          : NavigationBar(
+              selectedIndex: widget.index,
+              onDestinationSelected: (i) => context.go(paths[i]),
+              destinations: [
+                for (var i = 0; i < pages.length; i++)
+                  NavigationDestination(icon: Icon(icons[i]), label: pages[i]),
+              ],
+            ),
       floatingActionButton: widget.index == 3
           ? null
           : FloatingActionButton.extended(
@@ -296,88 +318,122 @@ class _RoomState extends ConsumerState<Room> {
               label: const Text('Titip sesuatu'),
             ),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(18, 8, 18, 100),
+        child: Row(
           children: [
-            if (due.isNotEmpty)
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            if (wide)
+              NavigationRail(
+                selectedIndex: widget.index,
+                extended: width >= 1100,
+                labelType: width >= 1100
+                    ? NavigationRailLabelType.none
+                    : NavigationRailLabelType.all,
+                onDestinationSelected: (i) => context.go(paths[i]),
+                destinations: [
+                  for (var i = 0; i < pages.length; i++)
+                    NavigationRailDestination(
+                      icon: Icon(icons[i]),
+                      label: Text(pages[i]),
+                    ),
+                ],
+              ),
+            if (wide) const VerticalDivider(width: 1),
+            Expanded(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 800),
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(18, 8, 18, 100),
                     children: [
-                      const Text('Mimi mau ingetin ♡'),
-                      Text(
-                        due.first.title,
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      Wrap(
-                        spacing: 8,
-                        children: [
-                          TextButton(
-                            onPressed: () => detail(due.first),
-                            child: const Text('Lihat titipan'),
+                      if (due.isNotEmpty)
+                        Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('Mimi mau ingetin ♡'),
+                                Text(
+                                  due.first.title,
+                                  style: Theme.of(context).textTheme.titleLarge,
+                                ),
+                                Wrap(
+                                  spacing: 8,
+                                  children: [
+                                    TextButton(
+                                      onPressed: () => detail(due.first),
+                                      child: const Text('Lihat titipan'),
+                                    ),
+                                    OutlinedButton(
+                                      onPressed: () =>
+                                          update(due.first, snooze: true),
+                                      child: const Text('Tunda 10 menit'),
+                                    ),
+                                    FilledButton(
+                                      onPressed: () => update(due.first),
+                                      child: const Text('Sudah selesai'),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
-                          OutlinedButton(
-                            onPressed: () => update(due.first, snooze: true),
-                            child: const Text('Tunda 10 menit'),
+                        ),
+                      if (widget.index == 3)
+                        profile()
+                      else ...[
+                        if (widget.index == 0) ...[
+                          Image.asset(
+                            'assets/mimi/v1/planner.webp',
+                            height: 164,
+                            excludeFromSemantics: true,
                           ),
-                          FilledButton(
-                            onPressed: () => update(due.first),
-                            child: const Text('Sudah selesai'),
+                          Text(
+                            'Hai, Iqlima ♡',
+                            style: Theme.of(context).textTheme.headlineMedium,
+                          ),
+                          const Text('Agenda hari ini'),
+                        ],
+                        if (widget.index == 1) ...[
+                          TextField(
+                            decoration: const InputDecoration(
+                              labelText: 'Cari titipan',
+                              prefixIcon: Icon(Icons.search),
+                            ),
+                            onChanged: (v) => setState(() => query = v),
+                          ),
+                          Wrap(
+                            spacing: 6,
+                            children: [
+                              for (final k in [
+                                'Semua',
+                                'Catatan',
+                                'Akun',
+                                'Agenda',
+                              ])
+                                ChoiceChip(
+                                  label: Text(k),
+                                  selected: filter == k,
+                                  onSelected: (_) => setState(() => filter = k),
+                                ),
+                            ],
                           ),
                         ],
-                      ),
+                        if (rows.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 24),
+                            child: Text(
+                              widget.index == 1
+                                  ? 'Belum ada titipan yang cocok.'
+                                  : 'Belum ada agenda di sini ♡',
+                            ),
+                          ),
+                        ...rows.map(row),
+                      ],
                     ],
                   ),
                 ),
               ),
-            if (widget.index == 3)
-              profile()
-            else ...[
-              if (widget.index == 0) ...[
-                Image.asset(
-                  'assets/mimi/v1/planner.webp',
-                  height: 164,
-                  excludeFromSemantics: true,
-                ),
-                Text(
-                  'Hai, Iqlima ♡',
-                  style: Theme.of(context).textTheme.headlineMedium,
-                ),
-                const Text('Agenda hari ini'),
-              ],
-              if (widget.index == 1) ...[
-                TextField(
-                  decoration: const InputDecoration(
-                    labelText: 'Cari titipan',
-                    prefixIcon: Icon(Icons.search),
-                  ),
-                  onChanged: (v) => setState(() => query = v),
-                ),
-                Wrap(
-                  spacing: 6,
-                  children: [
-                    for (final k in ['Semua', 'Catatan', 'Akun', 'Agenda'])
-                      ChoiceChip(
-                        label: Text(k),
-                        selected: filter == k,
-                        onSelected: (_) => setState(() => filter = k),
-                      ),
-                  ],
-                ),
-              ],
-              if (rows.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Text(
-                    widget.index == 1
-                        ? 'Belum ada titipan yang cocok.'
-                        : 'Belum ada agenda di sini ♡',
-                  ),
-                ),
-              ...rows.map(row),
-            ],
+            ),
           ],
         ),
       ),

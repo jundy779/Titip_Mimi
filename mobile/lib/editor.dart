@@ -99,94 +99,105 @@ class _EditorState extends State<EntryEditor> {
       title: Text(widget.entry == null ? 'Titip ke Mimi ♡' : 'Ubah titipan'),
     ),
     body: SafeArea(
-      child: Form(
-        key: form,
-        child: ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            DropdownButtonFormField<String>(
-              initialValue: kind,
-              decoration: const InputDecoration(labelText: 'Jenis titipan'),
-              items: [
-                'Catatan',
-                'Akun',
-                'Agenda',
-              ].map((k) => DropdownMenuItem(value: k, child: Text(k))).toList(),
-              onChanged: widget.entry != null
-                  ? null
-                  : (k) => setState(() {
-                      kind = k!;
-                      error = null;
-                      body.clear();
-                    }),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: title,
-              maxLength: 100,
-              decoration: InputDecoration(
-                labelText: kind == 'Akun' ? 'Nama layanan' : 'Judul titipan',
-              ),
-              validator: (v) =>
-                  (v ?? '').trim().isEmpty ? 'Isi judul dulu, ya.' : null,
-            ),
-            TextFormField(
-              controller: body,
-              minLines: 1,
-              maxLines: kind == 'Akun' ? 1 : 5,
-              decoration: InputDecoration(
-                labelText: kind == 'Akun' ? 'Email atau label akun' : 'Catatan',
-              ),
-              validator: (v) => kind == 'Akun' && (v ?? '').trim().isEmpty
-                  ? 'Isi email atau label akun.'
-                  : null,
-            ),
-            if (kind == 'Akun') ...[
-              DropdownButtonFormField<String>(
-                initialValue: method,
-                decoration: const InputDecoration(labelText: 'Cara masuk'),
-                items:
-                    [
-                          'Google',
-                          'Email dan kata sandi',
-                          'Apple',
-                          'Nomor HP',
-                          'Lainnya',
-                        ]
-                        .map((m) => DropdownMenuItem(value: m, child: Text(m)))
-                        .toList(),
-                onChanged: (m) => setState(() => method = m!),
-              ),
-              const Text(
-                'Simpan kata sandi dan PIN di pengelola kata sandimu.',
-              ),
-            ] else ...[
-              OutlinedButton.icon(
-                onPressed: selectTime,
-                icon: const Icon(Icons.schedule),
-                label: Text(
-                  time == null
-                      ? 'Pilih tanggal dan jam'
-                      : stamp(context, time!),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: Form(
+            key: form,
+            child: ListView(
+              padding: const EdgeInsets.all(20),
+              children: [
+                DropdownButtonFormField<String>(
+                  initialValue: kind,
+                  decoration: const InputDecoration(labelText: 'Jenis titipan'),
+                  items: ['Catatan', 'Akun', 'Agenda']
+                      .map((k) => DropdownMenuItem(value: k, child: Text(k)))
+                      .toList(),
+                  onChanged: widget.entry != null
+                      ? null
+                      : (k) => setState(() {
+                          kind = k!;
+                          error = null;
+                          body.clear();
+                        }),
                 ),
-              ),
-              if (time != null && kind == 'Catatan')
-                TextButton(
-                  onPressed: () => setState(() => time = null),
-                  child: const Text('Lepas jadwal'),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: title,
+                  maxLength: 100,
+                  decoration: InputDecoration(
+                    labelText: kind == 'Akun'
+                        ? 'Nama layanan'
+                        : 'Judul titipan',
+                  ),
+                  validator: (v) =>
+                      (v ?? '').trim().isEmpty ? 'Isi judul dulu, ya.' : null,
                 ),
-            ],
-            if (error != null)
-              Text(
-                error!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: saving ? null : submit,
-              child: const Text('Simpan titipan'),
+                TextFormField(
+                  controller: body,
+                  minLines: 1,
+                  maxLines: kind == 'Akun' ? 1 : 5,
+                  decoration: InputDecoration(
+                    labelText: kind == 'Akun'
+                        ? 'Email atau label akun'
+                        : 'Catatan',
+                  ),
+                  validator: (v) => kind == 'Akun' && (v ?? '').trim().isEmpty
+                      ? 'Isi email atau label akun.'
+                      : null,
+                ),
+                if (kind == 'Akun') ...[
+                  DropdownButtonFormField<String>(
+                    initialValue: method,
+                    decoration: const InputDecoration(labelText: 'Cara masuk'),
+                    items:
+                        [
+                              'Google',
+                              'Email dan kata sandi',
+                              'Apple',
+                              'Nomor HP',
+                              'Lainnya',
+                            ]
+                            .map(
+                              (m) => DropdownMenuItem(value: m, child: Text(m)),
+                            )
+                            .toList(),
+                    onChanged: (m) => setState(() => method = m!),
+                  ),
+                  const Text(
+                    'Simpan kata sandi dan PIN di pengelola kata sandimu.',
+                  ),
+                ] else ...[
+                  OutlinedButton.icon(
+                    onPressed: selectTime,
+                    icon: const Icon(Icons.schedule),
+                    label: Text(
+                      time == null
+                          ? 'Pilih tanggal dan jam'
+                          : stamp(context, time!),
+                    ),
+                  ),
+                  if (time != null && kind == 'Catatan')
+                    TextButton(
+                      onPressed: () => setState(() => time = null),
+                      child: const Text('Lepas jadwal'),
+                    ),
+                ],
+                if (error != null)
+                  Text(
+                    error!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                const SizedBox(height: 16),
+                FilledButton(
+                  onPressed: saving ? null : submit,
+                  child: const Text('Simpan titipan'),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     ),
