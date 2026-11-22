@@ -10,4 +10,4 @@
 
 Saat foto nota diterima, backend mencari profil dari akun Telegram yang tertaut, mencatat ID kiriman dan referensi media dalam satu transaksi, lalu mengonfirmasi penyimpanan. Jadwal yang telah dikonfirmasi menghasilkan pekerjaan pengingat. Worker memeriksa ulang status agenda dan tautan Telegram sebelum mengirim.
 
-Hari ini hanya prototipe di dist/ yang dapat dijalankan. Rincian migrasi, integrasi dan asumsi operasional ada di [TECH](../TECH.md).
+Frontend Astro menghasilkan prototipe statis di dist/. Halaman Hari Ini memakai komponen Astro dan interaksi lokal tetap berjalan di browser. Rincian migrasi, integrasi dan asumsi operasional ada di [TECH](../TECH.md).

@@ -10,3 +10,9 @@ Tujuan setiap perubahan adalah membantu Iqlima menitipkan sesuatu saat sibuk, me
 6. Simpan data uji fiktif dalam contoh, tangkapan layar, dan laporan masalah. Kredensial layanan hanya melalui konfigurasi privat.
 
 Di repositori prototipe, situs statis berada di `dist/`. Dokumen dan gambar referensi berada di luar folder publik tersebut.
+
+## Pembagian kerja AI
+
+Codex dan ChatGPT memiliki pekerjaan frontend serta UI/UX. Gunakan [panduan frontend](docs/ai/FRONTEND.md) dan [konteks ChatGPT](CHATGPT.md). Claude memiliki backend, database, serta keamanan aplikasi; rincian ada di [CLAUDE.md](CLAUDE.md). Cursor melakukan pemeriksaan menyeluruh sesuai [panduan review](docs/ai/FULL_REVIEW.md). Satu perubahan lintas bidang dapat dikerjakan berurutan memakai [format serah terima](docs/ai/HANDOFF.md).
+
+Edit sumber web di src/ dan aset statis di public/. Direktori dist/ memuat versi statis yang siap disajikan. Sesudah mengubah sumber, jalankan build dan uji alur pengguna. Catat bagian yang masih menunggu pemeriksaan Claude, Cursor atau perangkat nyata secara eksplisit.

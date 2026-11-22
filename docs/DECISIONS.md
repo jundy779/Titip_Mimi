@@ -12,3 +12,6 @@
 **Cara mengusulkan perubahan.** Tulis masalah yang dialami Iqlima, contoh nyata, fitur terdampak, tahap yang bergeser, dampak pada data lama, dan kriteria uji. Tandai “Diusulkan” sampai Jundy memutuskan. Catat masukan Iqlima untuk perubahan pengalaman pribadi dan berbagi data. Setelah diterima, perbarui PRD, desain, teknis, roadmap atau QA sesuai dampaknya.
 
 **Format entri** • tanggal | diajukan oleh | masalah | pilihan | dampak | keputusan/pemilik | dokumen terkait.
+
+
+22 November 2026 · Jundy menetapkan Codex/ChatGPT untuk frontend dan UI/UX, Claude untuk backend/database/keamanan, serta Cursor untuk pemeriksaan menyeluruh. Panduan dan format serah terima tersedia di [peta dokumentasi](README.md).

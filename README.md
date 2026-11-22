@@ -14,13 +14,14 @@ Prototipe web menyimpan titipan di browser yang dipakai. Di menu Agenda, kamu bi
 
 ## Jalankan di komputer
 
-Dari direktori utama repositori, jalankan perintah ini dengan Python 3.
+Frontend memakai Astro + TypeScript. Dari root repo gunakan Node 22.12+ dan npm.
 
 ```sh
-python -m http.server 8000 --directory dist
+npm ci
+npm run dev
 ```
 
-Buka [localhost:8000](http://localhost:8000). Situs ini berisi HTML, CSS, JavaScript, dan aset gambar yang siap disajikan.
+Buka alamat lokal yang dicetak Astro. Untuk memeriksa versi statis, jalankan `npm run build` lalu `npm run preview`. Sumber halaman ada di src/pages, komponen di src/components dan aset di public. Folder dist berisi hasil build yang juga bisa disajikan langsung.
 
 ## Panduan proyek
 

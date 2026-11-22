@@ -18,3 +18,6 @@ Baseline 21 November 2026 • Prototipe web [Ruang Iqlima](https://ruang-iqlima-
 4. Setelah tahap 1 lulus, bangun satu alur Telegram lengkap untuk foto nota, baru lanjut ke variasi media dan pengingat.
 
 Urutan ini usulan pelaksanaan, bukan komitmen tanggal. Jika kalender otomatis menjadi kebutuhan utama setelah pilot, catat alasannya dan ubah prioritas di catatan keputusan.
+
+
+**Pembaruan 22 November.** Halaman Hari Ini dan dialog titipan memakai Astro. Build serta uji fungsi lokal tercatat di [QA](QA.md). Berikutnya Codex/ChatGPT memeriksa visual, Claude mengerjakan kontrak login dan penyimpanan tahap 1, lalu Cursor melakukan review lintas komponen.

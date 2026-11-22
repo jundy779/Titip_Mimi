@@ -1,0 +1,6 @@
+---
+description: Periksa perubahan Titip Mimi dari UI sampai penyimpanan dan integrasi.
+alwaysApply: true
+---
+
+Saat memakai Cursor di repo ini, lakukan review menyeluruh sesuai docs/ai/FULL_REVIEW.md dan docs/QA.md. Baca AGENTS.md untuk batas produk dan pembagian tanggung jawab. Untuk temuan, tulis dampak, lokasi, bukti dan pemilik tindak lanjut. Catat area yang belum bisa diverifikasi. Mode review berakhir dengan temuan dan status pengujian; ubah implementasi ketika ada permintaan perbaikan.

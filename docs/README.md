@@ -13,3 +13,14 @@ Mulai dari [PRD](PRD.md) untuk tujuan produk dan [MVP](MVP.md) untuk batas pilot
 | Menguji rilis atau memulihkan layanan | [Runbook](runbooks/README.md) |
 
 Panduan untuk kontributor dan asisten coding tersedia di [AGENTS.md](../AGENTS.md).
+
+## Panduan AI
+
+| Alat | Mulai dari | Tugas |
+|---|---|---|
+| Codex | [AGENTS.md](../AGENTS.md) dan [frontend](ai/FRONTEND.md) | Implementasi frontend, UI/UX, serta bukti pengujian |
+| ChatGPT | [CHATGPT.md](../CHATGPT.md) | Alur interaksi, konsep visual, microcopy dan revisi frontend |
+| Claude | [CLAUDE.md](../CLAUDE.md) | Backend, database, integrasi dan keamanan |
+| Cursor | [Aturan Cursor](../.cursor/rules/full-review.mdc) dan [full review](ai/FULL_REVIEW.md) | Pemeriksaan lintas sistem dan pengujian ulang |
+
+Gunakan [format handoff](ai/HANDOFF.md) untuk meneruskan pekerjaan antaralat.

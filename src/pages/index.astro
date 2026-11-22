@@ -1,0 +1,26 @@
+---
+import Today from '../components/Today.astro';
+import CaptureDialog from '../components/CaptureDialog.astro';
+---
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Ruang Iqlima ♡</title>
+    <link rel="stylesheet" href="./base.css" />
+    <link rel="stylesheet" href="./planner.css" />
+  </head>
+  <body>
+    <header><strong><img src="bow.webp" alt="">Ruang Iqlima</strong><nav aria-label="Menu utama"></nav></header>
+    <main>
+      <div id="page"><Today /></div>
+      <p id="notice" role="status"></p>
+    </main>
+    <template id="today-template"><Today /></template>
+    <CaptureDialog />
+    <script>
+      import '../scripts/planner.js';
+    </script>
+  </body>
+</html>

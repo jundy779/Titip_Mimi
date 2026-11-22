@@ -7,7 +7,7 @@ function calendarDraft(item) {
   link.search = new URLSearchParams({action:'TEMPLATE', text:item.title, details:item.note, dates});
   return link.href;
 }
-function calendarButton(item) {
+export function calendarButton(item) {
   const link = document.createElement('a');
   link.href = calendarDraft(item);
   link.textContent = 'Kirim ke Google Kalender';
@@ -16,7 +16,7 @@ function calendarButton(item) {
   link.className = 'calendar-link';
   return link;
 }
-function readCalendar(source) {
+export function readCalendar(source) {
   const unfolded = source.replace(/\r\n?/g,'\n').replace(/\n[ \t]/g,'');
   if (!/^BEGIN:VCALENDAR$/m.test(unfolded)) throw Error('Pilih file kalender berakhiran .ics, ya.');
   const entries = [];
@@ -66,23 +66,4 @@ function readCalendar(source) {
     } catch {skipped++}
   }
   return {entries,skipped};
-}
-function addImport(card){
-  const input=document.createElement('input');
-  input.type='file';input.accept='.ics,text/calendar';input.hidden=true;
-  const button=make('button','Ambil dari Google Kalender');
-  const hint=make('p','Pilih file .ics hasil ekspor Google Kalender. Mimi bisa mengambil acara satu kali dan acara seharian.');
-  card.append(button,hint,input);
-  button.onclick=()=>input.click();
-  input.onchange=async()=>{
-    try {
-      const {entries,skipped}=readCalendar(await input.files[0].text());
-      const seen=new Set(items.map(x=>x.icsId));
-      const fresh=entries.filter(x=>{if(seen.has(x.icsId))return false;seen.add(x.icsId);return true});
-      if(fresh.length && !save([...fresh,...items]))return;
-      render();
-      el('notice').textContent=fresh.length+' agenda ditambahkan. '+(entries.length-fresh.length)+' sudah ada. '+skipped+' acara dilewati.';
-    } catch {el('notice').textContent='File belum bisa dibaca. Pilih file .ics yang sudah dikeluarkan dari ZIP, ya.'}
-    input.value='';
-  };
 }

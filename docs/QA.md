@@ -19,3 +19,8 @@ Gunakan contoh fiktif “Ambil jahitan” dan “Canva Kampus”. Tulis tanggal,
 **Bukti baseline.** Publikasi web berhasil. Uji kode kalender mencakup konversi WIB dan tanggal akhir acara seharian lintas tahun. Uji kalender menggunakan akun Google Iqlima, verifikasi visual di HP miliknya, dan penerimaan pengguna masih terbuka. Uji fitur tahap mendatang berstatus menunggu implementasi.
 
 **Format temuan** • ID uji | tanggal dan perangkat | langkah | hasil aktual | hasil yang diinginkan | status setelah perbaikan.
+
+
+### 22 November 2026 · migrasi pertama ke Astro
+
+Node 24, Astro 6.4.8. Build statis berhasil. Pada hasil build, simulasi DOM dengan penyimpanan lama lulus untuk baca titipan, tambah, cari, tandai selesai, keempat menu, dan tautan draf kalender. Uji ini tidak mengukur tampilan atau interaksi layanan Google. Pemeriksaan visual pada HP/desktop dan review independen oleh Cursor masih terbuka.
