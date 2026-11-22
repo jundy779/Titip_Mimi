@@ -14,3 +14,5 @@ Target pertama adalah Iqlima bisa membuka titipan yang sama dari HP dan web, ter
 **Integrasi aset Flutter.** Saat paket aplikasi dibuat, salin folder runtime v1 ke assets/mimi/v1 di paket Flutter, deklarasikan direktori itu pada pubspec.yaml, lalu muat melalui Image.asset dengan ID dari manifest. Gunakan BoxFit.contain. Beri label semantik saat pose menyampaikan informasi dan sembunyikan dari pembaca layar bila teks di sampingnya sudah menjelaskan status. Cache aset lokal agar Mimi tetap tersedia tanpa koneksi.
 
 **Pemilik.** Codex/ChatGPT mengerjakan frontend Flutter, perilaku Mimi dan UI/UX. Claude menyiapkan endpoint, data serta penautan akun. Cursor memeriksa build dan alur gabungan dari HP sampai pengiriman bot. Aplikasi Flutter, pengiriman Telegram dan rilis toko adalah tahap implementasi berikutnya; paket ini menyediakan rencana dan artwork statis.
+
+Tema Flutter memakai Material 3. Petakan ColorScheme, TextTheme, NavigationBarTheme dan InputDecorationTheme mengikuti [aturan komponen](../DESIGN.md) dan [token v1](../../design/tokens.json). Pada tahap Flutter lokal, bandingkan Hari Ini dan form titipan dengan panduan web pada ukuran ponsel.

@@ -1,0 +1,10 @@
+---
+import tokens from '../../design/tokens.json';
+const vars = [
+  ...Object.entries(tokens.color).map(([key,value]) => `--mimi-${key}:${value}`),
+  ...['space','radius','type'].flatMap(group =>
+    Object.entries(tokens[group as 'space' | 'radius' | 'type']).map(([key,value]) => `--mimi-${group}-${key}:${value / 16}rem`)),
+  `--mimi-target:${tokens.target / 16}rem`
+];
+---
+<style is:inline set:html={`:root{${vars.join(';')}}`}></style>

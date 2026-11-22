@@ -9,3 +9,4 @@ Pilih butir yang berkaitan dengan perubahan. Tulis bukti atau alasan jika tidak 
 - [ ] Untuk agenda, periksa zona waktu, acara seharian, tunda/selesai, dan pengingat setelah proses dimulai ulang.
 - [ ] Periksa diff untuk token, data pengguna, file konfigurasi privat dan log sensitif.
 - [ ] Catat pengujian yang lulus, yang belum dicoba, dan dokumen yang perlu disesuaikan.
+- [ ] Untuk layar baru, bandingkan dengan contoh /panduan-desain/, periksa pasangan warna dan status interaksi sesuai [sistem desain](DESIGN.md), lalu lampirkan bukti HP/desktop atau catat perangkat yang masih perlu diuji.
