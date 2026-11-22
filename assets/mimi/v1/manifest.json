@@ -1,0 +1,99 @@
+{
+  "version": "1.0",
+  "canvas": [
+    512,
+    512
+  ],
+  "poses": [
+    {
+      "id": "welcome",
+      "label": "Menyapa",
+      "file": "welcome.webp"
+    },
+    {
+      "id": "planner",
+      "label": "Memeluk agenda",
+      "file": "planner.webp"
+    },
+    {
+      "id": "peek",
+      "label": "Mengintip agenda",
+      "file": "peek.webp"
+    },
+    {
+      "id": "write",
+      "label": "Menulis titipan",
+      "file": "write.webp"
+    },
+    {
+      "id": "photo",
+      "label": "Menunjukkan foto",
+      "file": "photo.webp"
+    },
+    {
+      "id": "search",
+      "label": "Mencari titipan",
+      "file": "search.webp"
+    },
+    {
+      "id": "letter",
+      "label": "Membawa pesan",
+      "file": "letter.webp"
+    },
+    {
+      "id": "remind",
+      "label": "Mengingatkan",
+      "file": "remind.webp"
+    },
+    {
+      "id": "snooze",
+      "label": "Menunda pengingat",
+      "file": "snooze.webp"
+    },
+    {
+      "id": "done",
+      "label": "Agenda selesai",
+      "file": "done.webp"
+    },
+    {
+      "id": "saved",
+      "label": "Titipan tersimpan",
+      "file": "saved.webp"
+    },
+    {
+      "id": "sleep",
+      "label": "Jam tenang",
+      "file": "sleep.webp"
+    },
+    {
+      "id": "linked",
+      "label": "Terhubung",
+      "file": "linked.webp"
+    },
+    {
+      "id": "offline",
+      "label": "Koneksi terputus",
+      "file": "offline.webp"
+    },
+    {
+      "id": "retry",
+      "label": "Coba lagi",
+      "file": "retry.webp"
+    },
+    {
+      "id": "empty",
+      "label": "Koleksi kosong",
+      "file": "empty.webp"
+    },
+    {
+      "id": "privacy",
+      "label": "Menjaga akun",
+      "file": "privacy.webp"
+    },
+    {
+      "id": "celebrate",
+      "label": "Merayakan",
+      "file": "celebrate.webp"
+    }
+  ]
+}

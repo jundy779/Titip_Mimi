@@ -20,3 +20,5 @@ Gunakan latar blush (#FFF4F7), kertas krem (#FFFBF5), tombol rose (#AA3865), tek
 | Pilihan pengingat | Selesai · Ingatkan nanti |
 
 Mimi menemani lewat pose dan respons singkat. Hindari sapaan yang membuat Iqlima merasa bersalah karena sibuk. Mintalah Iqlima mencoba satu tugas tanpa petunjuk lalu tanyakan bagian yang membingungkan. Simpan umpan balik dengan format layar, tindakan, apa yang terjadi, dan perubahan yang diinginkan.
+
+Untuk layar dan keadaan baru, gunakan [koleksi Mimi v1](../assets/mimi/v1/README.md) beserta pemetaan pose yang sudah disiapkan.

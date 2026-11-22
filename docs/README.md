@@ -24,3 +24,6 @@ Panduan untuk kontributor dan asisten coding tersedia di [AGENTS.md](../AGENTS.m
 | Cursor | [Aturan Cursor](../.cursor/rules/full-review.mdc) dan [full review](ai/FULL_REVIEW.md) | Pemeriksaan lintas sistem dan pengujian ulang |
 
 Gunakan [format handoff](ai/HANDOFF.md) untuk meneruskan pekerjaan antaralat.
+
+- [Rencana Flutter Android/iOS](mobile/PLAN.md)
+- [Paket maskot Mimi v1.0](../assets/mimi/v1/README.md)
