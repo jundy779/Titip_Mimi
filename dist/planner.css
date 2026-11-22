@@ -5,7 +5,7 @@
 /* Shared interaction states across the planner and its component reference. */
 button, input:not([hidden]), .calendar-link { min-height:var(--mimi-target); }
 button, input, textarea { font-family:system-ui,sans-serif; }
-button:not(.primary):not(.active):not(.tile):not(.all):not(nav button) {
+button:where(:not(.primary):not(.active):not(.tile):not(.all):not(nav button)) {
   background-color:var(--mimi-primary-container); color:var(--mimi-on-primary-container);
 }
 input, textarea { border-color:var(--mimi-outline); border-radius:var(--mimi-radius-field); }
@@ -36,3 +36,15 @@ button:disabled { opacity:.55; cursor:default; }
   dialog[open], #page > .card, #page > .spread { animation:mimi-enter var(--mimi-motion-enter) ease-out; }
   @keyframes mimi-enter { from { opacity:.72; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
 }
+
+/* Shared action variants for the planner, forms and guide. */
+button.primary, button.quick {background:var(--mimi-primary);color:var(--mimi-on-primary)}
+button.quiet, button.all {background:transparent;color:var(--mimi-primary)}
+button.chip, a.calendar-link {display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--mimi-outline);border-radius:var(--mimi-radius-pill);padding:8px 16px;background:transparent;color:var(--mimi-on-surface);font:inherit}
+button.chip[aria-pressed=true] {background:var(--mimi-primary-container);color:var(--mimi-on-primary-container);border-color:var(--mimi-primary);font-weight:bold}
+.chips {display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+#box select {width:100%;min-height:var(--mimi-target);border:1px solid var(--mimi-outline);border-radius:var(--mimi-radius-field);padding:8px;background:var(--mimi-surface-container);color:var(--mimi-on-surface);font:inherit}
+#box fieldset {border:1px solid var(--mimi-outline);border-radius:var(--mimi-radius-field)}
+#box [hidden] {display:none}
+.note-body {white-space:pre-wrap;overflow-wrap:anywhere}
+.tile small {display:block;padding:0 5px 5px;overflow-wrap:anywhere}

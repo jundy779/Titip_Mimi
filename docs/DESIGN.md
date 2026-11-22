@@ -66,3 +66,5 @@ Rujukan: [Peran warna Material 3](https://m3.material.io/styles/color/roles), [t
 Profil dan panduan komponen menyediakan Terang, Gelap, serta Ikuti perangkat (default). Simpan pilihan pada browser. Gunakan warna dari color dan darkColor dengan nama peran yang sama. Aset Mimi mempertahankan warna ilustrasi. Untuk Flutter kelak, padankan pilihan dengan ThemeMode.system, light dan dark.
 
 Gunakan tombol filled untuk komitmen utama, tonal untuk aksi pendamping dan teks untuk navigasi ringan. Tampilkan outline saat fokus keyboard, lapisan warna saat hover/tekan, dan status disabled melalui atribut native. Efek tekan berlangsung 120 ms, masuk panel atau dialog 180 ms. Hormati pengaturan kurangi gerakan dengan tampilan langsung. Animasi maskot dan umpan balik untuk operasi jaringan tetap bergantung pada implementasi fitur masing-masing.
+
+Di Koleksi, tombol Simpan dan Titip sesuatu memakai warna utama. Batal dan Tutup memakai tombol teks. Filter Semua, Catatan, Akun, dan Agenda memakai chip dengan status pilihan. Kartu akun menampilkan nama layanan dan email atau label agar dua akun dari layanan yang sama bisa dibedakan. Form akun hanya menerima petunjuk masuk.

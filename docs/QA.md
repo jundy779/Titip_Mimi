@@ -24,3 +24,5 @@ Gunakan contoh fiktif “Ambil jahitan” dan “Canva Kampus”. Tulis tanggal,
 ### 22 November 2026 · migrasi pertama ke Astro
 
 Node 24, Astro 6.4.8. Build statis berhasil. Pada hasil build, simulasi DOM dengan penyimpanan lama lulus untuk baca titipan, tambah, cari, tandai selesai, keempat menu, dan tautan draf kalender. Uji ini tidak mengukur tampilan atau interaksi layanan Google. Pemeriksaan visual pada HP/desktop dan review independen oleh Cursor masih terbuka.
+
+Prototipe web, Koleksi bertipe. Build Astro lulus. Uji fungsi simpan dengan DOM simulasi membedakan dua kartu Canva, menyunting catatan tanpa duplikat, membaca hasil simpan, serta mengenali titipan lama. Uji visual perangkat asli, sinkronisasi lintas akun, dan pemeriksaan Cursor masih terbuka.

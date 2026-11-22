@@ -1,17 +1,18 @@
-<dialog id="box">
-<form id="form">
-<h2>Titip ke Mimi ♡</h2>
-<label>Judul titipan<input id="judul" required maxlength="100" placeholder="Misalnya, ambil jahitan">
-</label>
-<label>Catatan<textarea id="isi" placeholder="Tulis seadanya, yaa" rows="3">
-</textarea>
-</label>
-<label>Masuk agenda kapan? <small>(boleh kosong)</small>
-<input id="waktu" type="datetime-local">
-</label>
-<div class="row">
-<button type="button" id="cancel">Batal</button>
-<button class="primary">Simpan titipan</button>
-</div>
-</form>
+<dialog id="box" aria-labelledby="capture-title">
+  <form id="form">
+    <h2 id="capture-title">Titip ke Mimi ♡</h2>
+    <label>Jenis titipan
+      <select id="jenis"><option value="note">Catatan</option><option value="account">Akun digital</option><option value="agenda">Agenda</option></select>
+    </label>
+    <label><span id="title-label">Judul catatan</span><input id="judul" required maxlength="100"></label>
+    <fieldset id="account-fields" hidden>
+      <legend>Petunjuk masuk</legend>
+      <label>Email atau label akun<input id="identity" maxlength="160" placeholder="Misalnya, akun kampus" autocomplete="off"></label>
+      <label>Cara masuk<select id="method"><option>Google</option><option>Email dan kata sandi</option><option>Apple</option><option>Nomor HP</option><option>Lainnya</option></select></label>
+      <p>Demo ini menyimpan petunjuk di browser ini. Simpan kata sandi, PIN, dan kode pemulihan di pengelola kata sandimu.</p>
+    </fieldset>
+    <label id="note-field">Catatan<textarea id="isi" placeholder="Tulis seadanya, yaa" rows="3"></textarea></label>
+    <label id="date-field"><span id="date-label">Ingatkan kapan? (boleh kosong)</span><input id="waktu" type="datetime-local"></label>
+    <div class="row"><button type="button" id="cancel" class="quiet">Batal</button><button class="primary">Simpan titipan</button></div>
+  </form>
 </dialog>
