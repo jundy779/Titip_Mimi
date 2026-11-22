@@ -1,4 +1,5 @@
 import { calendarButton, readCalendar } from './calendar.js';
+import { nextReminder } from './reminders.mjs';
 import { localDay } from './day.ts';
 function addImport(card){
   const input=document.createElement('input');
@@ -58,11 +59,16 @@ function capture(kind, item = null){
 }
 el('jenis').onchange = configureForm;
 function list(target,rows){target.replaceChildren();if(!rows.length)target.append(make('p',tab==='Koleksi'?'Belum ada titipan yang cocok.':'Belum ada agenda di sini ♡'));for(const x of rows){const a=make('article','');a.className='entry';a.append(make('b',x.title),make('p',x.note));if(x.time){a.append(make('p',x.allDay?x.time.slice(0,10)+' · Seharian':new Date(x.time).toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short'})));const b=make('button',x.done?'Sudah selesai · Batalkan':'Tandai selesai');b.onclick=()=>{if(save(items.map(i=>i===x?{...i,done:!i.done}:i)))render()};a.append(b,calendarButton(x))}target.append(a)}}
-function render(){document.body.dataset.page=tab;const nav=document.querySelector('nav');nav.replaceChildren();for(const name of names){const b=make('button',name);if(name===tab){b.className='active';b.setAttribute('aria-current','page')};b.onclick=()=>{tab=name;el('notice').textContent='';render()};nav.append(b)}
-const p=el('page');p.replaceChildren();if(tab==='Profil'){p.innerHTML='<section class="card"><h2>Profil Iqlima</h2><p>Ini ruang coba Iqlima. Titipan disimpan di browser ini.</p><p>Di versi lengkap, kamu bisa masuk dengan Google dan menghubungkan Telegram di sini.</p></section>';
+function render(){refreshReminder();document.body.dataset.page=tab;const nav=document.querySelector('nav');nav.replaceChildren();for(const name of names){const b=make('button',name);if(name===tab){b.className='active';b.setAttribute('aria-current','page')};b.onclick=()=>{tab=name;el('notice').textContent='';render()};nav.append(b)}
+const p=el('page');p.replaceChildren();if(tab==='Profil'){p.innerHTML='<section class="card"><h2>Profil Iqlima</h2><p>Ini ruang coba Iqlima. Titipan disimpan di browser ini.</p><p>Pengingat muncul selama halaman ini terbuka.</p></section>';
  const choice = document.querySelector('#theme-choice').content.cloneNode(true);
  choice.querySelector('select').value = document.documentElement.dataset.preference || 'system';
  p.querySelector('.card').append(choice);
+ const links=make('section','');links.className='card';
+ links.append(make('h2','Koneksi Mimi'),make('h3','Google Kalender · Manual'),make('p','Ambil file kalender atau kirim agenda dari menu Agenda. Sinkronisasi otomatis belum aktif.'));
+ const go=make('button','Buka Agenda');go.onclick=()=>{tab='Agenda';render()};
+ links.append(go,make('h3','Telegram · Belum terhubung'),make('p','Penautan Telegram dan kiriman foto akan tersedia saat layanan akun aktif.'));
+ p.append(links);
  return}
 if(tab==='Hari Ini'){home(p);return}
 const card=make('section','');card.className='card';card.append(make('h2',tab==='Hari Ini'?'Agenda hari ini':tab));p.append(card);if(tab==="Agenda")addImport(card);let filter;if(tab==='Koleksi'){filter=document.createElement('input');filter.type='search';filter.placeholder='Cari titipan';filter.setAttribute('aria-label','Cari titipan');filter.value=search;card.append(filter);
@@ -119,10 +125,28 @@ el('form').onsubmit = event => {
   if(account && !identity){el('identity').focus();return}
   const entry = {...editing,kind,title,note:account?'':el('isi').value.trim(),
     time:account?'':el('waktu').value,done:editing?.done || false};
+  if(editing && editing.time !== entry.time)delete entry.snoozeUntil;
   if(account)Object.assign(entry,{identity,method:el('method').value});
   if(!save(editing ? items.map(item=>item===editing?entry:item) : [entry,...items]))return;
   el('box').close();
   tab='Koleksi';selectedKind=kind;search='';render();
   el('notice').textContent='Udah Mimi simpan di Koleksi ♡';
 };
+let shown;
+function refreshReminder(){
+  const due=nextReminder(items);
+  if(due!==shown){
+    shown=due;
+    el('due-title').textContent=due?.title || '';
+  }
+  el('reminder').hidden=!due;
+}
+function respond(patch){
+  if(shown && save(items.map(item=>item===shown?{...item,...patch}:item)))render();
+}
+el('due-open').onclick=()=>{if(shown)detail(shown)};
+el('due-snooze').onclick=()=>respond({snoozeUntil:Date.now()+600000});
+el('due-done').onclick=()=>respond({done:true,snoozeUntil:0});
+setInterval(refreshReminder,5000);
+document.addEventListener('visibilitychange',refreshReminder);
 render();

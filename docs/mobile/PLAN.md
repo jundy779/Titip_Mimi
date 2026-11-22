@@ -16,3 +16,5 @@ Target pertama adalah Iqlima bisa membuka titipan yang sama dari HP dan web, ter
 **Pemilik.** Codex/ChatGPT mengerjakan frontend Flutter, perilaku Mimi dan UI/UX. Claude menyiapkan endpoint, data serta penautan akun. Cursor memeriksa build dan alur gabungan dari HP sampai pengiriman bot. Aplikasi Flutter, pengiriman Telegram dan rilis toko adalah tahap implementasi berikutnya; paket ini menyediakan rencana dan artwork statis.
 
 Tema Flutter memakai Material 3. Petakan ColorScheme, TextTheme, NavigationBarTheme dan InputDecorationTheme mengikuti [aturan komponen](../DESIGN.md) dan [token v1](../../design/tokens.json). Pada tahap Flutter lokal, bandingkan Hari Ini dan form titipan dengan panduan web pada ukuran ponsel.
+
+Implementasi tahap 1 tersedia di [mobile](../../mobile/README.md). Flutter sudah memakai Riverpod, GoRouter, tema perangkat, penyimpanan lokal dan pengingat selama aplikasi terbuka. Bukti uji dan batas verifikasi tercatat di [QA](../QA.md).

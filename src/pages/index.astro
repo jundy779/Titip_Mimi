@@ -17,6 +17,11 @@ import CaptureDialog from '../components/CaptureDialog.astro';
   <body>
     <header><strong><img src="bow.webp" alt="">Ruang Iqlima</strong><nav aria-label="Menu utama"></nav></header>
     <main>
+      <aside id="reminder" class="card" hidden aria-labelledby="reminder-heading">
+        <img src="/remind.webp" width="72" height="72" alt="" />
+        <div><h2 id="reminder-heading">Mimi mau ingetin ♡</h2><p id="due-title" role="status"></p>
+        <div class="chips"><button id="due-open" class="quiet">Lihat titipan</button><button id="due-snooze">Tunda 10 menit</button><button id="due-done" class="primary">Sudah selesai</button></div></div>
+      </aside>
       <div id="page"><Today /></div>
       <p id="notice" role="status"></p>
     </main>

@@ -48,3 +48,7 @@ button.chip[aria-pressed=true] {background:var(--mimi-primary-container);color:v
 #box [hidden] {display:none}
 .note-body {white-space:pre-wrap;overflow-wrap:anywhere}
 .tile small {display:block;padding:0 5px 5px;overflow-wrap:anywhere}
+#reminder:not([hidden]) {display:flex;align-items:flex-start;gap:12px}
+#reminder h2,#reminder p {margin:0}
+#reminder img {object-fit:contain}
+@media(max-width:480px){#reminder img{width:44px;height:44px}}
