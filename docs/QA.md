@@ -44,3 +44,5 @@ Revisi halaman planner diuji dengan Chrome desktop: buka Profil, pilih Gelap, bu
 Sakelar Mode gelap di Profil diuji di Chrome dengan klik dan tombol spasi. Pilihan gelap bertahan setelah muat ulang. Opsi Ikuti perangkat dapat diaktifkan kembali. Build Astro lulus.
 
 Tema web dua pilihan diuji pada hasil build Astro. Tema awal dan preferensi lama system membuka tampilan terang, pilihan manual dipulihkan dan sakelar menyimpan perubahan.
+
+Beranda berilustrasi diuji di Chrome desktop: ketiga pintasan membuka jenis formulir yang tepat dan bisa dibatalkan. Build Astro lulus. Perangkat fisik belum diuji untuk revisi ini.

@@ -297,10 +297,22 @@ function home(p){
  p.replaceChildren(document.querySelector('#today-template').content.cloneNode(true));
  p.querySelector('.date').textContent=today.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long'});
  p.querySelector('.quick').onclick=()=>capture(tab==='Agenda'?'agenda':tab==='Koleksi'&&selectedKind?selectedKind:'note');
- const first=items.filter(x=>x.time.startsWith(day)&&!x.done).sort((a,b)=>a.time.localeCompare(b.time))[0];
+ for(const shortcut of p.querySelectorAll('[data-capture-kind]')){
+   shortcut.onclick=()=>capture(shortcut.dataset.captureKind);
+ }
+ const scheduled=items.filter(item=>item.time?.startsWith(day));
+ const progress=p.querySelector('.day-progress');
+ if(scheduled.length){
+   const completed=scheduled.filter(item=>item.done).length;
+   progress.hidden=false;
+   progress.querySelector('p').textContent=completed+' dari '+scheduled.length+' selesai';
+   const bar=progress.querySelector('progress');
+   bar.max=scheduled.length;bar.value=completed;
+ }
+ const first=scheduled.filter(x=>!x.done).sort((a,b)=>a.time.localeCompare(b.time))[0];
  const next=p.querySelector('.next');
  if(first){const info=make('div','');info.append(make('small',first.allDay?'Seharian':first.time.slice(11,16)),make('h3',first.title));next.append(info);
- const open=make('button',art(first)?'Lihat nota':'Lihat agenda');if(art(first)){const img=new Image();img.src=art(first);img.alt='';open.prepend(img)}open.onclick=()=>detail(first);next.append(open)}else next.append(make('p','Semua agenda hari ini sudah beres ♡'));
+ const open=make('button',art(first)?'Lihat nota':'Lihat agenda');if(art(first)){const img=new Image();img.src=art(first);img.alt='';open.prepend(img)}open.onclick=()=>detail(first);next.append(open)}else next.append(make('p',scheduled.length?'Semua agenda hari ini sudah beres ♡':'Belum ada agenda hari ini.'));
  p.querySelector('.all').onclick=()=>{tab='Koleksi';selectedKind='';search='';render()};
  gallery(p.querySelector('.previews'),items.slice(0,2).reverse())
 }

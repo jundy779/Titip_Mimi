@@ -255,3 +255,45 @@ dialog::backdrop { background: rgb(43 23 38 / .52); }
   .collection-item:hover { border-color: var(--mimi-primary); }
   .room-menu nav button:not(.active):hover { background: color-mix(in srgb,var(--mimi-primary) 7%,transparent); }
 }
+
+.journal {
+  grid-template-areas: 'intro intro' 'actions actions' 'agenda shelf';
+  align-items: stretch;
+}
+.journal .intro {
+  position: relative; isolation: isolate; overflow: hidden; width: 100%;
+  display: grid; grid-template-columns: minmax(0,1fr) minmax(5rem,30%);
+  align-items: center; align-content: center; justify-items: start;
+  text-align: left; padding: clamp(1.25rem,3.5vw,3rem); gap: .85rem 1rem;
+  background: #63354f; color: #fff6ef;
+}
+.journal .intro::before {
+  content: ''; position: absolute; z-index: -1; right: -8%; top: -38%;
+  width: 44%; aspect-ratio: 1; border-radius: 50%; background: #ffffff09;
+  box-shadow: 0 0 0 1.4rem #ffffff08,0 0 0 3rem #ffffff06;
+}
+.journal .intro h1 { font-size: clamp(2rem,4.8vw,4.5rem); margin: .25rem 0 0; }
+.journal .intro .date { color: #ffe2e9; }
+.journal .intro .quick { background: #ffd6df; color: #52243c; }
+.welcome-art { grid-column: 2; grid-row: 1/3; width: 100%; max-width: 12rem; height: auto; justify-self: center; }
+.journal-actions { grid-area: actions; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: clamp(.45rem,1.5vw,1rem); }
+.journal-actions button {
+  --wash: #ffe3ea; display: flex; align-items: center; justify-content: center; gap: .6rem;
+  background: var(--wash); color: #412d38; border-radius: 18px;
+  font-weight: 650; padding: .65rem; line-height: 1.25;
+}
+.journal-actions [data-capture-kind=agenda] { --wash: #e0ece5; }
+.journal-actions [data-capture-kind=account] { --wash: #e9e2f4; }
+.journal-actions img { width: clamp(2.75rem,5vw,4rem); height: auto; }
+:root[data-theme=dark] .journal-actions button { background: color-mix(in srgb,var(--wash) 16%,var(--mimi-surface)); color: var(--ink); }
+.day-progress { margin-top: 1.2rem; }
+.day-progress p { color: var(--mimi-on-surface-variant); font-size: .875rem; margin: 0 0 .35rem; }
+.day-progress progress { display: block; width: 100%; height: .45rem; accent-color: var(--mimi-primary); }
+@media(max-width:600px) {
+  .journal .intro { grid-template-columns: minmax(0,1fr) 31%; }
+  .journal-actions button { flex-direction: column; gap: .2rem; font-size: .875rem; }
+}
+@media(hover:hover) and (prefers-reduced-motion:no-preference) {
+  .journal-actions img { transition: transform 180ms ease-out; }
+  .journal-actions button:hover img { transform: translateY(-3px) rotate(-3deg); }
+}

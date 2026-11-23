@@ -1,13 +1,31 @@
-<div class="spread">
+---
+import { Image } from 'astro:assets';
+import welcome from '../../assets/mimi/v1/welcome.webp';
+import write from '../../assets/mimi/v1/write.webp';
+import planner from '../../assets/mimi/v1/planner.webp';
+import privacy from '../../assets/mimi/v1/privacy.webp';
+const shortcuts = [
+  {kind:'note', label:'Tulis catatan', art:write},
+  {kind:'agenda', label:'Buat agenda', art:planner},
+  {kind:'account', label:'Simpan akun', art:privacy}
+];
+---
+<div class="spread journal">
   <section class="intro">
     <div class="greeting"><p class="date"></p><h1>Hai, Iqlima ♡</h1></div>
-    <picture>
-      <source media="(max-width:959px)" srcset="peek.webp" />
-      <img src="mimi.webp" alt="Mimi dengan pita stroberi" fetchpriority="high" />
-    </picture>
+    <Image class="welcome-art" src={welcome} width={260} height={260} alt="Mimi menyapa Iqlima" fetchpriority="high" />
     <button class="primary quick">Titip sesuatu</button>
   </section>
-  <section class="sheet agenda"><h2>Agenda hari ini</h2><div class="next"></div></section>
+  <section class="sheet agenda">
+    <h2>Agenda hari ini</h2>
+    <div class="next"></div>
+    <div class="day-progress" hidden><p></p><progress aria-label="Agenda hari ini yang sudah selesai"></progress></div>
+  </section>
+  <div class="journal-actions" role="group" aria-label="Pintasan titipan">
+    {shortcuts.map(({kind,label,art}) => <button type="button" data-capture-kind={kind}>
+      <Image src={art} width={88} height={88} alt="" /><span>{label}</span>
+    </button>)}
+  </div>
   <section class="sheet shelf">
     <div class="row"><h2>Koleksi</h2><button class="all">Lihat semua</button></div>
     <div class="previews"></div>
