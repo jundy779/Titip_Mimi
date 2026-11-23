@@ -190,7 +190,7 @@ function collection(page){
   preview.onchange=()=>{confirm.disabled=!preview.querySelector(':checked')};
   confirm.onclick=()=>{
     const chosen=Array.from(preview.querySelectorAll(':checked'),check=>candidates[Number(check.value)]);
-    if(!chosen.length || !save([...chosen,...items]))return;
+    if(!chosen.length || !save([...chosen.map(card=>recordEvent(card,'Diimpor')),...items]))return;
     clearPreview();importer.open=false;field.value='';refresh();
     el('notice').textContent=chosen.length+' kartu akun sudah Mimi simpan.';
   };
@@ -239,6 +239,49 @@ function art(x){
  if(x.title==='Undangan syukuran')return 'invite.webp';
  return '';
 }
+function recordEvent(card, label){
+  return {...card,history:[...(card.history || []),{label,at:new Date().toISOString()}]};
+}
+function ask(title, description, action){
+  return new Promise(resolve=>{
+    const box=document.createElement('dialog');
+    box.setAttribute('aria-label',title);
+    const cancel=make('button','Batal');
+    cancel.autofocus=true;
+    cancel.onclick=()=>box.close();
+    const accept=make('button',action);
+    accept.onclick=()=>box.close('yes');
+    box.append(make('h2',title),make('p',description),cancel,accept);
+    document.body.append(box);
+    box.onclose=()=>{box.remove();resolve(box.returnValue==='yes')};
+    box.showModal();
+  });
+}
+function accountActions(dlg,card){
+  const history=card.history || [];
+  dlg.append(make('h3','Riwayat akun'));
+  if(!history.some(event=>['Ditambahkan','Diimpor'].includes(event.label))){
+    dlg.append(make('p','Tanggal ditambahkan belum tercatat.'));
+  }
+  for(const event of history.slice().reverse()){
+    const date=new Date(event.at).toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short'});
+    dlg.append(make('p',event.label+' · '+date));
+  }
+  const identity=card.title+' · '+card.identity;
+  const changed=make('button','Aku baru ganti sandi');
+  changed.onclick=async()=>{
+    if(!await ask('Catat perubahan sandi?',identity,'Catat'))return;
+    const updated=recordEvent(card,'Ganti sandi dicatat');
+    if(save(items.map(item=>item===card?updated:item))){dlg.close();render();detail(updated)}
+  };
+  const remove=make('button','Hapus kartu akun');
+  remove.onclick=async()=>{
+    if(!await ask('Hapus kartu akun ini?',identity,'Lanjutkan'))return;
+    if(!await ask('Yakin hapus dari Mimi?',identity+'. Kartu dan riwayatnya akan dihapus. Akun di layanan asal tetap aktif.','Ya, hapus kartu'))return;
+    if(save(items.filter(item=>item!==card))){dlg.close();render();el('notice').textContent='Kartu akun sudah dihapus dari Mimi.'}
+  };
+  dlg.append(changed,remove);
+}
 function detail(x){
  const dlg=document.createElement('dialog');
  dlg.className='item-detail';
@@ -246,7 +289,7 @@ function detail(x){
  dlg.append(title);
  if(art(x)){const img=new Image();img.src=art(x);img.alt=x.title;img.className='full';dlg.append(img)}
  dlg.setAttribute('aria-label',x.title);
- if(kindOf(x)==='account')dlg.append(make('p',x.identity),make('p','Cara masuk: '+x.method));
+ if(kindOf(x)==='account'){dlg.append(make('p',x.identity),make('p','Cara masuk: '+x.method));accountActions(dlg,x)}
  else {const note=make('p',x.note);note.className='note-body';dlg.append(note)}
  if(!x.icsId){const edit=make('button','Ubah');edit.onclick=()=>{dlg.close();capture(kindOf(x),x)};dlg.append(edit)}
  if(x.time){dlg.append(make('p',new Date(x.time).toLocaleString('id-ID')));
@@ -280,10 +323,14 @@ el('form').onsubmit = event => {
   const account = kind === 'account';
   const identity = el('identity').value.trim();
   if(account && !identity){el('identity').focus();return}
-  const entry = {...editing,kind,title,note:account?'':el('isi').value.trim(),
+  let entry = {...editing,kind,title,note:account?'':el('isi').value.trim(),
     time:account?'':el('waktu').value,done:editing?.done || false};
   if(editing && editing.time !== entry.time)delete entry.snoozeUntil;
   if(account)Object.assign(entry,{identity,method:el('method').value});
+  if(account){
+    if(!editing)entry=recordEvent(entry,'Ditambahkan');
+    else if(['title','identity','method'].some(k=>entry[k]!==editing[k]))entry=recordEvent(entry,'Diedit');
+  }
   if(!save(editing ? items.map(item=>item===editing?entry:item) : [entry,...items]))return;
   el('box').close();
   tab=kind==='agenda'?'Agenda':'Koleksi';selectedKind=kind;search='';render();

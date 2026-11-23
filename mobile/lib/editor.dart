@@ -72,18 +72,27 @@ class _EditorState extends State<EntryEditor> {
     });
     final old = widget.entry;
     try {
-      await widget.save(
-        Entry(
-          id: old?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
-          kind: kind,
-          title: title.text.trim(),
-          body: body.text.trim(),
-          method: method,
-          time: kind == 'Akun' ? null : time,
-          snooze: old?.time == time ? old?.snooze : null,
-          done: old?.done ?? false,
-        ),
+      var entry = Entry(
+        id: old?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+        kind: kind,
+        title: title.text.trim(),
+        body: body.text.trim(),
+        method: method,
+        time: kind == 'Akun' ? null : time,
+        snooze: old?.time == time ? old?.snooze : null,
+        done: old?.done ?? false,
+        history: old?.history ?? const [],
       );
+      if (kind == 'Akun') {
+        if (old == null) {
+          entry = entry.record('Ditambahkan');
+        } else if (old.title != entry.title ||
+            old.body != entry.body ||
+            old.method != entry.method) {
+          entry = entry.record('Diedit');
+        }
+      }
+      await widget.save(entry);
       if (mounted) {
         if (time != null && kind != 'Akun') {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -233,4 +242,9 @@ class _EditorState extends State<EntryEditor> {
 String stamp(BuildContext context, DateTime date) {
   final local = MaterialLocalizations.of(context);
   return '${local.formatMediumDate(date)} · ${local.formatTimeOfDay(TimeOfDay.fromDateTime(date), alwaysUse24HourFormat: true)}';
+}
+
+String historyStamp(BuildContext context, DateTime date) {
+  final local = MaterialLocalizations.of(context);
+  return '${local.formatFullDate(date)} · ${local.formatTimeOfDay(TimeOfDay.fromDateTime(date), alwaysUse24HourFormat: true)}';
 }

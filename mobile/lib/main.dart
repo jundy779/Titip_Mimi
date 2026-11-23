@@ -31,9 +31,13 @@ class Entries extends StateNotifier<List<Entry>> {
       );
   final SharedPreferences prefs;
   Future<void> _tail = Future.value();
-  Future<void> put(Entry item) {
+  Future<void> put(Entry item) =>
+      _write(() => [item, ...state.where((e) => e.id != item.id)]);
+  Future<void> remove(String id) =>
+      _write(() => state.where((e) => e.id != id).toList());
+  Future<void> _write(List<Entry> Function() change) {
     final operation = _tail.then((_) async {
-      final next = [item, ...state.where((e) => e.id != item.id)];
+      final next = change();
       if (!await prefs.setString(
         'entries',
         jsonEncode(next.map((e) => e.toJson()).toList()),
@@ -175,6 +179,80 @@ class _RoomState extends ConsumerState<Room> {
     }
   }
 
+  Future<bool> confirmAccount(String title, String body, String action) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (dialog) => AlertDialog(
+            title: Text(title),
+            content: Text(body),
+            actions: [
+              TextButton(
+                autofocus: true,
+                onPressed: () => Navigator.pop(dialog, false),
+                child: const Text('Batal'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(dialog, true),
+                child: Text(action),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  Future<void> accountAction(
+    BuildContext sheet,
+    Entry entry, {
+    required bool remove,
+  }) async {
+    final identity = '${entry.title} · ${entry.body}';
+    if (!await confirmAccount(
+          remove ? 'Hapus kartu akun ini?' : 'Catat perubahan sandi?',
+          identity,
+          remove ? 'Lanjutkan' : 'Catat',
+        ) ||
+        !mounted ||
+        !sheet.mounted) {
+      return;
+    }
+    if (remove &&
+        !await confirmAccount(
+          'Yakin hapus dari Mimi?',
+          '$identity. Kartu dan riwayatnya akan dihapus. Akun di layanan asal tetap aktif.',
+          'Ya, hapus kartu',
+        )) {
+      return;
+    }
+    if (!mounted || !sheet.mounted) return;
+    final store = ref.read(entriesProvider.notifier);
+    final updated = remove ? null : entry.record('Ganti sandi dicatat');
+    try {
+      if (updated == null) {
+        await store.remove(entry.id);
+      } else {
+        await store.put(updated);
+      }
+      if (!mounted || !sheet.mounted) return;
+      Navigator.pop(sheet);
+      if (updated != null) {
+        detail(updated);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Kartu akun sudah dihapus dari Mimi.')),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Perubahan belum tersimpan. Coba lagi, ya.'),
+          ),
+        );
+      }
+    }
+  }
+
   void detail(Entry e) {
     showModalBottomSheet<void>(
       context: context,
@@ -189,7 +267,33 @@ class _RoomState extends ConsumerState<Room> {
             Text(e.kind),
             Text(e.title, style: Theme.of(context).textTheme.headlineSmall),
             SelectableText(e.body),
-            if (e.kind == 'Akun') Text('Cara masuk: ${e.method}'),
+            if (e.kind == 'Akun') ...[
+              Text('Cara masuk: ${e.method}'),
+              Text(
+                'Riwayat akun',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              if (!e.history.any(
+                (event) => ['Ditambahkan', 'Diimpor'].contains(event['label']),
+              ))
+                const Text('Tanggal ditambahkan belum tercatat.'),
+              for (final event in e.history.reversed)
+                Text(
+                  "${event['label']} · ${historyStamp(context, DateTime.parse(event['at']!).toLocal())}",
+                ),
+              Wrap(
+                children: [
+                  OutlinedButton(
+                    onPressed: () => accountAction(sheet, e, remove: false),
+                    child: const Text('Aku baru ganti sandi'),
+                  ),
+                  TextButton(
+                    onPressed: () => accountAction(sheet, e, remove: true),
+                    child: const Text('Hapus kartu akun'),
+                  ),
+                ],
+              ),
+            ],
             if (e.time != null) Text(stamp(context, e.time!)),
             Wrap(
               spacing: 8,
