@@ -51,7 +51,10 @@ class JournalHeading extends StatelessWidget {
             title,
             style: Theme.of(
               context,
-            ).textTheme.headlineSmall?.copyWith(fontFamily: 'serif'),
+            ).textTheme.headlineSmall?.copyWith(
+              fontFamily: 'serif',
+              fontSize: MediaQuery.sizeOf(context).width <= 600 ? 18 : null,
+            ),
           ),
         ),
       ],

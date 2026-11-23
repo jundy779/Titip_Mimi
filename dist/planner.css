@@ -361,3 +361,17 @@ body[data-page], body.design-guide {
 body > dialog { border:1px solid var(--line); border-top:7px solid var(--tab-wash,var(--mimi-journal-rose)); background:var(--mimi-surface-container); color:var(--ink); }
 body > dialog h2 { line-height:1.15; overflow-wrap:anywhere; }
 #reminder:not([hidden]) { border-inline-start:5px solid var(--mimi-primary); }
+
+@media (max-width: 600px) {
+  .journal .intro h1, .journal-heading h1 {
+    font-size: 1.125rem;
+    line-height: 1.3;
+    letter-spacing: -.015em;
+  }
+  .sheet h2, .card h2, body > dialog h2 {
+    font-size: 1rem;
+    line-height: 1.35;
+  }
+  .heading-label { gap: .5rem; }
+  .heading-label img { width: 2.25rem; }
+}

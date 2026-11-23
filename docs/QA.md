@@ -52,3 +52,5 @@ Tampilan kertas petak, kartu pemandangan dan stiker beranda diperiksa pada Chrom
 Jurnal Mimi v1.2: build Astro lulus. Di Chrome desktop, Koleksi, Agenda dan Profil bisa dibuka, sakelar Mode gelap bekerja dan kartu Koleksi tampil dalam tema gelap. Pemeriksaan visual ponsel fisik masih terbuka.
 
 Flutter: formatter Dart berhasil membaca source yang berubah. Build perangkat dan widget test revisi ini belum terverifikasi.
+
+Tipografi ringkas ponsel: build Astro lulus. Pemeriksaan pada perangkat fisik belum dilakukan.

@@ -507,7 +507,7 @@ class _RoomState extends ConsumerState<Room> {
                       children: [
                         JournalHeading(
                           [
-                            'Hai, Iqlima ♡',
+                            'Hai, Iqlima\u00a0♡',
                             'Koleksi',
                             'Agenda',
                             'Profil Iqlima',

@@ -31,7 +31,7 @@ Untuk layar dan keadaan baru, gunakan [koleksi Mimi v1](../assets/mimi/v1/README
 
 | Elemen | Aturan Titip Mimi |
 |---|---|
-| Sapaan dan judul | Serif mengikuti web. Headline acuan 32, judul bagian 24. Sapaan beranda boleh membesar mengikuti ruang. |
+| Sapaan dan judul | Serif mengikuti web. Pada ponsel hingga 600 px, sapaan dan judul halaman memakai 18 px pada ukuran teks bawaan. Judul bagian web memakai 16 px. Hati mengikuti nama Iqlima ketika teks membungkus. Pada layar lebih lebar, judul dapat membesar mengikuti ruang. |
 | Isi, form dan aksi | Sans sistem, isi 16, label 14. Izinkan teks membesar dan membungkus. |
 | Jarak | Satuan 4, 8, 12, 16, 24, 32. Gunakan 8 untuk elemen terkait, 16 untuk tepi HP, 24 untuk kelompok. |
 | Bentuk | Kolom masukan radius 12, kartu 24, aksi utama berbentuk pil. Garis jahitan dan tekstur kertas untuk panel dekoratif. |
