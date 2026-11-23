@@ -7,7 +7,7 @@ function addImport(card){
   input.type='file';input.accept='.ics,text/calendar';input.hidden=true;
   const button=make('button','Ambil dari Google Kalender');
   const hint=make('p','Pilih file .ics hasil ekspor Google Kalender. Mimi bisa mengambil acara satu kali dan acara seharian.');
-  card.append(button,hint,input);
+  card.append(hint,button,input);
   button.onclick=()=>input.click();
   input.onchange=async()=>{
     try {
@@ -84,7 +84,12 @@ function agendaList(target,rows){
     else if(date===tomorrowKey)group='Besok';
     sections.get(group).push(item);
   }
-  if(!rows.length)target.append(make('p','Belum ada agenda di sini ♡'));
+  if(!rows.length){
+    const empty=make('div','');empty.className='collection-empty';
+    const mascot=new Image(96,96);mascot.src='remind.webp';mascot.alt='';
+    empty.append(mascot,make('h2','Belum ada agenda'),make('p','Pilih Tambah agenda untuk menentukan hari dan jamnya.'));
+    target.append(empty);
+  }
   for(const [name,entries] of sections){
     if(!entries.length)continue;
     const completed=name==='Selesai';
@@ -98,7 +103,9 @@ function agendaList(target,rows){
       const open=make('button',item.title);open.className='agenda-title';open.onclick=()=>detail(item);
       const toggle=make('button',item.done?'Batalkan selesai':'Tandai selesai');
       toggle.onclick=()=>{if(save(items.map(x=>x===item?{...x,done:!x.done}:x)))render()};
-      article.append(make('small',time),open,toggle,calendarButton(item));
+      const actions=make('div','');actions.className='agenda-actions';
+      actions.append(toggle,calendarButton(item));
+      article.append(make('small',time),open,actions);
       section.append(article);
     }
     target.append(section);
@@ -112,29 +119,18 @@ for(const button of nav.children){
   button.classList.toggle('active',active);
   if(active)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');
 }
-const p=el('page');p.replaceChildren();if(tab==='Profil'){p.innerHTML='<section class="card"><h2>Profil Iqlima</h2><p>Ini ruang coba Iqlima. Titipan disimpan di browser ini.</p><p>Pengingat muncul selama halaman ini terbuka.</p></section>';
- const choice = document.querySelector('#theme-choice').content.cloneNode(true);
- choice.querySelector('select').value = document.documentElement.dataset.preference || 'system';
- p.querySelector('.card').append(choice);
- const links=make('section','');links.className='card';
- links.append(make('h2','Koneksi Mimi'),make('h3','Google Kalender · Manual'),make('p','Ambil file kalender atau kirim agenda dari menu Agenda. Sinkronisasi otomatis belum aktif.'));
- const go=make('button','Buka Agenda');go.onclick=()=>{tab='Agenda';render()};
- links.append(go,make('h3','Telegram · Belum terhubung'),make('p','Penautan Telegram dan kiriman foto akan tersedia saat layanan akun aktif.'));
- p.append(links);
- return}
+const p=el('page');p.replaceChildren();if(tab==='Profil'){
+  p.append(el('profile-template').content.cloneNode(true));
+  p.querySelector('[data-theme-choice]').value=document.documentElement.dataset.preference || 'system';
+  p.querySelector('[data-open-agenda]').onclick=()=>{tab='Agenda';render()};
+  return;
+}
 if(tab==='Hari Ini'){home(p);return}
 if(tab==='Koleksi'){collection(p);return}
-const card=make('section','');
-card.className='card';
-card.append(make('h2','Agenda'));
-p.append(card);
-addImport(card);
-const add=make('button','Titip sesuatu');
-add.className='primary';
-add.onclick=()=>capture('agenda');
-const results=make('div','');
-card.append(add,results);
-agendaList(results,items.filter(item=>item.time).sort((a,b)=>a.time.localeCompare(b.time)));
+p.append(el('agenda-template').content.cloneNode(true));
+addImport(p.querySelector('[data-calendar-import]'));
+p.querySelector('[data-add]').onclick=()=>capture('agenda');
+agendaList(p.querySelector('[data-schedule]'),items.filter(item=>item.time).sort((a,b)=>a.time.localeCompare(b.time)));
 }
 
 function collection(page){

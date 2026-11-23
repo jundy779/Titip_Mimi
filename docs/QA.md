@@ -38,3 +38,5 @@ Agenda web dan Flutter memakai tanggal lokal untuk grup Terlewat, Hari ini, Beso
 Impor metadata akun tersedia di Koleksi > Akun pada web. Build Astro dan uji CSV fiktif lulus untuk BOM, CRLF, kolom berkutip, koma dan baris baru, fallback hostname, duplikat saat impor ulang, serta penolakan CSV rusak. Objek hasil uji hanya berisi petunjuk akun dan tidak memuat kata sandi, catatan bebas, atau query URL. Impor Flutter dan pengiriman ke brankas eksternal belum tersedia.
 
 Navigasi web diperiksa di Chrome desktop. Hari Ini, Koleksi, Agenda dan Profil bisa dibuka bergantian. Keempat tombol memperbarui aria-current. Build Astro lulus. Tampilan perangkat fisik belum diuji pada revisi ini.
+
+Revisi halaman planner diuji dengan Chrome desktop: buka Profil, pilih Gelap, buka Agenda, buka dan batalkan formulir, pindah ke Koleksi, buka detail catatan. Build Astro lulus. Belum ada verifikasi perangkat fisik atau pengukuran frame animasi.

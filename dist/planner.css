@@ -203,3 +203,43 @@ button.agenda-title {display:block;background:transparent;color:var(--mimi-on-su
 @media (max-width: 600px) {
   .room-menu nav button { flex-direction: column; gap: .2rem; padding: .35rem .15rem; font-size: .875rem; }
 }
+
+.page-frame { max-width: 74rem; margin-inline: auto; }
+.page-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: clamp(1.25rem,3vw,2.25rem); }
+.page-heading h1 { font: 600 clamp(2.25rem,4vw,3.6rem)/1.1 Georgia,serif; letter-spacing: -.045em; margin: 0; }
+.planner-columns { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(15rem,1fr); align-items: start; gap: clamp(1rem,2vw,2rem); }
+.planner-columns .sheet { min-width: 0; }
+.planner-columns p { color: var(--mimi-on-surface-variant); max-width: 56ch; }
+.timeline .agenda-group:first-child { margin-top: 0; }
+.agenda-group h3 { color: var(--mimi-primary); margin: 0 0 1rem; font-size: 1rem; }
+.timeline .entry { margin-inline-start: .3rem; position: relative; border: 0; border-inline-start: 2px solid var(--line); padding: 0 0 1.25rem 1.2rem; }
+.timeline .entry:last-child { padding-bottom: .25rem; }
+.timeline .entry::before { content: ''; position: absolute; top: .38rem; left: -5px; width: 8px; height: 8px; border-radius: 50%; background: var(--mimi-primary); }
+.agenda-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.agenda-actions :is(button,a) { margin: 0; font-size: .875rem; }
+.preferences { overflow: hidden; }
+.profile-mimi { display: block; width: 8rem; height: 4rem; object-fit: contain; margin: 0 0 1.25rem; border-radius: 1rem; }
+.preferences .theme-choice, .connections > div { border-top: 1px solid var(--line); margin-top: 1.25rem; padding-top: 1rem; }
+.preferences select { width: 100%; margin-top: .5rem; }
+.connections h3 { font: 600 1.12rem/1.35 system-ui,sans-serif; margin: 0; }
+.collection-tools { border-top: 0; padding-top: 0; }
+.collection-tools input { min-height: 3rem; padding-inline: 1rem; }
+.collection-results { grid-template-columns: repeat(auto-fill,minmax(min(100%,17rem),1fr)); }
+.collection-empty { padding-block: 2rem; }
+.intro { background: color-mix(in srgb,var(--mimi-primary) 6%,var(--mimi-surface-container)); border-radius: var(--mimi-radius-card); padding: clamp(1rem,2vw,2rem); }
+#form > .row { border-top: 1px solid var(--line); margin-top: 1rem; padding-top: .75rem; }
+dialog::backdrop { background: rgb(43 23 38 / .52); }
+@media(max-width:740px) { .planner-columns { grid-template-columns: minmax(0,1fr); } }
+@media(prefers-reduced-motion:no-preference) {
+  .page-frame { animation: unfold-page 230ms cubic-bezier(.2,.75,.25,1) both; }
+  .room-menu nav button, .chip, .collection-item { transition: background-color 160ms ease,color 160ms ease,border-color 160ms ease,transform 160ms ease; }
+  .room-menu nav button.active svg { animation: select-icon 230ms ease-out; }
+  dialog[open]::backdrop { animation: soften-backdrop 160ms ease-out; }
+  @keyframes unfold-page { from { opacity: .55; transform: translateY(6px); } }
+  @keyframes select-icon { 45% { transform: translateY(-2px); } }
+  @keyframes soften-backdrop { from { opacity: 0; } }
+}
+@media(hover:hover) {
+  .collection-item:hover { border-color: var(--mimi-primary); }
+  .room-menu nav button:not(.active):hover { background: color-mix(in srgb,var(--mimi-primary) 7%,transparent); }
+}
