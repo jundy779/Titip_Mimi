@@ -14,27 +14,18 @@ const vars = [
   (() => {
     const key = 'titip-mimi-theme';
     const root = document.documentElement;
-    const media = window.matchMedia('(prefers-color-scheme: dark)');
-    let mode = 'system';
+    let mode = 'light';
     function apply(value) {
-      mode = ['light', 'dark'].includes(value) ? value : 'system';
-      root.dataset.preference = mode;
-      root.dataset.theme = mode === 'system' ? (media.matches ? 'dark' : 'light') : mode;
-      document.querySelectorAll('[data-dark-switch]').forEach(field => field.checked = root.dataset.theme === 'dark');
-      document.querySelectorAll('[data-follow-device]').forEach(field => field.checked = mode === 'system');
+      mode = value === 'dark' ? 'dark' : 'light';
+      root.dataset.theme = mode;
+      document.querySelectorAll('[data-dark-switch]').forEach(field => field.checked = mode === 'dark');
     }
-    try { apply(localStorage.getItem(key)); } catch { apply('system'); }
-    media.addEventListener('change', () => apply(mode));
+    try { apply(localStorage.getItem(key)); } catch { apply('light'); }
     window.addEventListener('storage', event => { if (event.key === key || event.key === null) apply(event.newValue); });
     document.addEventListener('change', event => {
       const field = event.target;
-      if (field.matches('[data-dark-switch]')) {
-        apply(field.checked ? 'dark' : 'light');
-      } else if (field.matches('[data-follow-device]')) {
-        apply(field.checked ? 'system' : root.dataset.theme);
-      } else {
-        return;
-      }
+      if (!field.matches('[data-dark-switch]')) return;
+      apply(field.checked ? 'dark' : 'light');
       try { localStorage.setItem(key, mode); } catch {}
     });
     document.addEventListener('mimi-theme-mounted', () => apply(mode));

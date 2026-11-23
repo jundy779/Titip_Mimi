@@ -42,3 +42,5 @@ Navigasi web diperiksa di Chrome desktop. Hari Ini, Koleksi, Agenda dan Profil b
 Revisi halaman planner diuji dengan Chrome desktop: buka Profil, pilih Gelap, buka Agenda, buka dan batalkan formulir, pindah ke Koleksi, buka detail catatan. Build Astro lulus. Belum ada verifikasi perangkat fisik atau pengukuran frame animasi.
 
 Sakelar Mode gelap di Profil diuji di Chrome dengan klik dan tombol spasi. Pilihan gelap bertahan setelah muat ulang. Opsi Ikuti perangkat dapat diaktifkan kembali. Build Astro lulus.
+
+Tema web dua pilihan diuji pada hasil build Astro. Tema awal dan preferensi lama system membuka tampilan terang, pilihan manual dipulihkan dan sakelar menyimpan perubahan.
