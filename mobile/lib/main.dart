@@ -243,6 +243,52 @@ class _RoomState extends ConsumerState<Room> {
       onTap: () => detail(e),
     ),
   );
+  Iterable<Widget> agendaSections(Iterable<Entry> entries, DateTime now) sync* {
+    final today = DateUtils.dateOnly(now);
+    final tomorrow = DateTime(now.year, now.month, now.day + 1);
+    final groups = {
+      for (final name in [
+        'Terlewat',
+        'Hari ini',
+        'Besok',
+        'Berikutnya',
+        'Selesai',
+      ])
+        name: <Entry>[],
+    };
+    for (final entry in entries) {
+      final date = DateUtils.dateOnly(entry.time!);
+      final name = entry.done
+          ? 'Selesai'
+          : date.isBefore(today)
+          ? 'Terlewat'
+          : date == today
+          ? 'Hari ini'
+          : date == tomorrow
+          ? 'Besok'
+          : 'Berikutnya';
+      groups[name]!.add(entry);
+    }
+    for (final group in groups.entries) {
+      if (group.value.isEmpty) continue;
+      if (group.key == 'Selesai') {
+        yield ExpansionTile(
+          title: Text('Selesai (${group.value.length})'),
+          children: group.value.map(row).toList(),
+        );
+      } else {
+        yield Padding(
+          padding: const EdgeInsets.fromLTRB(4, 16, 4, 8),
+          child: Text(
+            group.key,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+        );
+        yield* group.value.map(row);
+      }
+    }
+  }
+
   Widget profile() => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -463,7 +509,10 @@ class _RoomState extends ConsumerState<Room> {
                                   : 'Belum ada agenda di sini ♡',
                             ),
                           ),
-                        ...rows.map(row),
+                        if (widget.index == 2)
+                          ...agendaSections(rows, now)
+                        else
+                          ...rows.map(row),
                       ],
                     ],
                   ),

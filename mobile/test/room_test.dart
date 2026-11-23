@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -56,6 +57,39 @@ void main() {
       );
       expect(tester.takeException(), isNull);
     }
+    await tester.pumpWidget(const SizedBox());
+  });
+  testWidgets('Agenda Besok dan arsip selesai', (tester) async {
+    final now = DateTime.now();
+    final tomorrow = DateTime(now.year, now.month, now.day + 1, 16);
+    final entries = [
+      Entry(id: '1', kind: 'Agenda', title: 'Ambil nota', time: tomorrow),
+      Entry(
+        id: '2',
+        kind: 'Agenda',
+        title: 'Nota lama',
+        time: tomorrow,
+        done: true,
+      ),
+    ];
+    SharedPreferences.setMockInitialValues({
+      'entries': jsonEncode(entries.map((e) => e.toJson()).toList()),
+    });
+    final prefs = await SharedPreferences.getInstance();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [prefsProvider.overrideWithValue(prefs)],
+        child: const MimiApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.calendar_month_outlined).first);
+    await tester.pumpAndSettle();
+    expect(find.text('Besok'), findsOneWidget);
+    expect(find.text('Nota lama'), findsNothing);
+    await tester.tap(find.text('Selesai (1)'));
+    await tester.pumpAndSettle();
+    expect(find.text('Nota lama'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
   });
   test('Tunda tidak mengubah waktu agenda', () {

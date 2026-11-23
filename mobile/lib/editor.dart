@@ -31,14 +31,16 @@ class _EditorState extends State<EntryEditor> {
     super.dispose();
   }
 
-  Future<void> selectTime() async {
+  Future<void> selectTime([DateTime? shortcut]) async {
     final initial = time ?? DateTime.now();
-    final date = await showDatePicker(
-      context: context,
-      initialDate: initial,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2150),
-    );
+    final date =
+        shortcut ??
+        await showDatePicker(
+          context: context,
+          initialDate: initial,
+          firstDate: DateTime(2000),
+          lastDate: DateTime(2150),
+        );
     if (date == null || !mounted) return;
     final hour = await showTimePicker(
       context: context,
@@ -82,7 +84,16 @@ class _EditorState extends State<EntryEditor> {
           done: old?.done ?? false,
         ),
       );
-      if (mounted) Navigator.pop(context);
+      if (mounted) {
+        if (time != null && kind != 'Akun') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Udah Mimi catat buat ${stamp(context, time!)} ♡'),
+            ),
+          );
+        }
+        Navigator.pop(context);
+      }
     } catch (_) {
       if (mounted) {
         setState(() {
@@ -168,8 +179,23 @@ class _EditorState extends State<EntryEditor> {
                     'Simpan kata sandi dan PIN di pengelola kata sandimu.',
                   ),
                 ] else ...[
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      for (final offset in [0, 1])
+                        ActionChip(
+                          label: Text(offset == 0 ? 'Hari ini' : 'Besok'),
+                          onPressed: () {
+                            final now = DateTime.now();
+                            selectTime(
+                              DateTime(now.year, now.month, now.day + offset),
+                            );
+                          },
+                        ),
+                    ],
+                  ),
                   OutlinedButton.icon(
-                    onPressed: selectTime,
+                    onPressed: () => selectTime(),
                     icon: const Icon(Icons.schedule),
                     label: Text(
                       time == null

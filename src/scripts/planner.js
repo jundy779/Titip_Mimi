@@ -25,7 +25,7 @@ const el=id=>document.getElementById(id);
 const names=['Hari Ini','Koleksi','Agenda','Profil'];
 const key='ruang-iqlima-demo-v1';
 let tab=names[0],items=[];
-const today=new Date(), day=localDay(today);
+let today=new Date(), day=localDay(today);
 try{items=JSON.parse(localStorage.getItem(key)||'null')||[{title:'Ambil jahitan',note:'Bawa nota waktu mengambil pesanan.',time:day+'T16:00',done:false},{title:'Undangan syukuran',note:'Contoh undangan di koleksi Iqlima.',time:'',done:false}]}catch{items=[]}
 function make(tag,txt){const n=document.createElement(tag);n.textContent=txt;return n}
 function save(next){try{localStorage.setItem(key,JSON.stringify(next));items=next;return true}catch{alert('Titipannya belum tersimpan. Penyimpanan browser mungkin penuh atau dibatasi.');return false}}
@@ -39,6 +39,7 @@ function configureForm(){
   el('identity').required = account;
   el('note-field').hidden = account;
   el('date-field').hidden = account;
+  el('quick-days').hidden = account;
   el('waktu').required = kind === 'agenda';
   el('title-label').textContent = account ? 'Nama layanan' : kind === 'agenda' ? 'Nama agenda' : 'Judul catatan';
   el('date-label').textContent = kind === 'agenda' ? 'Tanggal dan jam' : 'Masuk agenda kapan? (boleh kosong)';
@@ -58,7 +59,50 @@ function capture(kind, item = null){
   el('box').showModal();
 }
 el('jenis').onchange = configureForm;
-function list(target,rows){target.replaceChildren();if(!rows.length)target.append(make('p',tab==='Koleksi'?'Belum ada titipan yang cocok.':'Belum ada agenda di sini ♡'));for(const x of rows){const a=make('article','');a.className='entry';a.append(make('b',x.title),make('p',x.note));if(x.time){a.append(make('p',x.allDay?x.time.slice(0,10)+' · Seharian':new Date(x.time).toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short'})));const b=make('button',x.done?'Sudah selesai · Batalkan':'Tandai selesai');b.onclick=()=>{if(save(items.map(i=>i===x?{...i,done:!i.done}:i)))render()};a.append(b,calendarButton(x))}target.append(a)}}
+function dateOffset(offset, now=new Date()){
+  return new Date(now.getFullYear(),now.getMonth(),now.getDate()+offset);
+}
+Array.from(el('quick-days').children).forEach((button,offset)=>{
+  button.onclick=()=>{
+    const field=el('waktu');
+    const clock=field.value.slice(11,16) || new Date().toTimeString().slice(0,5);
+    field.value=localDay(dateOffset(offset))+'T'+clock;
+    field.focus();
+  };
+});
+function agendaList(target,rows){
+  const now=new Date();
+  const todayKey=localDay(now), tomorrowKey=localDay(dateOffset(1,now));
+  const sections=new Map(['Terlewat','Hari ini','Besok','Berikutnya','Selesai'].map(name=>[name,[]]));
+  for(const item of rows){
+    const date=item.time.slice(0,10);
+    let group='Berikutnya';
+    if(item.done)group='Selesai';
+    else if(date<todayKey)group='Terlewat';
+    else if(date===todayKey)group='Hari ini';
+    else if(date===tomorrowKey)group='Besok';
+    sections.get(group).push(item);
+  }
+  if(!rows.length)target.append(make('p','Belum ada agenda di sini ♡'));
+  for(const [name,entries] of sections){
+    if(!entries.length)continue;
+    const completed=name==='Selesai';
+    const section=make(completed?'details':'section','');
+    section.className='agenda-group';
+    section.append(make(completed?'summary':'h3',completed?'Selesai ('+entries.length+')':name));
+    for(const item of entries){
+      const article=make('article','');article.className='entry';
+      const at=new Date(item.time);
+      const time=at.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'})+' · '+(item.allDay?'Seharian':at.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}));
+      const open=make('button',item.title);open.className='agenda-title';open.onclick=()=>detail(item);
+      const toggle=make('button',item.done?'Batalkan selesai':'Tandai selesai');
+      toggle.onclick=()=>{if(save(items.map(x=>x===item?{...x,done:!x.done}:x)))render()};
+      article.append(make('small',time),open,toggle,calendarButton(item));
+      section.append(article);
+    }
+    target.append(section);
+  }
+}
 function render(){refreshReminder();document.body.dataset.page=tab;const nav=document.querySelector('nav');
 if(!nav.children.length){
   for(const name of names){
@@ -94,7 +138,7 @@ add.className='primary';
 add.onclick=()=>capture('agenda');
 const results=make('div','');
 card.append(add,results);
-list(results,items.filter(item=>item.time).sort((a,b)=>a.time.localeCompare(b.time)));
+agendaList(results,items.filter(item=>item.time).sort((a,b)=>a.time.localeCompare(b.time)));
 }
 
 function collection(page){
@@ -203,8 +247,8 @@ el('form').onsubmit = event => {
   if(account)Object.assign(entry,{identity,method:el('method').value});
   if(!save(editing ? items.map(item=>item===editing?entry:item) : [entry,...items]))return;
   el('box').close();
-  tab='Koleksi';selectedKind=kind;search='';render();
-  el('notice').textContent='Udah Mimi simpan di Koleksi ♡';
+  tab=kind==='agenda'?'Agenda':'Koleksi';selectedKind=kind;search='';render();
+  el('notice').textContent=entry.time?'Udah Mimi catat buat '+new Date(entry.time).toLocaleString('id-ID',{dateStyle:'full',timeStyle:'short'})+' ♡':'Udah Mimi simpan di Koleksi ♡';
 };
 let shown;
 function refreshReminder(){
@@ -224,6 +268,14 @@ function respond(patch){
 el('due-open').onclick=()=>{if(shown)detail(shown)};
 el('due-snooze').onclick=()=>respond({snoozeUntil:Date.now()+600000});
 el('due-done').onclick=()=>respond({done:true,snoozeUntil:0});
-setInterval(refreshReminder,5000);
-document.addEventListener('visibilitychange',refreshReminder);
+function updateClock(){
+  const now=new Date();
+  if(localDay(now)!==day){
+    today=now;day=localDay(now);
+    if(tab==='Hari Ini'||tab==='Agenda'){render();return}
+  }
+  refreshReminder();
+}
+setInterval(updateClock,5000);
+document.addEventListener('visibilitychange',updateClock);
 render();
