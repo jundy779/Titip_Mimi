@@ -1,9 +1,10 @@
 ---
+import JournalHeading from './JournalHeading.astro';
 import ThemeChoice from './ThemeChoice.astro';
 ---
 <template id="agenda-template">
   <section class="page-frame">
-    <div class="page-heading"><h1>Agenda</h1><button class="primary" data-add>Tambah agenda</button></div>
+    <JournalHeading section="agenda" title="Agenda"><button class="primary" data-add>Tambah agenda</button></JournalHeading>
     <div class="planner-columns">
       <div class="sheet timeline" data-schedule></div>
       <aside class="sheet import-calendar"><h2>Kalender lain</h2><div data-calendar-import></div></aside>
@@ -12,10 +13,9 @@ import ThemeChoice from './ThemeChoice.astro';
 </template>
 <template id="profile-template">
   <section class="page-frame">
-    <div class="page-heading"><h1>Profil Iqlima</h1></div>
+    <JournalHeading section="profile" title="Profil Iqlima" />
     <div class="planner-columns">
       <section class="sheet preferences">
-        <img class="profile-mimi" src="peek.webp" alt="" />
         <h2>Ruang pribadimu</h2>
         <p>Titipanmu tersimpan di browser ini. Mimi bisa mengingatkan selama halamannya terbuka.</p>
         <ThemeChoice />

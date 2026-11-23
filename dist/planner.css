@@ -294,7 +294,7 @@ dialog::backdrop { background: rgb(43 23 38 / .52); }
 }
 
 /* A notebook page with Mimi in a little strawberry garden. */
-body[data-page="Hari Ini"] {
+body[data-page], body.design-guide {
   --grid-line: color-mix(in srgb,var(--mimi-outline) 12%,transparent);
   background-color: var(--mimi-surface-container);
   background-image: linear-gradient(var(--grid-line) 1px,transparent 1px),
@@ -342,3 +342,22 @@ body[data-page="Hari Ini"] {
   .garden-cloud { width:1.8rem; height:.5rem; }
   .garden-cloud::before { width:.9rem; height:.9rem; }
 }
+
+.journal-heading, .guide .lead {
+  --heading-wash: var(--mimi-journal-rose);
+  background: var(--heading-wash); border: 1px solid var(--line);
+  border-radius: var(--mimi-radius-card); padding: clamp(.9rem,2.5vw,2rem);
+}
+.journal-heading[data-section-tone=agenda] { --heading-wash: var(--mimi-journal-mint); }
+.journal-heading[data-section-tone=profile] { --heading-wash: var(--mimi-journal-lilac); }
+.heading-label { display:flex; align-items:center; gap:clamp(.6rem,1.5vw,1.25rem); min-width:0; }
+.heading-label img { width:clamp(3rem,6vw,4.75rem); height:auto; }
+.journal-heading h1 { font-size:clamp(1.85rem,4vw,3.1rem); overflow-wrap:anywhere; }
+.guide .lead { margin-block:1rem; }
+.collection-item[data-kind=note], dialog[data-kind=note], #box:has(#jenis option[value=note]:checked) { --tab-wash:var(--mimi-journal-rose); }
+.collection-item[data-kind=agenda], dialog[data-kind=agenda], #box:has(#jenis option[value=agenda]:checked) { --tab-wash:var(--mimi-journal-mint); }
+.collection-item[data-kind=account], dialog[data-kind=account], #box:has(#jenis option[value=account]:checked) { --tab-wash:var(--mimi-journal-lilac); }
+.collection-item small { display:inline-block; padding:.2rem .6rem; border-radius:.55rem; background:var(--tab-wash); color:var(--ink); }
+body > dialog { border:1px solid var(--line); border-top:7px solid var(--tab-wash,var(--mimi-journal-rose)); background:var(--mimi-surface-container); color:var(--ink); }
+body > dialog h2 { line-height:1.15; overflow-wrap:anywhere; }
+#reminder:not([hidden]) { border-inline-start:5px solid var(--mimi-primary); }

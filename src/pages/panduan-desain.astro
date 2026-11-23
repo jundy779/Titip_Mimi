@@ -4,7 +4,7 @@ import MimiTheme from '../components/MimiTheme.astro';
 import tokens from '../../design/tokens.json';
 import planner from '../../assets/mimi/v1/planner.webp?url';
 const samples = [
-  ['primary','Aksi utama'],['primary-container','Aksi pendamping'],['surface','Latar blush'],
+  ['journal-rose','Koleksi dan catatan'],['journal-mint','Agenda'],['journal-lilac','Profil dan akun'],['primary','Aksi utama'],['primary-container','Aksi pendamping'],['surface','Latar blush'],
   ['surface-container','Kertas krem'],['on-surface','Teks utama'],['outline','Batas kolom']
 ] as const;
 ---
@@ -14,7 +14,7 @@ const samples = [
   <title>Panduan desain · Titip Mimi</title>
   <link rel="stylesheet" href="/base.css" /><link rel="stylesheet" href="/planner.css" />
   <MimiTheme />
-</head><body>
+</head><body class="design-guide">
 <main class="guide">
 <a href="/">Kembali ke Ruang Iqlima</a>
 <div class="lead"><div><h1>Panduan desain</h1><p>Warna, komponen, dan bahasa untuk ruang pribadi Iqlima.</p></div><img src={planner} alt="Mimi memeluk agenda" width="132" height="132" /></div>

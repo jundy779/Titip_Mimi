@@ -206,7 +206,7 @@ function collection(page){
     }
     for(const item of rows){
       const button=make('button','');
-      button.className='collection-item';
+      button.className='collection-item';button.dataset.kind=kindOf(item);
       const thumbnail=art(item);
       if(thumbnail){
         const img=new Image();img.src=thumbnail;img.alt='';img.loading='lazy';img.width=72;img.height=72;
@@ -275,7 +275,7 @@ function accountActions(dlg,card){
 }
 function detail(x){
  const dlg=document.createElement('dialog');
- dlg.className='item-detail';
+ dlg.className='item-detail';dlg.dataset.kind=kindOf(x);
  const title=make('h2',x.title);
  dlg.append(title);
  if(art(x)){const img=new Image();img.src=art(x);img.alt=x.title;img.className='full';dlg.append(img)}

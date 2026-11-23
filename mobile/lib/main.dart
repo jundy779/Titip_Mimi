@@ -7,16 +7,14 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'entry.dart';
 import 'editor.dart';
+import 'journal.dart';
 
 final prefsProvider = Provider<SharedPreferences>(
   (ref) => throw StateError('Penyimpanan belum siap'),
 );
 final themeProvider = StateProvider<ThemeMode>((ref) {
   final key = ref.watch(prefsProvider).getString('theme');
-  return ThemeMode.values.firstWhere(
-    (v) => v.name == key,
-    orElse: () => ThemeMode.system,
-  );
+  return key == 'dark' ? ThemeMode.dark : ThemeMode.light;
 });
 final entriesProvider = StateNotifierProvider<Entries, List<Entry>>(
   (ref) => Entries(ref.watch(prefsProvider)),
@@ -103,6 +101,14 @@ class MimiApp extends ConsumerWidget {
     return ThemeData(
       useMaterial3: true,
       colorScheme: colors,
+      scaffoldBackgroundColor: Color(dark ? 0xff221820 : 0xfffffbf5),
+      cardTheme: CardThemeData(
+        color: Color(dark ? 0xff30232c : 0xfffffbf5),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: colors.outlineVariant),
+        ),
+      ),
       inputDecorationTheme: const InputDecorationTheme(
         border: OutlineInputBorder(),
       ),
@@ -147,13 +153,13 @@ class _RoomState extends ConsumerState<Room> {
     super.dispose();
   }
 
-  void edit([Entry? e]) {
+  void edit([Entry? e, String? kind]) {
     Navigator.push(
       context,
       MaterialPageRoute<void>(
         builder: (_) => EntryEditor(
           entry: e,
-          initialKind: widget.index == 2 ? 'Agenda' : 'Catatan',
+          initialKind: kind ?? (widget.index == 2 ? 'Agenda' : 'Catatan'),
           save: ref.read(entriesProvider.notifier).put,
         ),
       ),
@@ -183,6 +189,7 @@ class _RoomState extends ConsumerState<Room> {
     return await showDialog<bool>(
           context: context,
           builder: (dialog) => AlertDialog(
+            icon: JournalStyle.account.sticker(40),
             title: Text(title),
             content: Text(body),
             actions: [
@@ -264,7 +271,7 @@ class _RoomState extends ConsumerState<Room> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(e.kind),
+            JournalHeading(e.kind, JournalStyle.forKind(e.kind)),
             Text(e.title, style: Theme.of(context).textTheme.headlineSmall),
             SelectableText(e.body),
             if (e.kind == 'Akun') ...[
@@ -323,15 +330,9 @@ class _RoomState extends ConsumerState<Room> {
 
   Widget row(Entry e) => Card(
     child: ListTile(
-      leading: Icon(
-        e.done
-            ? Icons.check_circle_outline
-            : switch (e.kind) {
-                'Agenda' => Icons.event_outlined,
-                'Akun' => Icons.person_outline,
-                _ => Icons.edit_note_outlined,
-              },
-      ),
+      leading: e.done
+          ? const Icon(Icons.check_circle_outline)
+          : JournalStyle.forKind(e.kind).sticker(44),
       title: Text(e.title),
       subtitle: Text(
         [
@@ -400,22 +401,14 @@ class _RoomState extends ConsumerState<Room> {
         'Titipanmu tersimpan di perangkat ini. Pengingat muncul saat aplikasi terbuka.',
       ),
       const SizedBox(height: 16),
-      DropdownButtonFormField<ThemeMode>(
-        initialValue: ref.watch(themeProvider),
-        decoration: const InputDecoration(labelText: 'Tampilan Mimi'),
-        items: const [
-          DropdownMenuItem(
-            value: ThemeMode.system,
-            child: Text('Ikuti perangkat'),
-          ),
-          DropdownMenuItem(value: ThemeMode.light, child: Text('Terang')),
-          DropdownMenuItem(value: ThemeMode.dark, child: Text('Gelap')),
-        ],
-        onChanged: (v) async {
-          if (v != null &&
-              await ref.read(prefsProvider).setString('theme', v.name) &&
+      SwitchListTile(
+        title: const Text('Mode gelap'),
+        value: ref.watch(themeProvider) == ThemeMode.dark,
+        onChanged: (enabled) async {
+          final mode = enabled ? ThemeMode.dark : ThemeMode.light;
+          if (await ref.read(prefsProvider).setString('theme', mode.name) &&
               mounted) {
-            ref.read(themeProvider.notifier).state = v;
+            ref.read(themeProvider.notifier).state = mode;
           }
         },
       ),
@@ -454,16 +447,28 @@ class _RoomState extends ConsumerState<Room> {
     final width = MediaQuery.sizeOf(context).width;
     final wide = width >= 720;
     return Scaffold(
-      appBar: AppBar(title: Text(pages[widget.index])),
+      appBar: AppBar(title: const Text('Ruang Iqlima')),
       bottomNavigationBar: wide
           ? null
-          : NavigationBar(
-              selectedIndex: widget.index,
-              onDestinationSelected: (i) => context.go(paths[i]),
-              destinations: [
-                for (var i = 0; i < pages.length; i++)
-                  NavigationDestination(icon: Icon(icons[i]), label: pages[i]),
-              ],
+          : SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(8, 0, 8, 6),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(26),
+                  child: NavigationBar(
+                    selectedIndex: widget.index,
+                    onDestinationSelected: (i) => context.go(paths[i]),
+                    destinations: [
+                      for (var i = 0; i < pages.length; i++)
+                        NavigationDestination(
+                          icon: Icon(icons[i]),
+                          label: pages[i],
+                        ),
+                    ],
+                  ),
+                ),
+              ),
             ),
       floatingActionButton: widget.index == 3
           ? null
@@ -472,158 +477,195 @@ class _RoomState extends ConsumerState<Room> {
               icon: const Icon(Icons.add),
               label: const Text('Titip sesuatu'),
             ),
-      body: SafeArea(
-        child: Row(
-          children: [
-            if (wide)
-              NavigationRail(
-                selectedIndex: widget.index,
-                extended: width >= 1100,
-                labelType: width >= 1100
-                    ? NavigationRailLabelType.none
-                    : NavigationRailLabelType.all,
-                onDestinationSelected: (i) => context.go(paths[i]),
-                destinations: [
-                  for (var i = 0; i < pages.length; i++)
-                    NavigationRailDestination(
-                      icon: Icon(icons[i]),
-                      label: Text(pages[i]),
-                    ),
-                ],
-              ),
-            if (wide) const VerticalDivider(width: 1),
-            Expanded(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 800),
-                  child: ListView(
-                    padding: const EdgeInsets.fromLTRB(18, 8, 18, 100),
-                    children: [
-                      if (due.isNotEmpty)
-                        Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+      body: JournalPaper(
+        child: SafeArea(
+          child: Row(
+            children: [
+              if (wide)
+                NavigationRail(
+                  selectedIndex: widget.index,
+                  extended: width >= 1100,
+                  labelType: width >= 1100
+                      ? NavigationRailLabelType.none
+                      : NavigationRailLabelType.all,
+                  onDestinationSelected: (i) => context.go(paths[i]),
+                  destinations: [
+                    for (var i = 0; i < pages.length; i++)
+                      NavigationRailDestination(
+                        icon: Icon(icons[i]),
+                        label: Text(pages[i]),
+                      ),
+                  ],
+                ),
+              if (wide) const VerticalDivider(width: 1),
+              Expanded(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 800),
+                    child: ListView(
+                      padding: const EdgeInsets.fromLTRB(18, 8, 18, 100),
+                      children: [
+                        JournalHeading(
+                          [
+                            'Hai, Iqlima ♡',
+                            'Koleksi',
+                            'Agenda',
+                            'Profil Iqlima',
+                          ][widget.index],
+                          [
+                            JournalStyle.home,
+                            JournalStyle.collection,
+                            JournalStyle.agenda,
+                            JournalStyle.profile,
+                          ][widget.index],
+                        ),
+                        if (due.isNotEmpty)
+                          Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('Mimi mau ingetin ♡'),
+                                  Text(
+                                    due.first.title,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleLarge,
+                                  ),
+                                  Wrap(
+                                    spacing: 8,
+                                    children: [
+                                      TextButton(
+                                        onPressed: () => detail(due.first),
+                                        child: const Text('Lihat titipan'),
+                                      ),
+                                      OutlinedButton(
+                                        onPressed: () =>
+                                            update(due.first, snooze: true),
+                                        child: const Text('Tunda 10 menit'),
+                                      ),
+                                      FilledButton(
+                                        onPressed: () => update(due.first),
+                                        child: const Text('Sudah selesai'),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        if (widget.index == 3)
+                          Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: profile(),
+                            ),
+                          )
+                        else ...[
+                          if (widget.index == 0) ...[
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
                               children: [
-                                const Text('Mimi mau ingetin ♡'),
-                                Text(
-                                  due.first.title,
-                                  style: Theme.of(context).textTheme.titleLarge,
-                                ),
-                                Wrap(
-                                  spacing: 8,
-                                  children: [
-                                    TextButton(
-                                      onPressed: () => detail(due.first),
-                                      child: const Text('Lihat titipan'),
-                                    ),
-                                    OutlinedButton(
-                                      onPressed: () =>
-                                          update(due.first, snooze: true),
-                                      child: const Text('Tunda 10 menit'),
-                                    ),
-                                    FilledButton(
-                                      onPressed: () => update(due.first),
-                                      child: const Text('Sudah selesai'),
-                                    ),
-                                  ],
-                                ),
+                                for (final (kind, label) in const [
+                                  ('Catatan', 'Tulis catatan'),
+                                  ('Agenda', 'Buat agenda'),
+                                  ('Akun', 'Simpan akun'),
+                                ])
+                                  ActionChip(
+                                    avatar: JournalStyle.forKind(
+                                      kind,
+                                    ).sticker(24),
+                                    label: Text(label),
+                                    backgroundColor: JournalStyle.forKind(
+                                      kind,
+                                    ).color(context),
+                                    onPressed: () => edit(null, kind),
+                                  ),
                               ],
                             ),
-                          ),
-                        ),
-                      if (widget.index == 3)
-                        profile()
-                      else ...[
-                        if (widget.index == 0) ...[
-                          Image.asset(
-                            'assets/mimi/v1/planner.webp',
-                            height: 164,
-                            excludeFromSemantics: true,
-                          ),
-                          Text(
-                            'Hai, Iqlima ♡',
-                            style: Theme.of(context).textTheme.headlineMedium,
-                          ),
-                          const Text('Agenda hari ini'),
-                        ],
-                        if (widget.index == 1) ...[
-                          TextField(
-                            controller: searchField,
-                            decoration: const InputDecoration(
-                              labelText: 'Cari titipan',
-                              hintText: 'Judul, catatan, atau akun',
-                              prefixIcon: Icon(Icons.search),
-                            ),
-                            onChanged: (v) => setState(() => query = v),
-                          ),
-                          Wrap(
-                            spacing: 6,
-                            children: [
-                              for (final k in [
-                                'Semua',
-                                'Catatan',
-                                'Akun',
-                                'Agenda',
-                              ])
-                                ChoiceChip(
-                                  label: Text(k),
-                                  selected: filter == k,
-                                  onSelected: (_) => setState(() => filter = k),
-                                ),
-                            ],
-                          ),
-                        ],
-                        if (widget.index == 1)
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '${rows.length} titipan',
-                                style: Theme.of(context).textTheme.labelLarge,
+                            const SizedBox(height: 16),
+                            const Text('Agenda hari ini'),
+                          ],
+                          if (widget.index == 1) ...[
+                            TextField(
+                              controller: searchField,
+                              decoration: const InputDecoration(
+                                labelText: 'Cari titipan',
+                                hintText: 'Judul, catatan, atau akun',
+                                prefixIcon: Icon(Icons.search),
                               ),
-                              if (query.isNotEmpty || filter != 'Semua')
-                                TextButton(
-                                  onPressed: () {
-                                    searchField.clear();
-                                    setState(() {
-                                      query = '';
-                                      filter = 'Semua';
-                                    });
-                                  },
-                                  child: const Text('Atur ulang'),
-                                ),
-                            ],
-                          ),
-                        if (widget.index == 1 && rows.isEmpty)
-                          Image.asset(
-                            'assets/mimi/v1/search.webp',
-                            height: 96,
-                            excludeFromSemantics: true,
-                          ),
-                        if (rows.isEmpty)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 24),
-                            child: Text(
-                              widget.index == 1
-                                  ? entries.isEmpty
-                                        ? 'Koleksimu masih kosong. Mau titip sesuatu?'
-                                        : 'Belum ketemu. Coba kata lain atau pilih Semua.'
-                                  : 'Belum ada agenda di sini ♡',
+                              onChanged: (v) => setState(() => query = v),
                             ),
-                          ),
-                        if (widget.index == 2)
-                          ...agendaSections(rows, now)
-                        else
-                          ...rows.map(row),
+                            Wrap(
+                              spacing: 6,
+                              children: [
+                                for (final k in [
+                                  'Semua',
+                                  'Catatan',
+                                  'Akun',
+                                  'Agenda',
+                                ])
+                                  ChoiceChip(
+                                    label: Text(k),
+                                    selected: filter == k,
+                                    onSelected: (_) =>
+                                        setState(() => filter = k),
+                                  ),
+                              ],
+                            ),
+                          ],
+                          if (widget.index == 1)
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  '${rows.length} titipan',
+                                  style: Theme.of(context).textTheme.labelLarge,
+                                ),
+                                if (query.isNotEmpty || filter != 'Semua')
+                                  TextButton(
+                                    onPressed: () {
+                                      searchField.clear();
+                                      setState(() {
+                                        query = '';
+                                        filter = 'Semua';
+                                      });
+                                    },
+                                    child: const Text('Atur ulang'),
+                                  ),
+                              ],
+                            ),
+                          if (widget.index == 1 && rows.isEmpty)
+                            Image.asset(
+                              'assets/mimi/v1/search.webp',
+                              height: 96,
+                              excludeFromSemantics: true,
+                            ),
+                          if (rows.isEmpty)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 24),
+                              child: Text(
+                                widget.index == 1
+                                    ? entries.isEmpty
+                                          ? 'Koleksimu masih kosong. Mau titip sesuatu?'
+                                          : 'Belum ketemu. Coba kata lain atau pilih Semua.'
+                                    : 'Belum ada agenda di sini ♡',
+                              ),
+                            ),
+                          if (widget.index == 2)
+                            ...agendaSections(rows, now)
+                          else
+                            ...rows.map(row),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

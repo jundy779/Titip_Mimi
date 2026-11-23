@@ -1,0 +1,16 @@
+---
+import { Image } from 'astro:assets';
+import letter from '../../assets/mimi/v1/letter.webp';
+import planner from '../../assets/mimi/v1/planner.webp';
+import welcome from '../../assets/mimi/v1/welcome.webp';
+interface Props { section: 'collection' | 'agenda' | 'profile'; title: string; id?: string }
+const {section,title,id} = Astro.props;
+const poses = {collection:letter,agenda:planner,profile:welcome};
+---
+<div class="page-heading journal-heading" data-section-tone={section}>
+  <div class="heading-label">
+    <Image src={poses[section]} width={76} height={76} alt="" />
+    <h1 id={id}>{title}</h1>
+  </div>
+  <slot />
+</div>

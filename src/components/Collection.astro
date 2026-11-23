@@ -1,8 +1,10 @@
+---
+import JournalHeading from './JournalHeading.astro';
+---
 <section class="page-frame collection" aria-labelledby="collection-heading">
-  <div class="page-heading">
-    <h1 id="collection-heading">Koleksi</h1>
+  <JournalHeading section="collection" title="Koleksi" id="collection-heading">
     <button class="primary" data-add>Titip sesuatu</button>
-  </div>
+  </JournalHeading>
   <div class="sheet collection-sheet">
   <div class="collection-tools">
     <input type="search" aria-label="Cari titipan" placeholder="Cari judul, catatan, atau akun" />

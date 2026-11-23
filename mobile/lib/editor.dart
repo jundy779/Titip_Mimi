@@ -1,3 +1,4 @@
+import 'journal.dart';
 import 'package:flutter/material.dart';
 import 'entry.dart';
 
@@ -127,6 +128,7 @@ class _EditorState extends State<EntryEditor> {
             child: ListView(
               padding: const EdgeInsets.all(20),
               children: [
+                JournalHeading(kind, JournalStyle.forKind(kind)),
                 DropdownButtonFormField<String>(
                   initialValue: kind,
                   decoration: const InputDecoration(labelText: 'Jenis titipan'),

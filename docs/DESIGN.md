@@ -2,7 +2,7 @@
 
 | Acuan asli | Detail yang harus terbaca pada implementasi |
 |---|---|
-| [Web](referensi/web.webp) | Navigasi kiri, sapaan dan Mimi memeluk agenda di tengah, agenda terdekat dan dua pratinjau koleksi di kanan. |
+| [Web](referensi/web.webp) | Referensi awal untuk sapaan, agenda dan koleksi. Beranda terkini menggunakan kartu taman serta tiga pintasan. |
 | [Android, iPhone, dan Telegram](referensi/ponsel.webp) | Mimi mengintip di atas agenda, tombol “Titip sesuatu” mudah dijangkau. Koleksi memakai pencarian dan kartu visual. Pengingat membawa lampiran. |
 | [Karakter Mimi](referensi/mimi.webp) | Kucing krem, pita stroberi, tanda hati dekat mata. Pose membawa amplop untuk pesan dan tidur saat jam tenang. |
 
@@ -23,7 +23,7 @@ Mimi menemani lewat pose dan respons singkat. Hindari sapaan yang membuat Iqlima
 
 Untuk layar dan keadaan baru, gunakan [koleksi Mimi v1](../assets/mimi/v1/README.md) beserta pemetaan pose yang sudah disiapkan.
 
-## Sistem desain v1 · Material 3 dengan identitas Titip Mimi
+## Sistem desain v1.2 · Jurnal Mimi
 
 [Contoh komponen interaktif](https://ruang-iqlima-mimi.oakrose8.chatgpt.site/panduan-desain/) memperlihatkan palet dan form titipan. Gunakan [token bersama](../design/tokens.json) sebagai sumber nilai warna, ukuran dan bentuk. Astro mengubah file ini menjadi variabel CSS melalui MimiTheme. Untuk warna baru, tentukan perannya dan cek pasangan teksnya sebelum menambah token.
 
@@ -35,7 +35,7 @@ Untuk layar dan keadaan baru, gunakan [koleksi Mimi v1](../assets/mimi/v1/README
 | Isi, form dan aksi | Sans sistem, isi 16, label 14. Izinkan teks membesar dan membungkus. |
 | Jarak | Satuan 4, 8, 12, 16, 24, 32. Gunakan 8 untuk elemen terkait, 16 untuk tepi HP, 24 untuk kelompok. |
 | Bentuk | Kolom masukan radius 12, kartu 24, aksi utama berbentuk pil. Garis jahitan dan tekstur kertas untuk panel dekoratif. |
-| Navigasi | Lebar hingga 720 CSS px memakai navigasi bawah. Di atasnya gunakan navigasi kiri. Pada ponsel pertahankan label keempat tujuan dan ruang aman bawah. |
+| Navigasi | Web menggunakan kapsul bawah hingga 600 px, menu atas pada 601–959 px, dan navigasi kiri mulai 960 px. Pada ponsel pertahankan label keempat tujuan dan ruang aman bawah. |
 | Gerakan | Respons sentuh singkat dan lembut. Hormati preferensi kurangi gerakan. Suara dan animasi tambahan mengikuti pilihan pengguna. |
 
 ### Pemetaan komponen web dan Flutter
@@ -63,7 +63,7 @@ Rujukan: [Peran warna Material 3](https://m3.material.io/styles/color/roles), [t
 
 ### Tema dan gerakan v1.1
 
-Profil web dan panduan komponen menyediakan satu sakelar Mode gelap. Tema awal terang. Simpan pilihan pada browser. Gunakan warna dari color dan darkColor dengan nama peran yang sama. Aset Mimi mempertahankan warna ilustrasi.
+Profil web, aplikasi Flutter, dan panduan komponen menyediakan satu sakelar Mode gelap. Tema awal terang. Simpan pilihan di perangkat. Gunakan warna dari color dan darkColor dengan nama peran yang sama. Aset Mimi mempertahankan warna ilustrasi.
 
 Gunakan tombol filled untuk komitmen utama, tonal untuk aksi pendamping dan teks untuk navigasi ringan. Tampilkan outline saat fokus keyboard, lapisan warna saat hover/tekan, dan status disabled melalui atribut native. Efek tekan berlangsung 120 ms, masuk panel atau dialog 180 ms. Hormati pengaturan kurangi gerakan dengan tampilan langsung. Animasi maskot dan umpan balik untuk operasi jaringan tetap bergantung pada implementasi fitur masing-masing.
 
@@ -75,4 +75,18 @@ Koleksi menggunakan daftar satu kolom pada web ponsel. Tampilkan judul dan hingg
 
 Beranda web memakai sapaan Mimi dan tiga pintasan bergambar untuk membuka formulir catatan, agenda, atau akun. Progres harian dihitung dari agenda yang dijadwalkan hari ini.
 
-Beranda memakai latar kertas petak dan kartu sapaan bergambar bukit, awan dan Mimi. Pada ponsel, navigasi bawah berbentuk kapsul dengan empat label.
+### Penerapan per layar
+
+Gunakan kertas petak sebagai latar halaman. Letakkan teks panjang dan kolom masukan di panel kertas agar garis petak tidak bersaing dengan isi. Kartu taman menjadi penanda beranda. Halaman tugas memakai kepala halaman yang lebih pendek agar konten utamanya segera terlihat.
+
+| Permukaan | Pose dan aksen | Tindakan utama |
+|---|---|---|
+| Hari Ini | Mimi menyapa, kartu taman di web, tiga pintasan berstiker | Titip sesuatu |
+| Koleksi | Mimi membawa surat, panel rose | Cari, filter, buka titipan |
+| Agenda | Mimi membawa planner, panel mint | Tambah agenda, tandai selesai |
+| Profil | Mimi menyapa, panel lilac | Ubah mode gelap, periksa koneksi |
+| Form dan detail | Rose untuk catatan, mint untuk agenda, lilac untuk akun. Web memakai pita warna, Flutter memakai ilustrasi jenis titipan | Baca judul, ubah isian, simpan atau batal |
+| Konfirmasi | Dialog ringkas berisi konsekuensi dan nama tindakan. Pada Flutter gunakan pose privasi untuk konfirmasi akun | Pilih batal atau konfirmasi |
+| Pengingat dan hasil kosong | Gunakan pose pengingat atau pencarian dengan pesan singkat | Buka, tunda, selesaikan, atau atur ulang |
+
+Pasangan warna terang dan gelap berada di token **journal-rose**, **journal-mint** dan **journal-lilac**. Label dan bentuk komponen tetap menyampaikan makna saat warna sulit dibedakan. Pertahankan kartu isi yang tenang dan tempatkan stiker di dekat judul atau aksi terkait.

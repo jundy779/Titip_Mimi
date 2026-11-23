@@ -48,3 +48,7 @@ Tema web dua pilihan diuji pada hasil build Astro. Tema awal dan preferensi lama
 Beranda berilustrasi diuji di Chrome desktop: ketiga pintasan membuka jenis formulir yang tepat dan bisa dibatalkan. Build Astro lulus. Perangkat fisik belum diuji untuk revisi ini.
 
 Tampilan kertas petak, kartu pemandangan dan stiker beranda diperiksa pada Chrome desktop dalam mode terang. Build Astro lulus. Pemeriksaan ponsel fisik masih terbuka.
+
+Jurnal Mimi v1.2: build Astro lulus. Di Chrome desktop, Koleksi, Agenda dan Profil bisa dibuka, sakelar Mode gelap bekerja dan kartu Koleksi tampil dalam tema gelap. Pemeriksaan visual ponsel fisik masih terbuka.
+
+Flutter: formatter Dart berhasil membaca source yang berubah. Build perangkat dan widget test revisi ini belum terverifikasi.
