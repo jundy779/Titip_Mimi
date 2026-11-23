@@ -1,3 +1,4 @@
+import { accountCards } from './account-import.mjs';
 import { calendarButton, readCalendar } from './calendar.js';
 import { nextReminder } from './reminders.mjs';
 import { localDay } from './day.ts';
@@ -145,7 +146,7 @@ function collection(page){
   page.append(el('collection-template').content.cloneNode(true));
   const field=page.querySelector('input');
   const filters=page.querySelector('.chips');
-  const summary=page.querySelector('[role=status]');
+  const summary=page.querySelector('.collection-summary [role=status]');
   const reset=page.querySelector('[data-reset]');
   const results=page.querySelector('.collection-results');
   field.value=search;
@@ -157,7 +158,45 @@ function collection(page){
     chip.onclick=()=>{selectedKind=kind;refresh()};
     filters.append(chip);
   }
+  const importer=page.querySelector('[data-import]');
+  const picker=importer.querySelector('input');
+  const preview=importer.querySelector('[data-preview]');
+  const message=importer.querySelector('[data-import-message]');
+  const confirm=importer.querySelector('[data-confirm]');
+  let candidates=[], version=0;
+  function clearPreview(){
+    version++; candidates=[];picker.value='';preview.replaceChildren();message.textContent='';confirm.hidden=true;
+  }
+  importer.ontoggle=()=>{if(!importer.open)clearPreview()};
+  picker.onchange=async()=>{
+    const file=picker.files[0];
+    clearPreview();
+    const request=version;
+    if(!file)return;
+    if(file.size>5*1024*1024){message.textContent='Pilih CSV di bawah 5 MB, ya.';return}
+    try{
+      const cards=accountCards(await file.text(),items);
+      if(request!==version || !importer.isConnected)return;
+      candidates=cards;
+      message.textContent=cards.length?'Centang akun yang mau dititipkan.':'Tidak ada kartu baru dengan nama layanan dan username.';
+      cards.forEach((card,index)=>{
+        const label=make('label','');
+        const check=document.createElement('input');check.type='checkbox';check.value=String(index);
+        label.append(check,document.createTextNode(card.title+' · '+card.identity));preview.append(label);
+      });
+      confirm.hidden=!cards.length;confirm.disabled=true;
+    }catch{if(request===version)message.textContent='File belum bisa dibaca. Pilih CSV dengan kolom username dan name atau url.'}
+  };
+  preview.onchange=()=>{confirm.disabled=!preview.querySelector(':checked')};
+  confirm.onclick=()=>{
+    const chosen=Array.from(preview.querySelectorAll(':checked'),check=>candidates[Number(check.value)]);
+    if(!chosen.length || !save([...chosen,...items]))return;
+    clearPreview();importer.open=false;field.value='';refresh();
+    el('notice').textContent=chosen.length+' kartu akun sudah Mimi simpan.';
+  };
   function refresh(){
+    importer.hidden=selectedKind!=='account';
+    if(importer.hidden && importer.open){importer.open=false;clearPreview()}
     search=field.value;
     const query=search.trim().toLocaleLowerCase('id');
     const rows=items.filter(item=>(!selectedKind || kindOf(item)===selectedKind)

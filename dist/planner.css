@@ -160,3 +160,7 @@ button.collection-item {background:var(--mimi-surface-container);color:var(--ink
 .agenda-group summary {cursor:pointer;font-weight:650;min-height:var(--mimi-target)}
 .agenda-group small {display:block;color:var(--mimi-on-surface-variant)}
 button.agenda-title {display:block;background:transparent;color:var(--mimi-on-surface);text-align:left;padding:.25rem 0;font:bold 1.35rem/1.25 Georgia,serif;overflow-wrap:anywhere}
+[data-import] summary {cursor:pointer;color:var(--mimi-primary);padding-block:.65rem}
+[data-preview] {max-height:18rem;overflow:auto}
+[data-preview] label {display:flex;align-items:center;gap:.6rem;min-height:44px;overflow-wrap:anywhere}
+[data-preview] input[type=checkbox] {width:1.25rem;min-height:1.25rem;flex-shrink:0}

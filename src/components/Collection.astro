@@ -7,6 +7,14 @@
     <input type="search" aria-label="Cari titipan" placeholder="Cari judul, catatan, atau akun" />
     <div class="chips" role="group" aria-label="Jenis titipan"></div>
   </div>
+  <details data-import hidden>
+    <summary>Impor kartu akun</summary>
+    <p>Pilih CSV dari Chrome atau Edge. Mimi membaca file di perangkat ini dan hanya menyimpan nama layanan serta username yang kamu pilih. Setelah selesai, hapus file ekspor karena bisa berisi kata sandi.</p>
+    <label>File CSV<input type="file" accept=".csv,text/csv" /></label>
+    <p data-import-message role="status"></p>
+    <div data-preview></div>
+    <button type="button" data-confirm hidden>Simpan pilihan</button>
+  </details>
   <div class="collection-summary"><p role="status"></p><button class="quiet" data-reset hidden>Atur ulang</button></div>
   <div class="collection-results"></div>
 </section>
