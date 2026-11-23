@@ -74,3 +74,5 @@ Di beranda web, layar hingga 600 px menempatkan menu di bawah dan Mimi di sampin
 Koleksi menggunakan daftar satu kolom pada web ponsel. Tampilkan judul dan hingga dua baris isi agar pengguna bisa membedakan titipan. Pada layar lebar, susun kartu sesuai ruang yang tersedia. Jika hasil kosong, tampilkan pose pencarian Mimi. Atur ulang mengosongkan kata pencarian dan memilih Semua. Detail pada web ponsel terbuka dari bawah dan mengikuti pilihan kurangi gerak.
 
 Beranda web memakai sapaan Mimi dan tiga pintasan bergambar untuk membuka formulir catatan, agenda, atau akun. Progres harian dihitung dari agenda yang dijadwalkan hari ini.
+
+Beranda memakai latar kertas petak dan kartu sapaan bergambar bukit, awan dan Mimi. Pada ponsel, navigasi bawah berbentuk kapsul dengan empat label.

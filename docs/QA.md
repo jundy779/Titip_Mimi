@@ -46,3 +46,5 @@ Sakelar Mode gelap di Profil diuji di Chrome dengan klik dan tombol spasi. Pilih
 Tema web dua pilihan diuji pada hasil build Astro. Tema awal dan preferensi lama system membuka tampilan terang, pilihan manual dipulihkan dan sakelar menyimpan perubahan.
 
 Beranda berilustrasi diuji di Chrome desktop: ketiga pintasan membuka jenis formulir yang tepat dan bisa dibatalkan. Build Astro lulus. Perangkat fisik belum diuji untuk revisi ini.
+
+Tampilan kertas petak, kartu pemandangan dan stiker beranda diperiksa pada Chrome desktop dalam mode terang. Build Astro lulus. Pemeriksaan ponsel fisik masih terbuka.
