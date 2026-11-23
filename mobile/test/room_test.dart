@@ -24,6 +24,12 @@ void main() {
     await tester.tap(find.text('Koleksi'));
     await tester.pumpAndSettle();
     expect(find.text('Bawa buku'), findsOneWidget);
+    await tester.enterText(find.byType(TextField), 'hilang');
+    await tester.pumpAndSettle();
+    expect(find.text('0 titipan'), findsOneWidget);
+    await tester.tap(find.text('Atur ulang'));
+    await tester.pumpAndSettle();
+    expect(find.text('1 titipan'), findsOneWidget);
     await tester.tap(find.text('Bawa buku'));
     await tester.pumpAndSettle();
     expect(find.text('Ubah'), findsOneWidget);

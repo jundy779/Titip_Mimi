@@ -128,6 +128,7 @@ class Room extends ConsumerStatefulWidget {
 
 class _RoomState extends ConsumerState<Room> {
   Timer? timer;
+  final searchField = TextEditingController();
   String query = '', filter = 'Semua';
   @override
   void initState() {
@@ -137,6 +138,7 @@ class _RoomState extends ConsumerState<Room> {
 
   @override
   void dispose() {
+    searchField.dispose();
     timer?.cancel();
     super.dispose();
   }
@@ -230,10 +232,13 @@ class _RoomState extends ConsumerState<Room> {
       subtitle: Text(
         [
           e.kind,
-          if (e.kind == 'Akun') e.body,
+          if (e.kind == 'Akun' || (widget.index == 1 && e.body.isNotEmpty))
+            e.body,
           if (e.time != null) stamp(context, e.time!),
           if (e.done) 'Selesai',
         ].join(' · '),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
       ),
       onTap: () => detail(e),
     ),
@@ -292,7 +297,7 @@ class _RoomState extends ConsumerState<Room> {
               e.title,
               e.body,
               e.method,
-            ].join(' ').toLowerCase().contains(query.toLowerCase()),
+            ].join(' ').toLowerCase().contains(query.trim().toLowerCase()),
       ),
       _ => agenda,
     };
@@ -395,8 +400,10 @@ class _RoomState extends ConsumerState<Room> {
                         ],
                         if (widget.index == 1) ...[
                           TextField(
+                            controller: searchField,
                             decoration: const InputDecoration(
                               labelText: 'Cari titipan',
+                              hintText: 'Judul, catatan, atau akun',
                               prefixIcon: Icon(Icons.search),
                             ),
                             onChanged: (v) => setState(() => query = v),
@@ -418,12 +425,41 @@ class _RoomState extends ConsumerState<Room> {
                             ],
                           ),
                         ],
+                        if (widget.index == 1)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '${rows.length} titipan',
+                                style: Theme.of(context).textTheme.labelLarge,
+                              ),
+                              if (query.isNotEmpty || filter != 'Semua')
+                                TextButton(
+                                  onPressed: () {
+                                    searchField.clear();
+                                    setState(() {
+                                      query = '';
+                                      filter = 'Semua';
+                                    });
+                                  },
+                                  child: const Text('Atur ulang'),
+                                ),
+                            ],
+                          ),
+                        if (widget.index == 1 && rows.isEmpty)
+                          Image.asset(
+                            'assets/mimi/v1/search.webp',
+                            height: 96,
+                            excludeFromSemantics: true,
+                          ),
                         if (rows.isEmpty)
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 24),
                             child: Text(
                               widget.index == 1
-                                  ? 'Belum ada titipan yang cocok.'
+                                  ? entries.isEmpty
+                                        ? 'Koleksimu masih kosong. Mau titip sesuatu?'
+                                        : 'Belum ketemu. Coba kata lain atau pilih Semua.'
                                   : 'Belum ada agenda di sini ♡',
                             ),
                           ),
