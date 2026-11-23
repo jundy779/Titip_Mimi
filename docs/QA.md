@@ -40,3 +40,5 @@ Impor metadata akun tersedia di Koleksi > Akun pada web. Build Astro dan uji CSV
 Navigasi web diperiksa di Chrome desktop. Hari Ini, Koleksi, Agenda dan Profil bisa dibuka bergantian. Keempat tombol memperbarui aria-current. Build Astro lulus. Tampilan perangkat fisik belum diuji pada revisi ini.
 
 Revisi halaman planner diuji dengan Chrome desktop: buka Profil, pilih Gelap, buka Agenda, buka dan batalkan formulir, pindah ke Koleksi, buka detail catatan. Build Astro lulus. Belum ada verifikasi perangkat fisik atau pengukuran frame animasi.
+
+Sakelar Mode gelap di Profil diuji di Chrome dengan klik dan tombol spasi. Pilihan gelap bertahan setelah muat ulang. Opsi Ikuti perangkat dapat diaktifkan kembali. Build Astro lulus.

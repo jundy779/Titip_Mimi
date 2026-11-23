@@ -20,16 +20,24 @@ const vars = [
       mode = ['light', 'dark'].includes(value) ? value : 'system';
       root.dataset.preference = mode;
       root.dataset.theme = mode === 'system' ? (media.matches ? 'dark' : 'light') : mode;
-      document.querySelectorAll('[data-theme-choice]').forEach(field => field.value = mode);
+      document.querySelectorAll('[data-dark-switch]').forEach(field => field.checked = root.dataset.theme === 'dark');
+      document.querySelectorAll('[data-follow-device]').forEach(field => field.checked = mode === 'system');
     }
     try { apply(localStorage.getItem(key)); } catch { apply('system'); }
     media.addEventListener('change', () => apply(mode));
     window.addEventListener('storage', event => { if (event.key === key || event.key === null) apply(event.newValue); });
     document.addEventListener('change', event => {
-      if (!event.target.matches('[data-theme-choice]')) return;
-      apply(event.target.value);
+      const field = event.target;
+      if (field.matches('[data-dark-switch]')) {
+        apply(field.checked ? 'dark' : 'light');
+      } else if (field.matches('[data-follow-device]')) {
+        apply(field.checked ? 'system' : root.dataset.theme);
+      } else {
+        return;
+      }
       try { localStorage.setItem(key, mode); } catch {}
     });
+    document.addEventListener('mimi-theme-mounted', () => apply(mode));
     document.addEventListener('DOMContentLoaded', () => apply(mode));
   })();
 </script>

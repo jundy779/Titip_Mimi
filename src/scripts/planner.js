@@ -121,7 +121,7 @@ for(const button of nav.children){
 }
 const p=el('page');p.replaceChildren();if(tab==='Profil'){
   p.append(el('profile-template').content.cloneNode(true));
-  p.querySelector('[data-theme-choice]').value=document.documentElement.dataset.preference || 'system';
+  document.dispatchEvent(new Event('mimi-theme-mounted'));
   p.querySelector('[data-open-agenda]').onclick=()=>{tab='Agenda';render()};
   return;
 }

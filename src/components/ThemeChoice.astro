@@ -1,7 +1,11 @@
-<label class="theme-choice">Tampilan Mimi
-  <select data-theme-choice>
-    <option value="system">Ikuti perangkat</option>
-    <option value="light">Terang</option>
-    <option value="dark">Gelap</option>
-  </select>
-</label>
+<fieldset class="theme-choice">
+  <legend>Tampilan Mimi</legend>
+  <label class="theme-row">
+    Mode gelap
+    <input type="checkbox" role="switch" data-dark-switch />
+  </label>
+  <label class="theme-auto">
+    <input type="checkbox" data-follow-device />
+    Ikuti perangkat
+  </label>
+</fieldset>
