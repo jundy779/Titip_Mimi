@@ -9,7 +9,6 @@ header strong {display:flex;align-items:center;gap:.55rem;font: bold clamp(20px,
 header strong img {width:2.5rem;mix-blend-mode:multiply}
 nav {display:flex;flex-direction:column;gap:.35rem}
 nav button {display:flex;align-items:center;gap:.65rem;text-align:left;background:transparent;color:var(--ink);font-weight:600}
-nav button:before {content:'';width:.55rem;height:.55rem;flex:none;border:1px solid currentColor;border-radius:50%}
 nav button.active:before {background:currentColor}
 button.active,.primary {color:var(--mimi-on-primary);background:var(--mimi-primary)}
 body > main:not(.guide) {max-width:85rem;margin-left:var(--rail);padding:clamp(1.5rem,4vw,4rem)}
@@ -46,7 +45,6 @@ dialog button {margin:.2rem}
 @media (min-width:601px) and (max-width:959px) {
   body > header {position:static;width:auto;max-width:none;flex-direction:row;align-items:center;justify-content:space-between;gap:1rem;padding:1rem 1.25rem;border:0;border-bottom:1px dashed var(--line)}
   header nav {position:static;display:flex;flex-direction:row;border:0;padding:0;background:transparent;flex-wrap:wrap}
-  nav button:before {display:none}
   body > main:not(.guide) {margin:auto;padding:1.5rem}
   .spread {grid-template-columns:1fr 1fr;grid-template-areas:'intro intro' 'agenda shelf'}
   .intro {grid-template-columns:1fr auto;justify-items:start;text-align:left;padding:0 1rem}
@@ -58,7 +56,6 @@ dialog button {margin:.2rem}
   header strong img {width:2rem}
   nav {position:fixed;inset:auto 0 0;z-index:3;display:grid;grid-template-columns:repeat(4,1fr);gap:.25rem;padding:.4rem .45rem max(.4rem,env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--mimi-surface-container)}
   nav button {justify-content:center;padding:.4rem .15rem;font-size:.875rem}
-  nav button:before {display:none}
   body > main:not(.guide) {margin:0;padding:1rem 1rem calc(5.5rem + env(safe-area-inset-bottom))}
   .spread {display:flex;flex-direction:column;align-items:stretch;gap:1rem}
   .intro {width:100%;grid-template-columns:minmax(0,1fr) minmax(4.5rem,32%);gap:.55rem;justify-items:start;text-align:left;padding:.6rem 0}
@@ -164,3 +161,45 @@ button.agenda-title {display:block;background:transparent;color:var(--mimi-on-su
 [data-preview] {max-height:18rem;overflow:auto}
 [data-preview] label {display:flex;align-items:center;gap:.6rem;min-height:44px;overflow-wrap:anywhere}
 [data-preview] input[type=checkbox] {width:1.25rem;min-height:1.25rem;flex-shrink:0}
+
+.room-menu strong {
+  font: 600 1.25rem/1.2 Georgia, serif;
+  letter-spacing: -.025em;
+  white-space: nowrap;
+}
+.room-menu strong img {
+  width: 2rem;
+  height: 2rem;
+  object-fit: contain;
+  padding: .22rem;
+  border-radius: 50%;
+  background: #fbe5e4;
+  mix-blend-mode: normal;
+}
+.room-menu nav button {
+  min-height: 46px;
+  padding: .55rem .75rem;
+  gap: .75rem;
+  border-radius: .75rem;
+  font-size: .95rem;
+  font-weight: 500;
+  line-height: 1.25;
+}
+.room-menu nav svg { flex: none; }
+.room-menu nav button.active {
+  color: var(--mimi-primary);
+  background: color-mix(in srgb, var(--mimi-primary) 12%, var(--mimi-surface-container));
+  font-weight: 650;
+}
+@media (min-width: 960px) {
+  body > .room-menu { gap: 1.25rem; padding: 1.75rem .85rem; border-right-style: solid; }
+  .room-menu strong { padding: 0 .35rem 1.15rem; border-bottom: 1px solid var(--line); }
+  .room-menu nav { gap: .2rem; }
+  .room-menu nav button.active { box-shadow: inset 3px 0 var(--mimi-primary); }
+}
+@media (min-width: 601px) and (max-width: 959px) {
+  .room-menu nav button { padding-inline: .6rem; gap: .4rem; }
+}
+@media (max-width: 600px) {
+  .room-menu nav button { flex-direction: column; gap: .2rem; padding: .35rem .15rem; font-size: .875rem; }
+}

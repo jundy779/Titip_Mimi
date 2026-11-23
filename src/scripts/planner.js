@@ -23,9 +23,9 @@ function addImport(card){
 }
 
 const el=id=>document.getElementById(id);
-const names=['Hari Ini','Koleksi','Agenda','Profil'];
+
 const key='ruang-iqlima-demo-v1';
-let tab=names[0],items=[];
+let tab='Hari Ini',items=[];
 let today=new Date(), day=localDay(today);
 try{items=JSON.parse(localStorage.getItem(key)||'null')||[{title:'Ambil jahitan',note:'Bawa nota waktu mengambil pesanan.',time:day+'T16:00',done:false},{title:'Undangan syukuran',note:'Contoh undangan di koleksi Iqlima.',time:'',done:false}]}catch{items=[]}
 function make(tag,txt){const n=document.createElement(tag);n.textContent=txt;return n}
@@ -105,15 +105,10 @@ function agendaList(target,rows){
   }
 }
 function render(){refreshReminder();document.body.dataset.page=tab;const nav=document.querySelector('nav');
-if(!nav.children.length){
-  for(const name of names){
-    const button=make('button',name);
-    button.onclick=()=>{if(tab!==name){tab=name;el('notice').textContent='';render()}};
-    nav.append(button);
-  }
-}
 for(const button of nav.children){
-  const active=button.textContent===tab;
+  const name=button.dataset.section;
+  button.onclick=()=>{if(tab!==name){tab=name;el('notice').textContent='';render()}};
+  const active=name===tab;
   button.classList.toggle('active',active);
   if(active)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');
 }

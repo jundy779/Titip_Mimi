@@ -36,3 +36,5 @@ Koleksi diperiksa pada demo web publik melalui Chrome. Filter Akun menghasilkan 
 Agenda web dan Flutter memakai tanggal lokal untuk grup Terlewat, Hari ini, Besok dan Berikutnya. Selesai dapat dilipat. Build Astro lulus. Uji DOM dengan jam simulasi memeriksa pintasan melewati tahun baru, simpan jadwal, konfirmasi waktu, buka nota, tunda sepuluh menit, pengingat muncul kembali dan selesai. Empat tes Flutter lulus, termasuk membuka grup Selesai dan menampilkan Besok. Analisis Dart bersih. Pengujian perangkat fisik dan pengiriman latar belakang belum tercakup.
 
 Impor metadata akun tersedia di Koleksi > Akun pada web. Build Astro dan uji CSV fiktif lulus untuk BOM, CRLF, kolom berkutip, koma dan baris baru, fallback hostname, duplikat saat impor ulang, serta penolakan CSV rusak. Objek hasil uji hanya berisi petunjuk akun dan tidak memuat kata sandi, catatan bebas, atau query URL. Impor Flutter dan pengiriman ke brankas eksternal belum tersedia.
+
+Navigasi web diperiksa di Chrome desktop. Hari Ini, Koleksi, Agenda dan Profil bisa dibuka bergantian. Keempat tombol memperbarui aria-current. Build Astro lulus. Tampilan perangkat fisik belum diuji pada revisi ini.

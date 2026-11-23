@@ -4,6 +4,12 @@ import ThemeChoice from "../components/ThemeChoice.astro";
 import MimiTheme from '../components/MimiTheme.astro';
 import Today from '../components/Today.astro';
 import CaptureDialog from '../components/CaptureDialog.astro';
+const sections = [
+  { label: 'Hari Ini', icon: 'M3 17h18 M5 20h14 M7 14a5 5 0 0 1 10 0 M12 3v3 M3.5 7l2 2 M20.5 7l-2 2 M2 14h2 M20 14h2' },
+  { label: 'Koleksi', icon: 'M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M3 10h18' },
+  { label: 'Agenda', icon: 'M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z M7 3v4 M17 3v4 M3 10h18 M7 15h4' },
+  { label: 'Profil', icon: 'M16 8a4 4 0 1 1-8 0 4 4 0 0 1 8 0z M4 21a8 8 0 0 1 16 0' }
+];
 ---
 <!doctype html>
 <html lang="id">
@@ -16,7 +22,17 @@ import CaptureDialog from '../components/CaptureDialog.astro';
     <MimiTheme />
   </head>
   <body>
-    <header><strong><img src="bow.webp" alt="">Ruang Iqlima</strong><nav aria-label="Menu utama"></nav></header>
+    <header class="room-menu">
+      <strong><img src="bow.webp" alt="" />Ruang Iqlima</strong>
+      <nav aria-label="Menu utama">
+        {sections.map(({label, icon}) => (
+          <button type="button" data-section={label}>
+            <svg aria-hidden="true" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><path d={icon} /></svg>
+            <span>{label}</span>
+          </button>
+        ))}
+      </nav>
+    </header>
     <main>
       <aside id="reminder" class="card" hidden aria-labelledby="reminder-heading">
         <img src="/remind.webp" width="72" height="72" alt="" />
