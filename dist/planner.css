@@ -398,3 +398,7 @@ body > dialog h2 { line-height:1.15; overflow-wrap:anywhere; }
 .list-fold textarea {width:100%;resize:vertical;margin-bottom:.6rem}
 .list-priority {margin-top:1rem;flex-wrap:wrap}
 @media(max-width:560px){.list-extras{grid-template-columns:1fr}.list-date span{position:absolute;clip-path:inset(50%)}.list-heading{gap:.375rem}.list-heading img{width:1.8rem}.mimi-list .list-date input{font-size:.82rem}}
+.list-task-row,.list-undo {display:flex;align-items:center;justify-content:space-between;gap:.5rem;border-bottom:1px solid color-mix(in srgb,currentColor 17%,transparent)}
+.list-group .list-task-row label {flex:1;min-width:0;border:0}
+.list-task-row .list-remove,.list-undo button {background:transparent;border:0;box-shadow:none;color:var(--mimi-primary);min-height:44px;padding:.4rem .6rem;font-size:.85rem}
+.list-undo {flex-wrap:wrap;overflow-wrap:anywhere;font-size:.875rem}

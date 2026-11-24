@@ -65,6 +65,28 @@ class _DailyListState extends State<DailyList> {
     save();
   }
 
+  void removeRow(String group, dynamic row) {
+    final rows = data[group] as List;
+    final index = rows.indexOf(row);
+    if (index < 0) return;
+    setState(() {
+      (data['deleted'] ??= {})[group] = {'index': index, 'item': rows.removeAt(index)};
+    });
+    save();
+  }
+
+  void undoRemove(String group) {
+    final removed = data['deleted']?[group];
+    if (removed == null) return;
+    final rows = data[group] as List;
+    setState(() {
+      final index = removed['index'] as int;
+      rows.insert(index > rows.length ? rows.length : index, removed['item']);
+      data['deleted'].remove(group);
+    });
+    save();
+  }
+
   @override
   void dispose() {
     for (final field in fields.values) { field.dispose(); }
@@ -73,9 +95,16 @@ class _DailyListState extends State<DailyList> {
 
   List<Widget> groupFields(String group) => [
         for (final row in data[group] ?? [])
-          CheckboxListTile(contentPadding: EdgeInsets.zero, controlAffinity: ListTileControlAffinity.leading,
+          Row(children: [Expanded(child: CheckboxListTile(contentPadding: EdgeInsets.zero, controlAffinity: ListTileControlAffinity.leading,
             title: Text(row['title'] as String), value: row['done'] == true,
-            onChanged: (checked) { setState(() => row['done'] = checked == true); save(); }),
+            onChanged: (checked) { setState(() => row['done'] = checked == true); save(); })),
+            TextButton(onPressed: () => removeRow(group, row), child: const Text('Hapus')),
+          ]),
+        if (data['deleted']?[group] != null)
+          Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: [
+            Text('“${data['deleted'][group]['item']['title']}” dihapus.'),
+            TextButton(onPressed: () => undoRemove(group), child: const Text('Urungkan')),
+          ]),
         Row(children: [
           Expanded(child: TextField(controller: fields[group], maxLength: 240,
             decoration: InputDecoration(labelText: 'Tambah ke $group', counterText: ''),

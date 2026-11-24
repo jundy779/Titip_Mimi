@@ -43,7 +43,47 @@ export function mountDailyList(sheet, today) {
         })) check.checked = !check.checked;
       };
       line.append(check, document.createTextNode(item.title));
-      container.append(line);
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'list-remove';
+      remove.textContent = 'Hapus';
+      remove.setAttribute('aria-label', 'Hapus ' + item.title);
+      remove.onclick = () => {
+        if (!write(data => {
+          const index = data[name]?.findIndex(row => row.id === item.id) ?? -1;
+          if (index < 0) return;
+          const [removed] = data[name].splice(index, 1);
+          (data.deleted ||= {})[name] = {item: removed, index};
+        })) return;
+        rows(group);
+        container.querySelector('.list-undo button')?.focus();
+      };
+      const wrapper = document.createElement('div');
+      wrapper.className = 'list-task-row';
+      wrapper.append(line, remove);
+      container.append(wrapper);
+    }
+    const deleted = page.deleted?.[name];
+    if (deleted) {
+      const notice = document.createElement('div');
+      notice.className = 'list-undo';
+      const undo = document.createElement('button');
+      undo.type = 'button';
+      undo.textContent = 'Urungkan';
+      undo.onclick = () => {
+        if (!write(data => {
+          const last = data.deleted?.[name];
+          if (last?.item.id !== deleted.item.id) return;
+          const items = data[name] ||= [];
+          if (!items.some(row => row.id === last.item.id)) items.splice(last.index, 0, last.item);
+          delete data.deleted[name];
+        })) return;
+        rows(group);
+        const controls = container.querySelectorAll('.list-remove');
+        controls[Math.min(deleted.index, controls.length - 1)]?.focus();
+      };
+      notice.append(document.createTextNode('“' + deleted.item.title + '” dihapus.'), undo);
+      container.append(notice);
     }
   }
   function open() {
