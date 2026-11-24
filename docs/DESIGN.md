@@ -98,3 +98,5 @@ Di Kamar Mimi, model anak kucing krem memakai pita merah muda di telinga, pipi m
 Saat bermain, Iqlima memegang benang dan Mimi bergerak sendiri. Arah lompatan terkunci saat lepas landas agar pemain dapat mengelak. Posisi gelembung menentukan usapan yang berhasil. Setelah tiga suapan Mimi kenyang selama setengah jam.
 
 Gerak Mimi mengikuti berat tubuh. Mata dan kepala mengikuti benang, telapak depan terangkat ketika meraih, lalu kaki menekuk ketika mendarat. Pita pink tetap menjadi ciri utamanya.
+
+Model bermain memakai tanda hati di mata kiri dan pita stroberi di kanan dari sudut pandang pemain, serta iris plum mengikuti paket maskot v1. Langkah dan ayunan ekor bertransisi bertahap antara diam dan berlari.

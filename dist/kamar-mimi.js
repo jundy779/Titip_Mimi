@@ -4,7 +4,7 @@ const el=id=>document.getElementById(id),canvas=document.querySelector('canvas')
 let scene;
 try{scene=makeScene(canvas)}catch(error){console.warn('Kamar Mimi',error)}
 el('fallback').hidden=!!scene;
-const s={impact:0,lookX:0,lookY:0,mode:'feed',catX:0,face:0,ballX:.9,ballY:.32,progress:0,drag:null,running:false,biting:false};
+const s={gait:0,stridePhase:0,tailPhase:0,impact:0,lookX:0,lookY:0,mode:'feed',catX:0,face:0,ballX:.9,ballY:.32,progress:0,drag:null,running:false,biting:false};
 const modes={
  feed:['Seret biskuit ikan dari mangkuk ke mulut Mimi.','Suapi Mimi','Mimi mencium aroma ikan…'],
  wash:['Usap gelembung di bulu Mimi sampai bersih.','Usap bulu','Gelembungnya geli, hihi.'],
@@ -83,18 +83,25 @@ canvas.onkeydown=e=>{
  if(s.mode!=='play'||!['ArrowLeft','ArrowRight'].includes(e.key))return;
  e.preventDefault();yarn.flick(e.key==='ArrowLeft'?-1:1);
 };
-let lastFrame=0;
+let lastFrame=null,clock=0;
+document.addEventListener('visibilitychange',()=>{lastFrame=null});
 function tick(now){
- requestAnimationFrame(tick);if(document.hidden||now-lastFrame<32)return;
- const dt=Math.min((now-lastFrame)/1000,.05);lastFrame=now;s.biting=now<biteEnd;
- if(s.mode==='play')yarn.step(dt,now);
- if(s.drag)s.face+=(Math.max(-.4,Math.min(.4,s.drag.x*.55))-s.face)*.2;
+ requestAnimationFrame(tick);if(document.hidden)return;
+ const dt=lastFrame===null?0:Math.min((now-lastFrame)/1000,.1);
+ lastFrame=now;clock+=dt;s.biting=now<biteEnd;
+ if(s.mode==='play'){
+   const steps=Math.ceil(dt*120);
+   for(let i=0;i<steps;i++)yarn.step(dt/steps,now-(steps-1-i)*dt/steps*1000);
+ }
+ s.gait+=((s.running?1:0)-s.gait)*(1-Math.exp(-10*dt));
+ s.stridePhase+=13*dt;s.tailPhase+=(1.7+2.3*s.gait)*dt;
+ if(s.drag)s.face+=(Math.max(-.4,Math.min(.4,s.drag.x*.55))-s.face)*(1-Math.exp(-13*dt));
  const focus=s.drag||(s.mode==='play'?{x:s.ballX,y:s.ballY}:null);
  const aimX=focus?Math.tanh((focus.x-s.catX)*1.5):Math.sin(now*.0007)*.18;
  const aimY=focus?Math.tanh(focus.y-1.35):.05;
  const follow=1-Math.exp(-10*dt);
  s.lookX+=(aimX-s.lookX)*follow;s.lookY+=(aimY-s.lookY)*follow;
  s.impact*=Math.exp(-9*dt);
- scene?.render(now/1000,s);
+ scene?.render(clock,s);
 }
 select('play');requestAnimationFrame(tick);

@@ -68,3 +68,5 @@ Revisi lembar ringkas diuji di Chrome pada demo publik. Centang lama terbaca, em
 Kamar Mimi, uji simulasi web 24 November 2026. Pengujian langkah waktu tetap memeriksa diam tanpa hadiah, gerakan menghindar saat Mimi menerkam, tangkapan setelah benang jatuh, satu hati per tangkapan dan lempar ulang. Build Astro berhasil. Pengujian sentuhan di perangkat Android dan iOS fisik masih terbuka.
 
 Kamar Mimi, 24 November 2026. Build Astro berhasil. Uji simulasi memeriksa satu hadiah per tangkapan, transisi turun setelah menangkap benang dan kontak dengan lantai. Pengujian pada HP fisik masih terbuka.
+
+Uji animasi Kamar Mimi di web. Simulasi jadwal frame 30, 60, 90 dan 120 Hz menghasilkan satu tangkapan untuk kibasan yang sama. Latar Canvas digunakan kembali setelah ukuran stabil. Build Astro lulus. Kecepatan frame di Android dan iOS fisik belum diukur.
