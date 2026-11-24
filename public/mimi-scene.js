@@ -3,6 +3,47 @@ export function makeScene(canvas) {
   const gl=canvas.getContext('webgl',{alpha:true,antialias:true});
   const ctx=gl?null:canvas.getContext('2d');
   if(!gl&&!ctx)return null;
+  // Paint the companion in depth order behind the interactive toys. The projected
+  // rig shares its world coordinates and jump physics with the 3D renderer.
+  const layer=document.createElement('canvas');
+  layer.setAttribute('aria-hidden','true');
+  layer.style.cssText='position:absolute;inset:0;width:100%;height:100%;pointer-events:none';
+  canvas.before(layer);
+  const artist=layer.getContext('2d');
+  const kitten=new Image();
+  kitten.src='mimi-fantasy.webp';
+  function paintKitten(t,s){
+    if(!artist||!kitten.complete||!kitten.naturalWidth)return false;
+    if(layer.width!==canvas.width||layer.height!==canvas.height){
+      layer.width=canvas.width;layer.height=canvas.height;
+    }
+    const w=layer.width,h=layer.height,u=w/(2*vx);
+    artist.clearRect(0,0,w,h);
+    const x=w/2+s.catX*u;
+    const floor=h/2+(1.38-.1)*.965*u;
+    const bottom=floor-s.lift*.965*u;
+    const stride=Math.sin(s.stridePhase)*s.gait;
+    const compression=s.crouch*.07+s.impact*.09;
+    const height=(2.38+Math.sin(t*2.3)*.014-compression+s.reach*.06)*u;
+    const width=height*kitten.width/kitten.height;
+    artist.save();artist.translate(x,floor);
+    artist.scale(u*(.59-s.lift*.17),u*.105);
+    const shade=artist.createRadialGradient(0,0,.1,0,0,1);
+    shade.addColorStop(0,'rgba(91,52,72,.34)');shade.addColorStop(1,'rgba(91,52,72,0)');
+    artist.fillStyle=shade;artist.fillRect(-1,-1,2,2);artist.restore();
+    // Each band bends progressively at the shoulders and hips, keeping paws planted at rest.
+    const bands=36;
+    for(let i=0;i<bands;i++){
+      const f=i/bands;
+      const head=1-f*f;
+      const sway=head*(s.lookX*.052+s.face*.10)+stride*(.04-f*.06);
+      const lean=1+head*Math.abs(s.face)*-.075+Math.sin(f*Math.PI)*compression*.3;
+      const bandWidth=width*lean;
+      artist.drawImage(kitten,0,f*kitten.height,kitten.width,kitten.height/bands,
+        x-bandWidth*.51+sway*u,bottom-height+f*height,bandWidth,height/bands+.55);
+    }
+    return true;
+  }
   let queue=[],group=[0,0,0,0],vx,vy;
   const stamps=new Map();
   let drawingFur=false;
@@ -201,7 +242,7 @@ export function makeScene(canvas) {
       gl.uniform2f(loc.gaze,s.lookX,s.lookY);
       gl.uniform1f(loc.blink,Math.min(1,Math.abs(t%4.9-4.6)/.13));
     }else ctx.clearRect(0,0,w,h);
-    const shade=1-s.lift*.4;ball(s.catX,.11,0,.60*shade,.02,.40*shade,'#d5aaa2');drawingFur=true;cat(t,s);drawingFur=false;origin();
+    if(!paintKitten(t,s)){drawingFur=true;cat(t,s);drawingFur=false}origin();
     if(s.mode==='feed'){ball(.82,.22,1.15,.39,.14,.31,'#cb8191');ball(.82,.31,1.15,.32,.07,.25,'#fae8d5');
       const x=s.drag?.x??.82,y=s.drag?.y??.44;ball(x,y,1.21,.17,.09,.08,'#e5ae69');ear(x-.16,y,1.21,.08,.105,.055,'#dda165',1.57);ball(x+.09,y+.025,1.28,.016,.016,.014,eye)}
     if(s.mode==='wash'){for(const i of s.foam){let a=i*2.4;ball(s.catX+Math.cos(a)*.61,1.3+Math.sin(a)*.39,.64,.105,.105,.09,'#bce3ea');ball(s.catX+Math.cos(a)*.61-.034,1.34+Math.sin(a)*.39,.71,.031,.031,.016,white)}}
