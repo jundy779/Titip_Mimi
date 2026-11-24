@@ -75,6 +75,25 @@ class _DailyListState extends State<DailyList> {
     save();
   }
 
+  Future<void> purgeRemoved(String group) async {
+    final removed = data['deleted']?[group];
+    if (removed == null) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Hapus “${removed['item']['title']}” secara permanen?'),
+        content: const Text('Tugas ini tidak bisa dikembalikan.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Batal')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Hapus permanen')),
+        ],
+      ),
+    );
+    if (!mounted || confirmed != true || !identical(data['deleted']?[group], removed)) return;
+    setState(() => data['deleted'].remove(group));
+    save();
+  }
+
   void undoRemove(String group) {
     final removed = data['deleted']?[group];
     if (removed == null) return;
@@ -104,6 +123,7 @@ class _DailyListState extends State<DailyList> {
           Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: [
             Text('“${data['deleted'][group]['item']['title']}” dihapus.'),
             TextButton(onPressed: () => undoRemove(group), child: const Text('Urungkan')),
+            TextButton(onPressed: () => purgeRemoved(group), child: const Text('Hapus permanen')),
           ]),
         Row(children: [
           Expanded(child: TextField(controller: fields[group], maxLength: 240,

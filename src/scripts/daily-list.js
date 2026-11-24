@@ -82,7 +82,18 @@ export function mountDailyList(sheet, today) {
         const controls = container.querySelectorAll('.list-remove');
         controls[Math.min(deleted.index, controls.length - 1)]?.focus();
       };
-      notice.append(document.createTextNode('“' + deleted.item.title + '” dihapus.'), undo);
+      const purge = document.createElement('button');
+      purge.type = 'button';
+      purge.textContent = 'Hapus permanen';
+      purge.onclick = () => {
+        if (!window.confirm('Hapus “' + deleted.item.title + '” secara permanen? Tugas ini tidak bisa dikembalikan.')) return;
+        if (!write(data => {
+          if (data.deleted?.[name]?.item.id === deleted.item.id) delete data.deleted[name];
+        })) return;
+        rows(group);
+        group.querySelector('form input').focus();
+      };
+      notice.append(document.createTextNode('“' + deleted.item.title + '” dihapus.'), undo, purge);
       container.append(notice);
     }
   }
