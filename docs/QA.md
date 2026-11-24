@@ -54,3 +54,9 @@ Jurnal Mimi v1.2: build Astro lulus. Di Chrome desktop, Koleksi, Agenda dan Prof
 Flutter: formatter Dart berhasil membaca source yang berubah. Build perangkat dan widget test revisi ini belum terverifikasi.
 
 Tipografi ringkas ponsel: build Astro lulus. Pemeriksaan pada perangkat fisik belum dilakukan.
+
+## Alur agenda web pada 24 November 2026
+
+Uji Chrome lulus pada lebar 320, 360, 390, 768, dan 1280 piksel. Keempat halaman utama muat tanpa gulir horizontal. Pada tiga lebar ponsel, judul beranda berukuran 18 piksel. Tema kunjungan pertama terang. Agenda jatuh tempo dapat dibuat, ditunda sepuluh menit, ditemukan lewat Koleksi, lalu diselesaikan. Waktu agenda asli, penundaan, dan status selesai bertahan setelah muat ulang sesuai langkah uji.
+
+Untuk mengulang, jalankan `npm run build`, salin `tests/browser/planner.html` ke `dist/qa.html`, lalu jalankan `npm run preview` pada origin pengujian kosong. Buka `/qa.html` dan pilih **Mulai pengujian**. Jangan sertakan salinan halaman uji saat menerbitkan demo. Pengujian ini memakai viewport browser. Pengiriman saat aplikasi ditutup dan perilaku pada perangkat fisik perlu diuji terpisah.

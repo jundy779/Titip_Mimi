@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="id"><meta charset="utf-8"><title>Uji agenda Mimi</title>
+<h1>Uji agenda Mimi</h1>
+<p>Jalankan pada origin pengujian kosong yang menyajikan build web di /. Hasil ditampilkan per ukuran layar.</p>
+<button id="start">Mulai pengujian</button><pre id="report"></pre>
+<iframe title="Planner dalam viewport uji" style="height:750px;border:0"></iframe>
+<script type="module">
+const frame = document.querySelector('iframe');
+const report = document.querySelector('#report');
+const start = document.querySelector('#start');
+const itemsKey = 'ruang-iqlima-demo-v1';
+const themeKey = 'titip-mimi-theme';
+function assert(ok, message) {
+  if (!ok) throw new Error(message);
+}
+function openHome() {
+  return new Promise(resolve => {
+    frame.onload = resolve;
+    frame.src = '/';
+  });
+}
+async function checkWidth(width) {
+  frame.style.width = width + 'px';
+  localStorage.setItem(itemsKey, '[]');
+  await openHome();
+  const doc = () => frame.contentDocument;
+  const one = selector => doc().querySelector(selector);
+  const click = selector => { assert(one(selector), 'Elemen hilang ' + selector); one(selector).click(); };
+  const fits = () => assert(doc().documentElement.scrollWidth <= width, 'Halaman meluap: ' + doc().body.dataset.page);
+  const stored = () => JSON.parse(localStorage.getItem(itemsKey));
+  assert(doc().documentElement.dataset.theme === 'light', 'Tema awal');
+  for (const section of ['Koleksi','Agenda','Profil','Hari Ini']) {
+    click('[data-section="' + section + '"]');
+    assert(doc().body.dataset.page === section, 'Navigasi ' + section);
+    fits();
+  }
+  const heading = frame.contentWindow.getComputedStyle(one('#page h1')).fontSize;
+  click('[data-capture-kind="agenda"]');
+  one('#judul').value = 'Uji ambil pesanan';
+  one('#waktu').value = '2020-01-02T10:00';
+  one('#form').requestSubmit();
+  assert(!one('#reminder').hidden && one('#due-title').textContent === 'Uji ambil pesanan', 'Pengingat jatuh tempo');
+  const before = Date.now();
+  click('#due-snooze');
+  assert(stored()[0].snoozeUntil >= before + 600000 && stored()[0].snoozeUntil <= Date.now() + 600000, 'Tunda sepuluh menit');
+  await openHome();
+  assert(one('#reminder').hidden && stored()[0].time === '2020-01-02T10:00', 'Tunda setelah muat ulang');
+  click('[data-section="Koleksi"]');
+  const search = one('#page input');
+  search.value = 'ambil pesanan';
+  search.dispatchEvent(new Event('input', {bubbles:true}));
+  click('.collection-results .collection-item');
+  assert(one('dialog[open] h2').textContent === 'Uji ambil pesanan', 'Buka hasil pencarian');
+  Array.from(one('dialog[open]').querySelectorAll('button')).find(button => button.textContent === 'Tandai selesai').click();
+  await openHome();
+  click('[data-section="Agenda"]');
+  assert(stored()[0].done && one('details.agenda-group summary').textContent === 'Selesai (1)' && one('#reminder').hidden, 'Status selesai setelah muat ulang');
+  report.textContent += width + ' px lulus; ukuran judul beranda ' + heading + '\n';
+}
+start.onclick = async () => {
+  if ([itemsKey,themeKey].some(key => localStorage.getItem(key) !== null)) {
+    report.textContent = 'Gunakan origin pengujian kosong agar data yang ada tetap aman.';
+    return;
+  }
+  start.disabled = true;
+  report.textContent = '';
+  try {
+    for (const width of [320,360,390,768,1280]) await checkWidth(width);
+    report.textContent += 'Semua pemeriksaan lulus.';
+  } catch (error) {
+    report.textContent += 'Gagal pada ' + frame.style.width + ': ' + error.message;
+  } finally {
+    frame.src = 'about:blank';
+    localStorage.removeItem(itemsKey);
+    start.disabled = false;
+  }
+};
+</script></html>
