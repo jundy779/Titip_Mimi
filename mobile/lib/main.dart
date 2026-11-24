@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'entry.dart';
+import 'reminders.dart';
 import 'editor.dart';
 import 'journal.dart';
 
@@ -17,17 +18,49 @@ final themeProvider = StateProvider<ThemeMode>((ref) {
   return key == 'dark' ? ThemeMode.dark : ThemeMode.light;
 });
 final entriesProvider = StateNotifierProvider<Entries, List<Entry>>(
-  (ref) => Entries(ref.watch(prefsProvider)),
+  (ref) => Entries(ref.watch(prefsProvider), (message) {
+    ref.read(reminderStatus.notifier).state = message;
+  }),
 );
 
+final reminderStatus = StateProvider<String>((ref) => '');
+final reminderEnabled = StateProvider<bool>(
+  (ref) => ref.watch(prefsProvider).getBool('phoneReminders') ?? false,
+);
+
+void _ignoreStatus(String _) {}
+
 class Entries extends StateNotifier<List<Entry>> {
-  Entries(this.prefs)
+  Entries(this.prefs, [this.report = _ignoreStatus])
     : super(
         (jsonDecode(prefs.getString('entries') ?? '[]') as List)
             .map((j) => Entry.fromJson(j))
             .toList(),
       );
   final SharedPreferences prefs;
+  final void Function(String) report;
+  Future<void> reconcile({bool clear = false}) {
+    final operation = _tail.then((_) => _sync(clear: clear));
+    _tail = operation.catchError((Object _) {});
+    return operation;
+  }
+
+  Future<void> _sync({bool clear = false}) async {
+    final enabled = prefs.getBool('phoneReminders') ?? false;
+    if (!enabled && !clear) return;
+    try {
+      final status = await reminderChannel.invokeMethod<String>(
+        'replace', enabled ? pendingReminders(state, DateTime.now()) : [],
+      );
+      report(switch (status) {
+        'denied' => 'Izinkan notifikasi Titip Mimi di pengaturan HP, ya.',
+        'limited' => 'Mimi menjadwalkan 60 pengingat terdekat. Buka aplikasi lagi untuk memperbaruinya.',
+        _ => '',
+      });
+    } catch (_) {
+      report('Jadwal notifikasi belum diperbarui. Coba lagi dari Profil.');
+    }
+  }
   Future<void> _tail = Future.value();
   Future<void> put(Entry item) =>
       _write(() => [item, ...state.where((e) => e.id != item.id)]);
@@ -43,6 +76,7 @@ class Entries extends StateNotifier<List<Entry>> {
         throw StateError('Gagal menyimpan');
       }
       state = next;
+      await _sync();
     });
     _tail = operation.catchError((Object _) {});
     return operation;
@@ -136,18 +170,49 @@ class Room extends ConsumerStatefulWidget {
   ConsumerState<Room> createState() => _RoomState();
 }
 
-class _RoomState extends ConsumerState<Room> {
+class _RoomState extends ConsumerState<Room> with WidgetsBindingObserver {
+  bool changingReminder = false;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) ref.read(entriesProvider.notifier).reconcile();
+  }
+
+  Future<void> toggleReminder(bool enabled) async {
+    setState(() => changingReminder = true);
+    final prefs = ref.read(prefsProvider);
+    try {
+      if (enabled && await reminderChannel.invokeMethod<bool>('authorize') != true) {
+        if (mounted) ref.read(reminderStatus.notifier).state =
+            'Izinkan notifikasi Titip Mimi di pengaturan HP, ya.';
+        return;
+      }
+      if (!await prefs.setBool('phoneReminders', enabled)) throw StateError('prefs');
+      if (!mounted) return;
+      ref.read(reminderEnabled.notifier).state = enabled;
+      await ref.read(entriesProvider.notifier).reconcile(clear: !enabled);
+    } catch (_) {
+      if (mounted) ref.read(reminderStatus.notifier).state =
+          'Pengaturan pengingat belum tersimpan. Coba lagi, ya.';
+    } finally {
+      if (mounted) setState(() => changingReminder = false);
+    }
+  }
+
   Timer? timer;
   final searchField = TextEditingController();
   String query = '', filter = 'Semua';
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    ref.read(entriesProvider.notifier).reconcile(clear: ref.read(prefsProvider).containsKey('phoneReminders'));
     timer = Timer.periodic(const Duration(seconds: 5), (_) => setState(() {}));
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     searchField.dispose();
     timer?.cancel();
     super.dispose();
@@ -398,7 +463,7 @@ class _RoomState extends ConsumerState<Room> {
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       const Text(
-        'Titipanmu tersimpan di perangkat ini. Pengingat muncul saat aplikasi terbuka.',
+        'Titipanmu tersimpan di perangkat ini.',
       ),
       const SizedBox(height: 16),
       SwitchListTile(
@@ -412,6 +477,20 @@ class _RoomState extends ConsumerState<Room> {
           }
         },
       ),
+      SwitchListTile(
+        title: const Text('Ingatkan di HP'),
+        subtitle: const Text('Mimi bisa mengingatkan meski aplikasi ditutup. Isi agenda tetap pribadi di layar kunci.'),
+        value: ref.watch(reminderEnabled),
+        onChanged: changingReminder ? null : toggleReminder,
+      ),
+      if (ref.watch(reminderStatus).isNotEmpty)
+        ListTile(
+          subtitle: Text(ref.watch(reminderStatus)),
+          trailing: TextButton(
+            onPressed: () => toggleReminder(ref.read(reminderEnabled)),
+            child: const Text('Coba lagi'),
+          ),
+        ),
       const ListTile(
         title: Text('Google Kalender'),
         subtitle: Text(
