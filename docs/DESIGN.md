@@ -108,3 +108,5 @@ Pada tampilan utama, Mimi menggunakan ilustrasi karakter fantasi transparan dari
 Mimi memakai enam pose yang dihubungkan dengan mekanik bermain. Saat santai ia merawat bulu dan mengedip, saat diterkam benang berada di antara kedua kaki depan. Usapan kepala saat santai memicu pose mata tertutup.
 
 Di browser WebGL, karakter utama kembali memakai tubuh 3D dengan gerak mata dan kaki depan terpisah. Perangkat tanpa WebGL memakai pose ilustrasi utuh agar sambungan segitiga tidak tampak. Usapan, cilukba, dan tos tersedia langsung dari teras.
+
+Pintasan Main sama Mimi di Hari Ini berupa satu tautan kartu dengan maskot menyapa, label singkat, dan panah. Seluruh kartu bisa diketuk atau dibuka lewat keyboard.

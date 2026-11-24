@@ -409,3 +409,43 @@ body > dialog h2 { line-height:1.15; overflow-wrap:anywhere; }
   margin:0;background:var(--mimi-surface);box-shadow:0 6px 24px #42273833;
 }
 #due-actions[hidden],#due-close[hidden]{display:none}
+
+/* Pintu masuk ke teras dari halaman Hari Ini. */
+.mimi-play-link {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  min-width: 0;
+  padding: .5rem .75rem .5rem .55rem;
+  border: 1px solid var(--line);
+  border-radius: 1.15rem;
+  background: linear-gradient(110deg, color-mix(in srgb, var(--mimi-primary-container) 55%, var(--mimi-surface)), var(--mimi-surface));
+  box-shadow: 0 2px 0 color-mix(in srgb, var(--mimi-primary) 12%, transparent);
+  text-decoration: none;
+  font: 700 1rem/1.25 Georgia, serif;
+}
+.mimi-play-link:any-link { color: var(--ink); text-decoration: none; }
+.mimi-play-art {
+  display: grid; place-items: end center; flex: none;
+  width: 3.15rem; height: 3.15rem;
+  border-radius: .85rem;
+  background: linear-gradient(155deg, #f9d5d9 0 62%, #ebc2cc 62%);
+  overflow: hidden;
+}
+.mimi-play-art img { width: 100%; height: 100%; object-fit: contain; }
+.mimi-play-arrow {
+  display: grid; place-items: center; flex: none;
+  margin-inline-start: auto;
+  width: 2rem; height: 2rem;
+  border-radius: 50%;
+  background: var(--mimi-primary-container); color: var(--mimi-on-primary-container);
+  font: 600 1.2rem/1 system-ui, sans-serif;
+}
+.mimi-play-link:focus-visible { outline: 3px solid var(--mimi-primary); outline-offset: 3px; }
+@media (hover:hover) { .mimi-play-link:hover { border-color: var(--mimi-primary); } }
+@media (prefers-reduced-motion:no-preference) {
+  .mimi-play-arrow { transition: transform 150ms ease-out; }
+  .mimi-play-link:hover .mimi-play-arrow { transform: translateX(2px); }
+  .mimi-play-link:active { transform: translateY(1px); }
+}
