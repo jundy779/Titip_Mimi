@@ -100,3 +100,5 @@ Saat bermain, Iqlima memegang benang dan Mimi bergerak sendiri. Arah lompatan te
 Gerak Mimi mengikuti berat tubuh. Mata dan kepala mengikuti benang, telapak depan terangkat ketika meraih, lalu kaki menekuk ketika mendarat. Pita pink tetap menjadi ciri utamanya.
 
 Model bermain memakai tanda hati di mata kiri dan pita stroberi di kanan dari sudut pandang pemain, serta iris plum mengikuti paket maskot v1. Langkah dan ayunan ekor bertransisi bertahap antara diam dan berlari.
+
+Teras mawar memakai latar ilustrasi fantasi orisinal, model Mimi bergerak di atasnya, serta tekstur wajah dari pose welcome v1. Kelopak dekoratif berhenti saat pemain mengaktifkan pengurangan gerakan.

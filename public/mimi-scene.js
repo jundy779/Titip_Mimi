@@ -1,13 +1,23 @@
 // Coordinates are in room units. Positive z points towards the player.
 export function makeScene(canvas) {
-  const gl=canvas.getContext('webgl',{alpha:false,antialias:true});
+  const gl=canvas.getContext('webgl',{alpha:true,antialias:true});
   const ctx=gl?null:canvas.getContext('2d');
   if(!gl&&!ctx)return null;
   let queue=[],group=[0,0,0,0],vx,vy;
   const stamps=new Map();
   let drawingFur=false;
   let drawingFace=false;
-  let background=null, boundMesh=null;
+  let boundMesh=null;
+  const faceArt=new Image();
+  let hasArt=false, faceTexture;
+  faceArt.onload=()=>{
+    hasArt=true;stamps.clear();
+    if(gl){
+      gl.bindTexture(gl.TEXTURE_2D,faceTexture);
+      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,faceArt);
+    }
+  };
+  faceArt.src='mimi-portrait.webp';
   function materialStamp(shape,col,fur){
     const key=shape+col+fur;
     if(stamps.has(key))return stamps.get(key);
@@ -47,6 +57,9 @@ export function makeScene(canvas) {
         brush.stroke();
       }
     }
+    if(shape==='head'&&hasArt){
+      brush.drawImage(faceArt,-1,-1,2,2);
+    }
     stamps.set(key,stamp);return stamp;
   }
   // On devices without WebGL, project the same animated room and character into Canvas.
@@ -65,7 +78,7 @@ export function makeScene(canvas) {
   void main(){float a=rot.z,b=rot.x;mat3 r=ry(rot.y)*mat3(cos(a),sin(a),0.,-sin(a),cos(a),0.,0.,0.,1.)*mat3(1.,0.,0.,0.,cos(b),sin(b),0.,-sin(b),cos(b));
   surface=p;vec3 w=ry(yaw)*(r*(p*size)+pos)+base; normal=ry(yaw)*r*(n/size);
   gl_Position=vec4(w.x/view.x,((w.y-1.38)*.965-w.z*.262)/view.y,(-w.z*.965-w.y*.262)/16.,1.);}`;
-  const frag=`precision mediump float;varying vec3 normal;varying vec3 surface;uniform float fur,faceMark;uniform vec3 color;void main(){vec3 N=normalize(normal);float d=dot(N,normalize(vec3(-.45,.8,.65)));float lit=.79+.21*d;float grain=sin(surface.x*181.+surface.y*15.+sin(surface.y*33.+surface.z*20.)*1.4)*cos(surface.z*119.+surface.y*22.);
+  const frag=`precision mediump float;varying vec3 normal;varying vec3 surface;uniform float fur,faceMark,useArt,blink;uniform vec2 gaze;uniform sampler2D portrait;uniform vec3 color;void main(){vec3 N=normalize(normal);float d=dot(N,normalize(vec3(-.45,.8,.65)));float lit=.79+.21*d;float grain=sin(surface.x*181.+surface.y*15.+sin(surface.y*33.+surface.z*20.)*1.4)*cos(surface.z*119.+surface.y*22.);
   float rim=pow(1.-abs(N.z),3.);
   vec3 coat=color;
   if(faceMark>.5 && surface.z>0.){
@@ -75,12 +88,27 @@ export function makeScene(canvas) {
     float heart=q*q*q-uv.x*uv.x*uv.y*uv.y*uv.y;
     coat=mix(color,vec3(.96,.71,.69),1.-smoothstep(-.008,.008,heart));
   }
-  gl_FragColor=vec4(coat*(lit+fur*(grain*.028+rim*.065))+.055*pow(max(0.,dot(N,normalize(vec3(-.35,.65,1.)))),12.),1.);}`;
+  if(faceMark>.5 && useArt>.5 && surface.z>0.){
+    vec2 uv=vec2(.5+.5*surface.x,.5-.5*surface.y);
+    vec2 center=uv.x<.5?vec2(.37,.52):vec2(.68,.46);
+    vec2 delta=uv-center;
+    float eyeArea=1.-smoothstep(.065,.13,length(delta));
+    uv.y+=delta.y*eyeArea*(1.-blink)*3.;
+    uv-=gaze*.012*eyeArea;
+    vec4 ink=texture2D(portrait,uv);
+    coat=mix(coat,ink.rgb,ink.a*smoothstep(.05,.35,surface.z));
+  }
+  float cel=mix(.78,.93,smoothstep(-.13,-.06,d))+.07*smoothstep(.56,.68,d);
+  gl_FragColor=vec4(coat*(cel+fur*(grain*.028+rim*.065))+.055*pow(max(0.,dot(N,normalize(vec3(-.35,.65,1.)))),12.),1.);}`;
   function shader(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s}
   let loc,ap,an,meshes;const colors=new Map();
   if(gl){
   const prog=gl.createProgram();gl.attachShader(prog,shader(gl.VERTEX_SHADER,vertex));gl.attachShader(prog,shader(gl.FRAGMENT_SHADER,frag));gl.linkProgram(prog);if(!gl.getProgramParameter(prog,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(prog));gl.useProgram(prog);
-  loc=Object.fromEntries(['pos','size','rot','base','view','yaw','color','fur','faceMark'].map(k=>[k,gl.getUniformLocation(prog,k)]));
+  loc=Object.fromEntries(['pos','size','rot','base','view','yaw','color','fur','faceMark','useArt','blink','gaze'].map(k=>[k,gl.getUniformLocation(prog,k)]));
+  faceTexture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,faceTexture);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([255,255,255,0]));
+  for(const param of [gl.TEXTURE_WRAP_S,gl.TEXTURE_WRAP_T])gl.texParameteri(gl.TEXTURE_2D,param,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
   ap=gl.getAttribLocation(prog,'p');an=gl.getAttribLocation(prog,'n');gl.enableVertexAttribArray(ap);gl.enableVertexAttribArray(an);
   function mesh(shape,cols=32,rows=20){
     const points=[],idx=[];
@@ -111,23 +139,6 @@ export function makeScene(canvas) {
   const ball=(...p)=>object('ball',...p),box=(...p)=>object('box',...p),ear=(...p)=>object('ear',...p);
   const cream='#fff0df',pink='#ed8495',inner='#f3b1ae',eye='#523043',white='#fffafa',wood='#b7806b';
   function origin(x=0,y=0,z=0,yaw=0){group=[x,y,z,yaw];if(!gl)return;gl.uniform3f(loc.base,x,y,z);gl.uniform1f(loc.yaw,yaw)}
-  function room(){
-    box(0,-.13,0,12,.12,10,'#e8b799');box(0,3,-3,12,3,.12,'#f5d8d0');
-    for(let i=-9;i<10;i++)box(i*.59,2.6,-2.86,.036,2.6,.012,'#f0cbc6');
-    box(0,.22,-2.75,10,.17,.09,'#ffe6d3');
-    for(let z=-2;z<6;z+=.92)box(0,-.003,z,9,.009,.012,'#d5a88d');
-    // Sash window, blue glass, clouds, gathered curtains.
-    box(-1.45,2.35,-2.68,1.08,1.01,.09,cream);box(-1.45,2.35,-2.55,.94,.87,.03,'#a7d6dc');
-    ball(-1.76,2.77,-2.48,.35,.10,.02,white);ball(-1.89,2.84,-2.48,.16,.14,.02,white);
-    ball(-1.01,2.91,-2.48,.19,.19,.025,'#ffdc94');
-    box(-1.45,2.35,-2.42,.035,.86,.035,cream);box(-1.45,2.3,-2.4,.96,.036,.035,cream);
-    for(const sign of [-1,1])for(let j=0;j<3;j++)ball(-1.45+sign*(.91-j*.105),2.56,-2.32,.11,.86-j*.11,.09,['#d28fa1','#e7acb8','#f0bfca'][j],sign*-.13);
-    box(-1.45,1.39,-2.39,1.16,.075,.2,cream);
-    box(1.64,1.66,-2.5,.85,.06,.19,wood);
-    for(let i=0;i<4;i++)box(1.14+i*.13,1.93,-2.44,.057,.23-i*.018,.11,['#b7c8b3','#df9bb0','#efd09b','#a8c7c4'][i],i===3?-.15:0);
-    ball(2.15,1.89,-2.42,.16,.23,.14,'#f4dec2');for(let i=0;i<3;i++)ball(2.15+(i-1)*.09,2.17,-2.42,.05,.17,.05,'#96b49a',(1-i)*.48);
-    ball(0,.015,.1,2.72,.045,1.8,'#c88596');ball(0,.055,.1,2.60,.035,1.70,'#f4cfcb');ball(0,.085,.1,2.40,.014,1.53,'#eebfbb');
-  }
   function cat(t,s){
     const step=Math.sin(s.stridePhase)*s.gait;
     const breath=Math.sin(t*2.35)*.019;
@@ -160,6 +171,7 @@ export function makeScene(canvas) {
     drawingFace=true;ball(0,y,0,.80,.68,.56,cream);drawingFace=false;
     for(const side of [-1,1]){
       for(let j=0;j<2;j++)ear(side*(.67-j*.025),y-.11-j*.13,.03,.14,.24,.14,cream,-side*(1.48+j*.28));
+      if(hasArt)continue;
       ball(side*.48,y-.13,.43,.17,.083,.04,'#efaeb2',side*.15);
       const blink=Math.max(.09,1-Math.max(0,1-Math.abs(t%4.9-4.6)/.13));
       const irisX=side*.29+s.lookX*.036,irisY=y+.05+s.lookY*.034;
@@ -172,25 +184,23 @@ export function makeScene(canvas) {
       }
       ball(side*.094,y-.098,.535,.110,.067,.052,'#fff4df');
       for(let j=0;j<2;j++)ball(side*.59,y-.15-j*.08,.39,.135,.012,.016,'#ab857c',side*(.13-j*.25));}
+    if(!hasArt){
     ball(0,y-.068,.563,.063,.042,.038,'#d98791');
     for(const side of [-1,1])ball(side*.034,y-.127,.551,.048,.015,.018,eye,side*.32);
     if(s.biting||s.mode==='chat')ball(0,y-.154,.557,.034,.029,.018,'#d78992');
+    }
     for(const side of [-1,1]){
       ball(.43+side*.15,y+.51,.32,.20,.14,.10,pink,side*.42);
       ball(.43+side*.16,y+.51,.405,.096,.046,.016,'#cf748a',side*.42);
       box(.43+side*.075,y+.36,.31,.051,.12,.032,pink,side*.38);}
     ball(.43,y+.51,.42,.087,.09,.075,'#e78098');
   }
-  function render(t,s){const d=Math.min(devicePixelRatio||1,1.6),w=Math.round(canvas.clientWidth*d),h=Math.round(canvas.clientHeight*d);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;background=null}queue=[];vy=Math.max(1.89,1.56*h/w);vx=vy*w/h;if(gl){gl.viewport(0,0,w,h);gl.uniform2f(loc.view,vx,vy);gl.enable(gl.DEPTH_TEST);gl.clearColor(.97,.85,.81,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT)}origin();
-    if(gl)room();
-    else {
-      if(!background){
-        background=document.createElement('canvas');background.width=w;background.height=h;
-        const backdrop=background.getContext('2d');backdrop.fillStyle='#f5d8d0';backdrop.fillRect(0,0,w,h);
-        room();paintScene(backdrop);queue=[];
-      }
-      ctx.drawImage(background,0,0);
-    }
+  function render(t,s){const d=Math.min(devicePixelRatio||1,1.6),w=Math.round(canvas.clientWidth*d),h=Math.round(canvas.clientHeight*d);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h}queue=[];vy=Math.max(1.89,1.56*h/w);vx=vy*w/h;if(gl){gl.viewport(0,0,w,h);gl.uniform2f(loc.view,vx,vy);gl.enable(gl.DEPTH_TEST);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT)}origin();
+    if(gl){
+      gl.uniform1f(loc.useArt,hasArt?1:0);
+      gl.uniform2f(loc.gaze,s.lookX,s.lookY);
+      gl.uniform1f(loc.blink,Math.min(1,Math.abs(t%4.9-4.6)/.13));
+    }else ctx.clearRect(0,0,w,h);
     const shade=1-s.lift*.4;ball(s.catX,.11,0,.60*shade,.02,.40*shade,'#d5aaa2');drawingFur=true;cat(t,s);drawingFur=false;origin();
     if(s.mode==='feed'){ball(.82,.22,1.15,.39,.14,.31,'#cb8191');ball(.82,.31,1.15,.32,.07,.25,'#fae8d5');
       const x=s.drag?.x??.82,y=s.drag?.y??.44;ball(x,y,1.21,.17,.09,.08,'#e5ae69');ear(x-.16,y,1.21,.08,.105,.055,'#dda165',1.57);ball(x+.09,y+.025,1.28,.016,.016,.014,eye)}
