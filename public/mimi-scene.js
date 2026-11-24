@@ -13,45 +13,15 @@ export function makeScene(canvas) {
   const kitten=new Image();
   kitten.src='mimi-acting.webp';
   const poses={sit:0,blink:1,stalk:2,pounce:3,hug:4,groom:5};
-  let currentPose='sit',previousPose='sit',changedAt=0;
-  // Bend the painted surface around local joints. All triangles share their
-  // corner positions so the body stays connected while ears, tail and paws move.
-  const frames=new Map();
+  
   function drawRig(name,t,s,size,height){
     const frame=kitten.naturalWidth/3,index=poses[name];
-    if(!frames.has(name)){
-      const tile=document.createElement('canvas');tile.width=tile.height=frame;
-      tile.getContext('2d').drawImage(kitten,index%3*frame,Math.floor(index/3)*frame,frame,frame,0,0,frame,frame);
-      frames.set(name,tile);
-    }
-    const tile=frames.get(name),points=[],cols=5,rows=5;
-    const weight=(x,y,cx,cy,rx,ry)=>Math.exp(-(((x-cx)/rx)**2+((y-cy)/ry)**2));
-    const beat=Math.sin(t*15),breath=Math.sin(t*2.65);
-    for(let j=0;j<=rows;j++)for(let i=0;i<=cols;i++){
-      const x=i/cols,y=j/rows;
-      const tail=weight(x,y,.16,name==='stalk'?.17:.7,.17,.25);
-      const ear=weight(x,y,.76,.16,.21,.16),chest=weight(x,y,.5,.60,.31,.22);
-      const paw=weight(x,y,.64,name==='groom'?.52:.8,.18,.18);
-      const head=weight(x,y,.55,.34,.37,.23);
-      const dx=tail*.045*Math.sin(t*2.1-y*3)+head*.019*s.lookX+ear*.014*Math.sin(t*3.7)+paw*.012*(name==='groom'?beat:0);
-      const dy=tail*.025*Math.cos(t*2.1)+ear*.015*Math.sin(t*4.2)+chest*.012*breath+head*.011*s.lookY+
-        paw*(name==='hug'?.022*Math.sin(t*7):name==='stalk'?.023*Math.sin(s.stridePhase+x*5):name==='groom'?.022*beat:0);
-      points.push([(x-.5+dx)*size,(y-1+dy)*height]);
-    }
-    function triangle(a,b,c,ix,iy,ux,uy){
-      const A=points[a],B=points[b],C=points[c],step=frame/cols;
-      artist.save();artist.beginPath();artist.moveTo(...A);artist.lineTo(...B);artist.lineTo(...C);artist.closePath();artist.clip();
-      const xx=(B[0]-A[0])/(ux*step),xy=(B[1]-A[1])/(ux*step);
-      const yx=(C[0]-A[0])/(uy*step),yy=(C[1]-A[1])/(uy*step);
-      artist.transform(xx,xy,yx,yy,A[0]-xx*ix*step-yx*iy*step,A[1]-xy*ix*step-yy*iy*step);
-      artist.drawImage(tile,Math.min(ix,ix+ux)*step,Math.min(iy,iy+uy)*step,step,step,Math.min(ix,ix+ux)*step,Math.min(iy,iy+uy)*step,step,step);artist.restore();
-    }
-    for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){
-      const a=j*(cols+1)+i,b=a+1,c=a+cols+1,d=c+1;
-      triangle(a,b,c,i,j,1,1);triangle(d,c,b,i+1,j+1,-1,-1);
-    }
+    artist.drawImage(kitten,index%3*frame,Math.floor(index/3)*frame,frame,frame,-size/2,-height,size,height);
   }
   function pickPose(t,s){
+    if(s.gesture==='hide')return 'hug';
+    if(s.gesture==='offer')return 'groom';
+    if(s.gesture==='reveal'||s.gesture==='highfive')return 'pounce';
     if(s.mode==='play'&&s.motion!=='rest')return s.motion;
     if(s.biting)return 'groom';
     if(s.petted)return 'blink';
@@ -70,7 +40,7 @@ export function makeScene(canvas) {
     artist.clearRect(0,0,w,h);
     const x=w/2+s.catX*u;
     const floor=h/2+(1.38-.1)*.965*u;
-    const bottom=floor-s.lift*.965*u;
+    const bottom=floor-(s.lift+(s.hop||0))*.965*u;
     const stride=Math.sin(s.stridePhase)*s.gait;
     const compression=s.crouch*.07+s.impact*.09;
     const height=(2.38+Math.sin(t*2.3)*.014-compression+s.reach*.06)*u;
@@ -81,8 +51,7 @@ export function makeScene(canvas) {
     shade.addColorStop(0,'rgba(91,52,72,.34)');shade.addColorStop(1,'rgba(91,52,72,0)');
     artist.fillStyle=shade;artist.fillRect(-1,-1,2,2);artist.restore();
     const next=pickPose(t,s);
-    if(next!==currentPose){previousPose=currentPose;currentPose=next;changedAt=t}
-    const blend=Math.min(1,(t-changedAt)/.085);
+
     function drawPose(name,opacity){
       if(opacity<=0)return;
       artist.save();artist.globalAlpha=opacity;
@@ -94,8 +63,7 @@ export function makeScene(canvas) {
       drawRig(name,t,s,width,length);
       artist.restore();
     }
-    if(blend<1)drawPose(previousPose,1-blend);
-    drawPose(currentPose,blend);
+    drawPose(next,1);
     return true;
   }
   let queue=[],group=[0,0,0,0],vx,vy;
@@ -238,7 +206,7 @@ export function makeScene(canvas) {
     const step=Math.sin(s.stridePhase)*s.gait;
     const breath=Math.sin(t*2.35)*.019;
     const compress=s.crouch*.11+s.impact*.15;
-    const base=.11+s.lift+Math.abs(step)*.036;
+    const base=.11+s.lift+(s.hop||0)+Math.abs(step)*.036;
     origin(s.catX,base,0,s.face);
     // A tapered tail swings from its root. The tip follows with a delay.
     for(let i=0;i<9;i++){
@@ -251,24 +219,25 @@ export function makeScene(canvas) {
       const stride=step*side;
       ball(side*.37,.34-compress*.5,-.09,.24,.32,.25,cream);
       ball(side*.39,.15+Math.max(0,stride)*.09,.18+stride*.07,.22,.14,.26,cream);
-      const pawY=.16+Math.max(0,-stride)*.12+s.reach*.45;
-      const pawX=side*(.245+s.reach*.06);
-      ball(pawX,(pawY+.70-compress)/2,.34,.132,(.76-compress-pawY)/2+.08,.145,cream,side*.06);
-      ball(pawX,pawY,.43+s.reach*.18,.155,.143,.174,cream);
-      for(let j=-1;j<=1;j++)ball(pawX+j*.062,pawY-.035,.55+s.reach*.18,.058,.072,.06,cream);
+      const raise=Math.max(s.cover||0,side===1?(s.wave||0):0);
+      const pawY=.16+raise*1.30+Math.max(0,-stride)*.12+s.reach*.45;
+      const pawX=side*(.245+s.reach*.06+(side===1?.32*(s.wave||0):0));
+      ball(pawX,(pawY+.70-compress)/2,.34,.132,Math.abs(.76-compress-pawY)/2+.08,.145,cream,side*.06);
+      ball(pawX,pawY,.43+s.reach*.18+raise*.22,.155,.143,.174,cream);
+      for(let j=-1;j<=1;j++)ball(pawX+j*.062,pawY-.035,.55+s.reach*.18+raise*.22,.058,.072,.06,cream);
     }
     const nod=breath-compress+(s.biting?-.085*Math.abs(Math.sin(t*12)):0);
     const y=1.45+nod;
-    origin(s.catX+.035*s.lookX,base,0,s.face+s.lookX*.21);
+    origin(s.catX+.035*s.lookX+.12*(s.nuzzle||0),base,0,s.face+s.lookX*.21+.28*(s.nuzzle||0));
     for(const side of [-1,1]){
       ear(side*.52,y+.46,-.01,.36,.43,.24,cream,-side*.39);
       ear(side*.52,y+.49,.12,.24,.31,.13,inner,-side*.39);}
     drawingFace=true;ball(0,y,0,.80,.68,.56,cream);drawingFace=false;
     for(const side of [-1,1]){
       for(let j=0;j<2;j++)ear(side*(.67-j*.025),y-.11-j*.13,.03,.14,.24,.14,cream,-side*(1.48+j*.28));
-      if(hasArt)continue;
+
       ball(side*.48,y-.13,.43,.17,.083,.04,'#efaeb2',side*.15);
-      const blink=Math.max(.09,1-Math.max(0,1-Math.abs(t%4.9-4.6)/.13));
+      const blink=s.petted?.13:Math.max(.09,1-Math.max(0,1-Math.abs(t%4.9-4.6)/.13));
       const irisX=side*.29+s.lookX*.036,irisY=y+.05+s.lookY*.034;
       ball(side*.29,y+.05,.49,.135,.164*blink,.072,eye,side*.08);
       if(blink>.5){
@@ -279,7 +248,7 @@ export function makeScene(canvas) {
       }
       ball(side*.094,y-.098,.535,.110,.067,.052,'#fff4df');
       for(let j=0;j<2;j++)ball(side*.59,y-.15-j*.08,.39,.135,.012,.016,'#ab857c',side*(.13-j*.25));}
-    if(!hasArt){
+    {
     ball(0,y-.068,.563,.063,.042,.038,'#d98791');
     for(const side of [-1,1])ball(side*.034,y-.127,.551,.048,.015,.018,eye,side*.32);
     if(s.biting||s.mode==='chat')ball(0,y-.154,.557,.034,.029,.018,'#d78992');
@@ -292,11 +261,11 @@ export function makeScene(canvas) {
   }
   function render(t,s){const d=Math.min(devicePixelRatio||1,1.6),w=Math.round(canvas.clientWidth*d),h=Math.round(canvas.clientHeight*d);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h}queue=[];vy=Math.max(1.89,1.56*h/w);vx=vy*w/h;if(gl){gl.viewport(0,0,w,h);gl.uniform2f(loc.view,vx,vy);gl.enable(gl.DEPTH_TEST);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT)}origin();
     if(gl){
-      gl.uniform1f(loc.useArt,hasArt?1:0);
+      gl.uniform1f(loc.useArt,0);
       gl.uniform2f(loc.gaze,s.lookX,s.lookY);
       gl.uniform1f(loc.blink,Math.min(1,Math.abs(t%4.9-4.6)/.13));
     }else ctx.clearRect(0,0,w,h);
-    if(!paintKitten(t,s)){drawingFur=true;cat(t,s);drawingFur=false}origin();
+    if(gl||!paintKitten(t,s)){ball(s.catX,.11,0,.59,.018,.38,'#d5adab');drawingFur=true;cat(t,s);drawingFur=false}origin();
     if(s.mode==='feed'){ball(.82,.22,1.15,.39,.14,.31,'#cb8191');ball(.82,.31,1.15,.32,.07,.25,'#fae8d5');
       const x=s.drag?.x??.82,y=s.drag?.y??.44;ball(x,y,1.21,.17,.09,.08,'#e5ae69');ear(x-.16,y,1.21,.08,.105,.055,'#dda165',1.57);ball(x+.09,y+.025,1.28,.016,.016,.014,eye)}
     if(s.mode==='wash'){for(const i of s.foam){let a=i*2.4;ball(s.catX+Math.cos(a)*.61,1.3+Math.sin(a)*.39,.64,.105,.105,.09,'#bce3ea');ball(s.catX+Math.cos(a)*.61-.034,1.34+Math.sin(a)*.39,.71,.031,.031,.016,white)}}

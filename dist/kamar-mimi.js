@@ -25,11 +25,35 @@ function talk(){options(stories.map(([label,reply,next,end])=>[label,()=>{el('sp
 const say=words=>el('speech').textContent=words;
 const yarn=yarnGame(s,say,()=>reward('Kena! Mimi mendekap benangnya ♡'));
 let biteEnd=0,lastRub=null,activePointer=null,strokeStart=null,petEnd=0;
+let gesture='idle',gestureEnd=0,petSide=0;
+function gestureState(next,duration=0){
+ gesture=next;gestureEnd=duration?performance.now()+duration:0;
+ el('peek').textContent=next==='hide'?'Buka mata!':'Cilukba';
+ el('five').textContent=next==='offer'?'Sambut tos!':'Tos Mimi';
+}
+function react(next,duration,words){
+ if(s.mode==='play'&&s.motion!=='rest')yarn.reset();
+ gestureState(next,duration);say(words);
+}
+function stroke(side=0){
+ petSide=side;
+ petEnd=performance.now()+1550;
+ react('pet',1550,'Prrr… Mimi nyender ke tanganmu.');
+}
+el('pet').onclick=()=>stroke(.5);
+el('peek').onclick=()=>{
+ if(gesture==='hide')react('reveal',1050,'Baaa! Ketemu Iqlima ♡');
+ else react('hide',0,'Mimi tutup mata. Kamu sembunyi di mana?');
+};
+el('five').onclick=()=>{
+ if(gesture==='offer')react('highfive',850,'Plak! Tos kecil buat kamu.');
+ else react('offer',0,'Tos, yuk! Sentuh kaki depan Mimi.');
+};
 let pet={lastMeal:0,bites:0,washed:0};
 try{const old=JSON.parse(localStorage.getItem('mimi-care-v1')||'{}');for(const k of Object.keys(pet))if(Number.isFinite(old[k]))pet[k]=old[k]}catch{}
 function savePet(){try{localStorage.setItem('mimi-care-v1',JSON.stringify(pet))}catch{}}
 function select(mode){
- yarn.reset();activePointer=null;
+ gestureState('idle');yarn.reset();activePointer=null;
  Object.assign(s,{mode,catX:0,face:0,progress:0,drag:null,running:false,biting:false,foam:new Set([0,1,2,3,4,5])});
  lastRub=null;strokeStart=null;petEnd=0;biteEnd=0;
  const [hint,act,words]=modes[mode];el('hint').textContent=hint;el('action').textContent=act;el('action').hidden=false;say(words);options([]);
@@ -63,24 +87,33 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>select(b.datase
 canvas.onpointerdown=e=>{
  if(!scene||activePointer!==null)return;
  activePointer=e.pointerId;canvas.setPointerCapture(e.pointerId);
+ const head=scene.world(e,.5);
+ const onKitten=Math.abs(head.x-s.catX)<.85&&head.y>.24&&head.y<2.22;
+ if(onKitten&&gesture==='offer'){el('five').click();return}
+ if(onKitten&&gesture==='hide'){el('peek').click();return}
  if(s.mode==='play'){
    const p=scene.world(e,1);
-   if(!yarn.grab(p.x,p.y,e.timeStamp)&&s.motion==='rest'){
-     const head=scene.world(e,.5);
-     if(Math.hypot(head.x-s.catX,head.y-1.58)<.75)strokeStart=head;
-   }
+   if(yarn.grab(p.x,p.y,e.timeStamp)){gestureState('idle');return}
  }
- if(s.mode==='feed'){const p=scene.world(e,1.21);if(Math.hypot(p.x-.82,p.y-.42)<.52)s.drag=p}
- if(s.mode==='wash')lastRub=scene.world(e,.64);
+ if(s.mode==='feed'){
+   const p=scene.world(e,1.21);
+   if(Math.hypot(p.x-.82,p.y-.42)<.52){s.drag=p;return}
+ }
+ if(s.mode==='wash'){
+   const p=scene.world(e,.64);
+   const bubble=[...s.foam].some(id=>Math.hypot(p.x-s.catX-Math.cos(id*2.4)*.61,p.y-1.3-Math.sin(id*2.4)*.39)<.26);
+   if(bubble){lastRub=p;return}
+ }
+ if(onKitten)strokeStart=head;
 };
 canvas.onpointermove=e=>{
  if(e.pointerId!==activePointer)return;
  if(s.mode==='play'){const p=scene.world(e,1);yarn.pull(p.x,p.y,e.timeStamp)}
  if(strokeStart){
    const p=scene.world(e,.5);
-   if(Math.hypot(p.x-s.catX,p.y-1.58)>.88)strokeStart=null;
-   else if(Math.hypot(p.x-strokeStart.x,p.y-strokeStart.y)>.17){
-     petEnd=performance.now()+1400;strokeStart=p;say('Prrr… Mimi nyender ke tanganmu.');
+   if(Math.abs(p.x-s.catX)>.98||p.y<.15||p.y>2.35)strokeStart=null;
+   else if(Math.hypot(p.x-strokeStart.x,p.y-strokeStart.y)>.075){
+     stroke(Math.tanh((p.x-s.catX)*2));strokeStart=p;
    }
  }
  if(s.drag)s.drag=scene.world(e,1.21);
@@ -101,7 +134,14 @@ document.addEventListener('visibilitychange',()=>{lastFrame=null});
 function tick(now){
  requestAnimationFrame(tick);if(document.hidden)return;
  const dt=lastFrame===null?0:Math.min((now-lastFrame)/1000,.1);
- lastFrame=now;clock+=dt;s.biting=now<biteEnd;s.petted=now<petEnd;
+ lastFrame=now;clock+=dt;s.biting=now<biteEnd;
+ if(gestureEnd&&now>=gestureEnd)gestureState('idle');
+ s.gesture=gesture;s.petted=gesture==='pet'&&now<petEnd;
+ const followGesture=1-Math.exp(-14*dt);
+ s.cover=(s.cover||0)+((gesture==='hide'?1:0)-(s.cover||0))*followGesture;
+ s.wave=(s.wave||0)+((gesture==='offer'||gesture==='highfive'?1:0)-(s.wave||0))*followGesture;
+ s.nuzzle=(s.nuzzle||0)+((s.petted?petSide:0)-(s.nuzzle||0))*followGesture;
+ s.hop=gesture==='reveal'||gesture==='highfive'?.22*Math.sin(Math.PI*Math.min(1,((gesture==='reveal'?1050:850)-(gestureEnd-now))/450)):0;
  if(s.mode==='play'){
    const steps=Math.ceil(dt*120);
    for(let i=0;i<steps;i++)yarn.step(dt/steps,now-(steps-1-i)*dt/steps*1000);

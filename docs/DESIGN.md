@@ -106,3 +106,5 @@ Teras mawar memakai latar ilustrasi fantasi orisinal, model Mimi bergerak di ata
 Pada tampilan utama, Mimi menggunakan ilustrasi karakter fantasi transparan dari acuan welcome. Animasi 2.5D membengkokkan tubuh mengikuti arah pandang, langkah, lompatan dan pendaratan. Model prosedural ditampilkan selama ilustrasi dimuat.
 
 Mimi memakai enam pose yang dihubungkan dengan mekanik bermain. Saat santai ia merawat bulu dan mengedip, saat diterkam benang berada di antara kedua kaki depan. Usapan kepala saat santai memicu pose mata tertutup.
+
+Di browser WebGL, karakter utama kembali memakai tubuh 3D dengan gerak mata dan kaki depan terpisah. Perangkat tanpa WebGL memakai pose ilustrasi utuh agar sambungan segitiga tidak tampak. Usapan, cilukba, dan tos tersedia langsung dari teras.
