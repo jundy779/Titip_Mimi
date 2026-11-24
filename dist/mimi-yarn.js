@@ -7,7 +7,7 @@ export function yarnGame(s,announce,caught){
     Object.assign(s,{ballX:.84,ballY:.32,lift:0,crouch:0,reach:0,running:false});
   }
   function grab(x,y,time){
-    if(phase==='hold'||Math.hypot(x-s.ballX,y-s.ballY)>.48)return false;
+    if((phase==='hold'||phase==='settle')||Math.hypot(x-s.ballX,y-s.ballY)>.48)return false;
     held=awake=true;vx=vy=0;lastMove=time;return true;
   }
   function pull(x,y,time){
@@ -19,18 +19,24 @@ export function yarnGame(s,announce,caught){
   }
   function release(time){if(!held)return;held=false;if(time-lastMove>100)vx=vy=0}
   function flick(direction){
-    if(phase==='hold')return;
+    if(phase==='hold'||phase==='settle')return;
     awake=true;held=false;vx=direction*2.8;vy=2.9;
   }
   function step(dt,time){
     if(!awake)return;
     clock+=dt;
-    if(!held&&phase!=='hold'){
+    if(!held&&phase!=='hold'&&phase!=='settle'){
       vy-=7*dt;s.ballY+=vy*dt;s.ballX+=vx*dt;
       if(s.ballY<=.32){s.ballY=.32;vy=Math.abs(vy)>.5?-vy*.42:0;vx*=Math.exp(-3.5*dt)}
       if(Math.abs(s.ballX)>1.32){s.ballX=clamp(s.ballX,-1.32,1.32);vx*=-.58}
     }
     const gap=s.ballX-s.catX;
+    if(phase==='settle'){
+      s.lift=Math.max(0,s.lift-dt*(1.4+7*clock));
+      s.ballX=s.catX;s.ballY=.52+s.lift;
+      if(!s.lift){s.impact=1;phase='hold';clock=0}
+      return;
+    }
     if(phase==='hold'){
       if(clock>.95){reset();s.ballX=clamp(s.catX+(s.catX>0?-.72:.72),-1.3,1.3);announce('Mimi melepaskan benangnya. Giliranmu lagi.')}
       return;
@@ -39,9 +45,9 @@ export function yarnGame(s,announce,caught){
       const f=Math.min(1,clock/.48);s.lift=Math.sin(Math.PI*f)*.67;s.reach=Math.sin(Math.PI*f);
       s.catX=clamp(s.catX+launch*dt,-1.32,1.32);
       if(Math.abs(s.ballX-s.catX)<.34 && Math.abs(s.ballY-(.55+s.lift))<.44){
-        phase='hold';clock=0;held=false;s.lift=s.crouch=0;s.reach=.35;s.ballX=s.catX;s.ballY=.52;caught();return;
+        phase='settle';clock=0;held=false;s.crouch=0;s.reach=.35;s.ballX=s.catX;s.ballY=.52+s.lift;caught();return;
       }
-      if(f===1){phase='watch';clock=0;s.reach=0;announce('Hampir! Tadi lolos dari cakar Mimi.')}
+      if(f===1){s.impact=1;phase='watch';clock=0;s.reach=0;announce('Hampir! Tadi lolos dari cakar Mimi.')}
       return;
     }
     s.face+=(Math.sign(gap)*.49-s.face)*Math.min(1,6*dt);

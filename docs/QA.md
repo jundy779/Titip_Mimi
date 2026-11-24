@@ -66,3 +66,5 @@ To-Do List harian: build Astro lulus. Pada Chrome di demo yang diterbitkan, tuga
 Revisi lembar ringkas diuji di Chrome pada demo publik. Centang lama terbaca, empat bagian tambahan awalnya tertutup. Pada tanggal lain, tugas baru dapat ditambah dan dicentang, Target dapat dibuka lalu diisi dengan Enter dan ringkasannya berubah menjadi 0/1. Build Astro lulus. Flutter belum diuji pada revisi ini.
 
 Kamar Mimi, uji simulasi web 24 November 2026. Pengujian langkah waktu tetap memeriksa diam tanpa hadiah, gerakan menghindar saat Mimi menerkam, tangkapan setelah benang jatuh, satu hati per tangkapan dan lempar ulang. Build Astro berhasil. Pengujian sentuhan di perangkat Android dan iOS fisik masih terbuka.
+
+Kamar Mimi, 24 November 2026. Build Astro berhasil. Uji simulasi memeriksa satu hadiah per tangkapan, transisi turun setelah menangkap benang dan kontak dengan lantai. Pengujian pada HP fisik masih terbuka.

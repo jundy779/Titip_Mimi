@@ -96,3 +96,5 @@ Lembar To-Do List di Hari Ini memakai pita Mimi dan daftar per tanggal. Tugasku 
 Di Kamar Mimi, model anak kucing krem memakai pita merah muda di telinga, pipi merah muda dan mata cokelat berkilau sesuai maskot. Kamar memiliki karpet, jendela dan rak pastel. Aktivitas dapat dimainkan dengan sentuhan atau tombol. Hati disimpan di browser perangkat ini.
 
 Saat bermain, Iqlima memegang benang dan Mimi bergerak sendiri. Arah lompatan terkunci saat lepas landas agar pemain dapat mengelak. Posisi gelembung menentukan usapan yang berhasil. Setelah tiga suapan Mimi kenyang selama setengah jam.
+
+Gerak Mimi mengikuti berat tubuh. Mata dan kepala mengikuti benang, telapak depan terangkat ketika meraih, lalu kaki menekuk ketika mendarat. Pita pink tetap menjadi ciri utamanya.
