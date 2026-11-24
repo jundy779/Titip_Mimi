@@ -402,3 +402,10 @@ body > dialog h2 { line-height:1.15; overflow-wrap:anywhere; }
 .list-group .list-task-row label {flex:1;min-width:0;border:0}
 .list-task-row .list-remove,.list-undo button {background:transparent;border:0;box-shadow:none;color:var(--mimi-primary);min-height:44px;padding:.4rem .6rem;font-size:.85rem}
 .list-undo {flex-wrap:wrap;overflow-wrap:anywhere;font-size:.875rem}
+
+#reminder.floating-reminder:not([hidden]) {
+  position:fixed;z-index:12;inset:auto max(.75rem,env(safe-area-inset-right)) max(5rem,calc(4rem + env(safe-area-inset-bottom))) auto;
+  width:min(25rem,calc(100vw - 1.5rem));box-sizing:border-box;max-height:65vh;overflow:auto;
+  margin:0;background:var(--mimi-surface);box-shadow:0 6px 24px #42273833;
+}
+#due-actions[hidden],#due-close[hidden]{display:none}

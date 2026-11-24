@@ -123,6 +123,11 @@ for(const button of nav.children){
 const p=el('page');p.replaceChildren();if(tab==='Profil'){
   p.append(el('profile-template').content.cloneNode(true));
   document.dispatchEvent(new Event('mimi-theme-mounted'));
+  p.querySelector('[data-test-popup]').onclick=()=>{
+    previewReminder=true;
+    refreshReminder();
+    el('due-close').focus();
+  };
   p.querySelector('[data-open-agenda]').onclick=()=>{tab='Agenda';render()};
   return;
 }
@@ -342,13 +347,21 @@ el('form').onsubmit = event => {
   el('notice').textContent=entry.time?'Udah Mimi catat buat '+new Date(entry.time).toLocaleString('id-ID',{dateStyle:'full',timeStyle:'short'})+' ♡':'Udah Mimi simpan di Koleksi ♡';
 };
 let shown;
+let previewReminder=false;
+let floatingReminder=false;
 function refreshReminder(){
   const due=nextReminder(items);
   if(due!==shown){
     shown=due;
-    el('due-title').textContent=due?.title || '';
+    floatingReminder=Boolean(due);
   }
-  el('reminder').hidden=!due;
+  const floating=previewReminder || floatingReminder;
+  el('reminder').classList.toggle('floating-reminder',floating);
+  el('reminder').hidden=!due && !previewReminder;
+  const title=previewReminder?'Contoh pengingat: waktunya istirahat sebentar.':due?.title || '';
+  if(el('due-title').textContent!==title)el('due-title').textContent=title;
+  el('due-actions').hidden=previewReminder;
+  el('due-close').hidden=!floating;
 }
 function respond(patch){
   if(shown && save(items.map(item=>item===shown?{...item,...patch}:item))){
@@ -356,6 +369,14 @@ function respond(patch){
     el('notice').textContent=patch.done?'Agenda ditandai selesai.':'Mimi ingetin lagi 10 menit dari sekarang.';
   }
 }
+el('due-close').onclick=()=>{
+  const wasPreview=previewReminder;
+  previewReminder=false;
+  floatingReminder=false;
+  refreshReminder();
+  if(wasPreview)document.querySelector('[data-test-popup]')?.focus();
+  else el('due-open').focus();
+};
 el('due-open').onclick=()=>{if(shown)detail(shown)};
 el('due-snooze').onclick=()=>respond({snoozeUntil:Date.now()+600000});
 el('due-done').onclick=()=>respond({done:true,snoozeUntil:0});
