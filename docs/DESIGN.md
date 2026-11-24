@@ -92,3 +92,5 @@ Gunakan kertas petak sebagai latar halaman. Letakkan teks panjang dan kolom masu
 Pasangan warna terang dan gelap berada di token **journal-rose**, **journal-mint** dan **journal-lilac**. Label dan bentuk komponen tetap menyampaikan makna saat warna sulit dibedakan. Pertahankan kartu isi yang tenang dan tempatkan stiker di dekat judul atau aksi terkait.
 
 Lembar To-Do List di Hari Ini memakai pita Mimi dan daftar per tanggal. Tugasku langsung terbuka dengan satu kolom tambah. Target, Rawat diri, Catatan dan Pengingat dapat dibuka sesuai kebutuhan. Di web, ringkasan menampilkan jumlah centang atau tanda Terisi. Di layar sempit bagian disusun vertikal. Pengingat di lembar ini adalah pesan tertulis, sedangkan agenda menangani jadwal dengan jam.
+
+Di Kamar Mimi, model anak kucing krem memakai pita merah muda di telinga, pipi merah muda dan mata cokelat berkilau sesuai maskot. Kamar memiliki karpet, jendela dan rak pastel. Aktivitas dapat dimainkan dengan sentuhan atau tombol. Hati disimpan di browser perangkat ini.
