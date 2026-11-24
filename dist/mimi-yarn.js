@@ -4,11 +4,11 @@ export function yarnGame(s,announce,caught){
   let held=false,awake=false,vx=0,vy=0,phase='watch',clock=0,launch=0,lastMove=0;
   function reset(){
     held=awake=false;vx=vy=clock=0;phase='watch';
-    Object.assign(s,{ballX:.84,ballY:.32,lift:0,crouch:0,reach:0,running:false});
+    Object.assign(s,{motion:'rest',ballX:.84,ballY:.32,lift:0,crouch:0,reach:0,running:false});
   }
   function grab(x,y,time){
     if((phase==='hold'||phase==='settle')||Math.hypot(x-s.ballX,y-s.ballY)>.48)return false;
-    held=awake=true;vx=vy=0;lastMove=time;return true;
+    s.motion='stalk';held=awake=true;vx=vy=0;lastMove=time;return true;
   }
   function pull(x,y,time){
     if(!held)return;
@@ -20,7 +20,7 @@ export function yarnGame(s,announce,caught){
   function release(time){if(!held)return;held=false;if(time-lastMove>100)vx=vy=0}
   function flick(direction){
     if(phase==='hold'||phase==='settle')return;
-    awake=true;held=false;vx=direction*2.8;vy=2.9;
+    s.motion='stalk';awake=true;held=false;vx=direction*2.8;vy=2.9;
   }
   function step(dt,time){
     if(!awake)return;
@@ -44,10 +44,10 @@ export function yarnGame(s,announce,caught){
     if(phase==='jump'){
       const f=Math.min(1,clock/.48);s.lift=Math.sin(Math.PI*f)*.67;s.reach=Math.sin(Math.PI*f);
       s.catX=clamp(s.catX+launch*dt,-1.32,1.32);
-      if(Math.abs(s.ballX-s.catX)<.34 && Math.abs(s.ballY-(.55+s.lift))<.44){
-        phase='settle';clock=0;held=false;s.crouch=0;s.reach=.35;s.ballX=s.catX;s.ballY=.52+s.lift;caught();return;
+      if(clock>.12 && Math.abs(s.ballX-s.catX)<.34 && Math.abs(s.ballY-(.55+s.lift))<.44){
+        s.motion='hug';phase='settle';clock=0;held=false;s.crouch=0;s.reach=.35;s.ballX=s.catX;s.ballY=.52+s.lift;caught();return;
       }
-      if(f===1){s.impact=1;phase='watch';clock=0;s.reach=0;announce('Hampir! Tadi lolos dari cakar Mimi.')}
+      if(f===1){s.motion='stalk';s.impact=1;phase='watch';clock=0;s.reach=0;announce('Hampir! Tadi lolos dari cakar Mimi.')}
       return;
     }
     s.face+=(Math.sign(gap)*.49-s.face)*Math.min(1,6*dt);
@@ -56,7 +56,7 @@ export function yarnGame(s,announce,caught){
     if(s.running)s.catX+=Math.sign(gap)*Math.min(Math.abs(gap)-.55,dt*(speed>1?1.65:.66));
     s.crouch=Math.min(1,clock*1.5);
     if(Math.abs(gap)<.94&&clock>(speed>1?.34:.85)&&s.ballY<1.91){
-      phase='jump';launch=clamp((s.ballX+vx*.12-s.catX)/.34,-2.65,2.65);clock=0;
+      s.motion='pounce';phase='jump';launch=clamp((s.ballX+vx*.12-s.catX)/.34,-2.65,2.65);clock=0;
       s.running=false;s.crouch=0;announce('Hup!');
     }
   }

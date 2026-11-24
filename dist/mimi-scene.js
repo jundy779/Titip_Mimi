@@ -11,7 +11,56 @@ export function makeScene(canvas) {
   canvas.before(layer);
   const artist=layer.getContext('2d');
   const kitten=new Image();
-  kitten.src='mimi-fantasy.webp';
+  kitten.src='mimi-acting.webp';
+  const poses={sit:0,blink:1,stalk:2,pounce:3,hug:4,groom:5};
+  let currentPose='sit',previousPose='sit',changedAt=0;
+  // Bend the painted surface around local joints. All triangles share their
+  // corner positions so the body stays connected while ears, tail and paws move.
+  const frames=new Map();
+  function drawRig(name,t,s,size,height){
+    const frame=kitten.naturalWidth/3,index=poses[name];
+    if(!frames.has(name)){
+      const tile=document.createElement('canvas');tile.width=tile.height=frame;
+      tile.getContext('2d').drawImage(kitten,index%3*frame,Math.floor(index/3)*frame,frame,frame,0,0,frame,frame);
+      frames.set(name,tile);
+    }
+    const tile=frames.get(name),points=[],cols=5,rows=5;
+    const weight=(x,y,cx,cy,rx,ry)=>Math.exp(-(((x-cx)/rx)**2+((y-cy)/ry)**2));
+    const beat=Math.sin(t*15),breath=Math.sin(t*2.65);
+    for(let j=0;j<=rows;j++)for(let i=0;i<=cols;i++){
+      const x=i/cols,y=j/rows;
+      const tail=weight(x,y,.16,name==='stalk'?.17:.7,.17,.25);
+      const ear=weight(x,y,.76,.16,.21,.16),chest=weight(x,y,.5,.60,.31,.22);
+      const paw=weight(x,y,.64,name==='groom'?.52:.8,.18,.18);
+      const head=weight(x,y,.55,.34,.37,.23);
+      const dx=tail*.045*Math.sin(t*2.1-y*3)+head*.019*s.lookX+ear*.014*Math.sin(t*3.7)+paw*.012*(name==='groom'?beat:0);
+      const dy=tail*.025*Math.cos(t*2.1)+ear*.015*Math.sin(t*4.2)+chest*.012*breath+head*.011*s.lookY+
+        paw*(name==='hug'?.022*Math.sin(t*7):name==='stalk'?.023*Math.sin(s.stridePhase+x*5):name==='groom'?.022*beat:0);
+      points.push([(x-.5+dx)*size,(y-1+dy)*height]);
+    }
+    function triangle(a,b,c,ix,iy,ux,uy){
+      const A=points[a],B=points[b],C=points[c],step=frame/cols;
+      artist.save();artist.beginPath();artist.moveTo(...A);artist.lineTo(...B);artist.lineTo(...C);artist.closePath();artist.clip();
+      const xx=(B[0]-A[0])/(ux*step),xy=(B[1]-A[1])/(ux*step);
+      const yx=(C[0]-A[0])/(uy*step),yy=(C[1]-A[1])/(uy*step);
+      artist.transform(xx,xy,yx,yy,A[0]-xx*ix*step-yx*iy*step,A[1]-xy*ix*step-yy*iy*step);
+      artist.drawImage(tile,Math.min(ix,ix+ux)*step,Math.min(iy,iy+uy)*step,step,step,Math.min(ix,ix+ux)*step,Math.min(iy,iy+uy)*step,step,step);artist.restore();
+    }
+    for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){
+      const a=j*(cols+1)+i,b=a+1,c=a+cols+1,d=c+1;
+      triangle(a,b,c,i,j,1,1);triangle(d,c,b,i+1,j+1,-1,-1);
+    }
+  }
+  function pickPose(t,s){
+    if(s.mode==='play'&&s.motion!=='rest')return s.motion;
+    if(s.biting)return 'groom';
+    if(s.petted)return 'blink';
+    if(s.mode==='wash'&&s.foam.size<6)return t%3<1?'groom':'blink';
+    const idle=t%9.8;
+    if(idle>.7&&idle<1.85)return 'groom';
+    if(idle>4.1&&idle<4.45)return 'blink';
+    return 'sit';
+  }
   function paintKitten(t,s){
     if(!artist||!kitten.complete||!kitten.naturalWidth)return false;
     if(layer.width!==canvas.width||layer.height!==canvas.height){
@@ -25,23 +74,28 @@ export function makeScene(canvas) {
     const stride=Math.sin(s.stridePhase)*s.gait;
     const compression=s.crouch*.07+s.impact*.09;
     const height=(2.38+Math.sin(t*2.3)*.014-compression+s.reach*.06)*u;
-    const width=height*kitten.width/kitten.height;
+    const width=height;
     artist.save();artist.translate(x,floor);
     artist.scale(u*(.59-s.lift*.17),u*.105);
     const shade=artist.createRadialGradient(0,0,.1,0,0,1);
     shade.addColorStop(0,'rgba(91,52,72,.34)');shade.addColorStop(1,'rgba(91,52,72,0)');
     artist.fillStyle=shade;artist.fillRect(-1,-1,2,2);artist.restore();
-    // Each band bends progressively at the shoulders and hips, keeping paws planted at rest.
-    const bands=36;
-    for(let i=0;i<bands;i++){
-      const f=i/bands;
-      const head=1-f*f;
-      const sway=head*(s.lookX*.052+s.face*.10)+stride*(.04-f*.06);
-      const lean=1+head*Math.abs(s.face)*-.075+Math.sin(f*Math.PI)*compression*.3;
-      const bandWidth=width*lean;
-      artist.drawImage(kitten,0,f*kitten.height,kitten.width,kitten.height/bands,
-        x-bandWidth*.51+sway*u,bottom-height+f*height,bandWidth,height/bands+.55);
+    const next=pickPose(t,s);
+    if(next!==currentPose){previousPose=currentPose;currentPose=next;changedAt=t}
+    const blend=Math.min(1,(t-changedAt)/.085);
+    function drawPose(name,opacity){
+      if(opacity<=0)return;
+      artist.save();artist.globalAlpha=opacity;
+      artist.translate(x,bottom);
+      const lean=s.lookX*.022+stride*.032+(s.petted?.052:0);
+      artist.rotate(lean);
+      const bob=(s.biting?Math.sin(t*15)*.023:0)+Math.abs(stride)*.045;
+      const length=height+bob*u;
+      drawRig(name,t,s,width,length);
+      artist.restore();
     }
+    if(blend<1)drawPose(previousPose,1-blend);
+    drawPose(currentPose,blend);
     return true;
   }
   let queue=[],group=[0,0,0,0],vx,vy;

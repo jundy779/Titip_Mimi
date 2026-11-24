@@ -70,3 +70,5 @@ Kamar Mimi, uji simulasi web 24 November 2026. Pengujian langkah waktu tetap mem
 Kamar Mimi, 24 November 2026. Build Astro berhasil. Uji simulasi memeriksa satu hadiah per tangkapan, transisi turun setelah menangkap benang dan kontak dengan lantai. Pengujian pada HP fisik masih terbuka.
 
 Uji animasi Kamar Mimi di web. Simulasi jadwal frame 30, 60, 90 dan 120 Hz menghasilkan satu tangkapan untuk kibasan yang sama. Latar Canvas digunakan kembali setelah ukuran stabil. Build Astro lulus. Kecepatan frame di Android dan iOS fisik belum diukur.
+
+Uji simulasi 30, 60 dan 120 Hz memastikan urutan mengintai, menerkam, memeluk lalu duduk, dengan satu hati per tangkapan. Build web berhasil. Pengujian laju bingkai pada perangkat fisik masih terbuka.

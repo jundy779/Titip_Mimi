@@ -104,3 +104,5 @@ Model bermain memakai tanda hati di mata kiri dan pita stroberi di kanan dari su
 Teras mawar memakai latar ilustrasi fantasi orisinal, model Mimi bergerak di atasnya, serta tekstur wajah dari pose welcome v1. Kelopak dekoratif berhenti saat pemain mengaktifkan pengurangan gerakan.
 
 Pada tampilan utama, Mimi menggunakan ilustrasi karakter fantasi transparan dari acuan welcome. Animasi 2.5D membengkokkan tubuh mengikuti arah pandang, langkah, lompatan dan pendaratan. Model prosedural ditampilkan selama ilustrasi dimuat.
+
+Mimi memakai enam pose yang dihubungkan dengan mekanik bermain. Saat santai ia merawat bulu dan mengedip, saat diterkam benang berada di antara kedua kaki depan. Usapan kepala saat santai memicu pose mata tertutup.

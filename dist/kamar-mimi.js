@@ -24,14 +24,14 @@ function options(items){el('choices').replaceChildren();for(const [label,go] of 
 function talk(){options(stories.map(([label,reply,next,end])=>[label,()=>{el('speech').textContent=reply;options([[next,()=>{reward(end);options([]);el('action').hidden=false;el('action').focus()}]]);el('choices').firstChild.focus()}]));el('action').hidden=true}
 const say=words=>el('speech').textContent=words;
 const yarn=yarnGame(s,say,()=>reward('Kena! Mimi mendekap benangnya ♡'));
-let biteEnd=0,lastRub=null,activePointer=null;
+let biteEnd=0,lastRub=null,activePointer=null,strokeStart=null,petEnd=0;
 let pet={lastMeal:0,bites:0,washed:0};
 try{const old=JSON.parse(localStorage.getItem('mimi-care-v1')||'{}');for(const k of Object.keys(pet))if(Number.isFinite(old[k]))pet[k]=old[k]}catch{}
 function savePet(){try{localStorage.setItem('mimi-care-v1',JSON.stringify(pet))}catch{}}
 function select(mode){
  yarn.reset();activePointer=null;
  Object.assign(s,{mode,catX:0,face:0,progress:0,drag:null,running:false,biting:false,foam:new Set([0,1,2,3,4,5])});
- lastRub=null;biteEnd=0;
+ lastRub=null;strokeStart=null;petEnd=0;biteEnd=0;
  const [hint,act,words]=modes[mode];el('hint').textContent=hint;el('action').textContent=act;el('action').hidden=false;say(words);options([]);
  document.querySelectorAll('nav button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===mode)));
  if(mode==='chat')talk();
@@ -63,20 +63,33 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>select(b.datase
 canvas.onpointerdown=e=>{
  if(!scene||activePointer!==null)return;
  activePointer=e.pointerId;canvas.setPointerCapture(e.pointerId);
- if(s.mode==='play'){const p=scene.world(e,1);yarn.grab(p.x,p.y,e.timeStamp)}
+ if(s.mode==='play'){
+   const p=scene.world(e,1);
+   if(!yarn.grab(p.x,p.y,e.timeStamp)&&s.motion==='rest'){
+     const head=scene.world(e,.5);
+     if(Math.hypot(head.x-s.catX,head.y-1.58)<.75)strokeStart=head;
+   }
+ }
  if(s.mode==='feed'){const p=scene.world(e,1.21);if(Math.hypot(p.x-.82,p.y-.42)<.52)s.drag=p}
  if(s.mode==='wash')lastRub=scene.world(e,.64);
 };
 canvas.onpointermove=e=>{
  if(e.pointerId!==activePointer)return;
  if(s.mode==='play'){const p=scene.world(e,1);yarn.pull(p.x,p.y,e.timeStamp)}
+ if(strokeStart){
+   const p=scene.world(e,.5);
+   if(Math.hypot(p.x-s.catX,p.y-1.58)>.88)strokeStart=null;
+   else if(Math.hypot(p.x-strokeStart.x,p.y-strokeStart.y)>.17){
+     petEnd=performance.now()+1400;strokeStart=p;say('Prrr… Mimi nyender ke tanganmu.');
+   }
+ }
  if(s.drag)s.drag=scene.world(e,1.21);
  if(lastRub){const p=scene.world(e,.64);if(Math.hypot(p.x-lastRub.x,p.y-lastRub.y)>.06){washAt(p);lastRub=p}}
 };
 function finish(e){
  if(e.pointerId!==activePointer)return;
  if(s.drag&&e.type==='pointerup'){const p=scene.world(e,.55);if(Math.hypot(p.x-s.catX,p.y-1.31)<.45)feed();else say('Dekatkan ikannya ke hidung Mimi, ya.')}
- yarn.release(e.timeStamp);s.drag=null;lastRub=null;activePointer=null;
+ yarn.release(e.timeStamp);s.drag=null;lastRub=null;strokeStart=null;activePointer=null;
 }
 canvas.onpointerup=canvas.onpointercancel=canvas.onlostpointercapture=finish;
 canvas.onkeydown=e=>{
@@ -88,7 +101,7 @@ document.addEventListener('visibilitychange',()=>{lastFrame=null});
 function tick(now){
  requestAnimationFrame(tick);if(document.hidden)return;
  const dt=lastFrame===null?0:Math.min((now-lastFrame)/1000,.1);
- lastFrame=now;clock+=dt;s.biting=now<biteEnd;
+ lastFrame=now;clock+=dt;s.biting=now<biteEnd;s.petted=now<petEnd;
  if(s.mode==='play'){
    const steps=Math.ceil(dt*120);
    for(let i=0;i<steps;i++)yarn.step(dt/steps,now-(steps-1-i)*dt/steps*1000);
