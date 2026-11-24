@@ -62,3 +62,5 @@ Uji Chrome lulus pada lebar 320, 360, 390, 768, dan 1280 piksel. Keempat halaman
 Untuk mengulang, jalankan `npm run build`, salin `tests/browser/planner.html` ke `dist/qa.html`, lalu jalankan `npm run preview` pada origin pengujian kosong. Buka `/qa.html` dan pilih **Mulai pengujian**. Jangan sertakan salinan halaman uji saat menerbitkan demo. Pengujian ini memakai viewport browser. Pengiriman saat aplikasi ditutup dan perilaku pada perangkat fisik perlu diuji terpisah.
 
 To-Do List harian: build Astro lulus. Pada Chrome di demo yang diterbitkan, tugas fiktif ditambahkan dan dicentang. Setelah muat ulang, centang masih aktif. Kode Flutter untuk lembar harian sudah ditambahkan, tetapi build dan uji perangkat Android/iOS untuk perubahan ini belum dijalankan.
+
+Revisi lembar ringkas diuji di Chrome pada demo publik. Centang lama terbaca, empat bagian tambahan awalnya tertutup. Pada tanggal lain, tugas baru dapat ditambah dan dicentang, Target dapat dibuka lalu diisi dengan Enter dan ringkasannya berubah menjadi 0/1. Build Astro lulus. Flutter belum diuji pada revisi ini.

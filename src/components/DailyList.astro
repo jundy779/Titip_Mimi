@@ -1,12 +1,26 @@
+---
+const extras = ['Target', 'Rawat diri', 'Catatan', 'Pengingat'];
+---
 <section class="sheet mimi-list" aria-labelledby="list-heading">
-  <header><img src="/bow.webp" alt="" width="45" height="38"/><h2 id="list-heading">To-Do List</h2></header>
-  <div class="list-meta"><label>Tanggal <input type="date" data-list-date required /></label>
-    <label>Prioritas <select data-list-priority><option value="">Pilih</option><option>Santai</option><option>Penting</option><option>Utama</option></select></label></div>
-  <div class="list-grid">
-    {['Tugasku','Target','Rawat diri'].map((name,i)=><section class={'list-group group-'+i} data-list-group={name}>
-      <h3>{name}</h3><div data-rows></div><form><input aria-label={'Tambah ke '+name} placeholder="Tulis satu hal…" required maxlength="240"/><button type="submit" aria-label={'Tambah ke '+name}>Tambah</button></form>
-    </section>)}
-    {['Catatan','Pengingat'].map(name=><label class="list-memo">{name}<textarea data-memo={name} rows="2" maxlength="2000" placeholder={name==='Catatan'?'Yang mau kamu ingat…':'Pesan kecil untuk hari ini…'}/></label>)}
+  <div class="list-heading">
+    <img src="/bow.webp" width="42" height="36" alt="" />
+    <h2 id="list-heading">To-Do List</h2>
+    <label class="list-date"><span>Tanggal</span><input type="date" data-list-date required /></label>
   </div>
+  <section class="list-group list-main" data-list-group="Tugasku">
+    <h3>Tugasku</h3>
+    <form><input aria-label="Tambah ke Tugasku" placeholder="Tulis tugas…" required maxlength="240" /><button type="submit">Tambah</button></form>
+    <div data-rows></div>
+  </section>
+  <div class="list-extras">
+    {extras.map((name,i) => <details class="list-fold">
+      <summary>{name}<small data-summary={name}></small></summary>
+      {i < 2 ? <div class="list-group" data-list-group={name}>
+        <div data-rows></div>
+        <form><input aria-label={'Tambah ke '+name} placeholder={i === 0 ? 'Tulis target…' : 'Waktu untuk dirimu…'} required maxlength="240" /><button type="submit">Tambah</button></form>
+      </div> : <textarea aria-label={name} data-memo={name} rows="2" maxlength="2000" placeholder={name === 'Catatan' ? 'Tulis catatan…' : 'Tulis pesan untuk dirimu…'} />}
+    </details>)}
+  </div>
+  <label class="list-priority">Prioritas hari ini <select data-list-priority><option value="">Pilih</option><option>Santai</option><option>Penting</option><option>Utama</option></select></label>
   <small data-list-status role="status"></small>
 </section>

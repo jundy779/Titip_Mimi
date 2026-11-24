@@ -5,12 +5,21 @@ export function mountDailyList(sheet, today) {
   date.value = today;
   let key;
   let page;
+  function summarize() {
+    for (const badge of sheet.querySelectorAll('[data-summary]')) {
+      const value = page[badge.dataset.summary];
+      badge.textContent = Array.isArray(value) && value.length
+        ? value.filter(item => item.done).length + '/' + value.length
+        : typeof value === 'string' && value.trim() ? 'Terisi' : '';
+    }
+  }
   function write(change) {
     try {
       const latest = JSON.parse(localStorage.getItem(key) || '{}');
       change(latest);
       localStorage.setItem(key, JSON.stringify(latest));
       page = latest;
+      summarize();
       status.textContent = 'Tersimpan di perangkat ini.';
       return true;
     } catch {
@@ -46,6 +55,7 @@ export function mountDailyList(sheet, today) {
       page = {};
       status.textContent = 'Daftarnya belum bisa dibaca.';
     }
+    summarize();
     priority.value = page.priority || '';
     for (const memo of sheet.querySelectorAll('textarea')) {
       memo.value = page[memo.dataset.memo] || '';

@@ -71,6 +71,20 @@ class _DailyListState extends State<DailyList> {
     super.dispose();
   }
 
+  List<Widget> groupFields(String group) => [
+        for (final row in data[group] ?? [])
+          CheckboxListTile(contentPadding: EdgeInsets.zero, controlAffinity: ListTileControlAffinity.leading,
+            title: Text(row['title'] as String), value: row['done'] == true,
+            onChanged: (checked) { setState(() => row['done'] = checked == true); save(); }),
+        Row(children: [
+          Expanded(child: TextField(controller: fields[group], maxLength: 240,
+            decoration: InputDecoration(labelText: 'Tambah ke $group', counterText: ''),
+            onSubmitted: (_) => add(group))),
+          IconButton(tooltip: 'Tambah ke $group', onPressed: () => add(group), icon: const Icon(Icons.add)),
+        ]),
+        const SizedBox(height: 12),
+  ];
+
   @override
   Widget build(BuildContext context) => Card(child: Padding(
     padding: const EdgeInsets.all(16),
@@ -84,25 +98,17 @@ class _DailyListState extends State<DailyList> {
           items: ['Santai', 'Penting', 'Utama'].map((p) => DropdownMenuItem(value:p, child:Text(p))).toList(),
           onChanged: (value) { setState(() => data['priority'] = value); save(); }),
       ]),
-      for (final group in groups) ...[
-        Text(group, style: Theme.of(context).textTheme.titleMedium),
-        for (final row in data[group] ?? [])
-          CheckboxListTile(contentPadding: EdgeInsets.zero, controlAffinity: ListTileControlAffinity.leading,
-            title: Text(row['title'] as String), value: row['done'] == true,
-            onChanged: (checked) { setState(() => row['done'] = checked == true); save(); }),
-        Row(children: [
-          Expanded(child: TextField(controller: fields[group], maxLength: 240,
-            decoration: InputDecoration(labelText: 'Tambah ke $group', counterText: ''),
-            onSubmitted: (_) => add(group))),
-          IconButton(tooltip: 'Tambah ke $group', onPressed: () => add(group), icon: const Icon(Icons.add)),
-        ]),
-        const SizedBox(height: 12),
-      ],
-      for (final name in ['Catatan','Pengingat']) Padding(
+      Text('Tugasku', style: Theme.of(context).textTheme.titleMedium),
+      ...groupFields('Tugasku'),
+      for (final group in groups.skip(1))
+        ExpansionTile(title: Text(group), tilePadding: EdgeInsets.zero,
+          children: groupFields(group)),
+      for (final name in ['Catatan','Pengingat']) ExpansionTile(
+        tilePadding: EdgeInsets.zero, title: Text(name), children: [Padding(
         padding: const EdgeInsets.only(top: 8),
         child: TextField(controller: fields[name], minLines: 1, maxLines: 3, maxLength: 2000,
           decoration: InputDecoration(labelText: name, counterText: ''),
-          onChanged: (value) { data[name] = value; save(); })),
+          onChanged: (value) { data[name] = value; save(); }))]),
       if (message.isNotEmpty) TextButton(onPressed: save, child: Text(message)),
     ]),
   ));
