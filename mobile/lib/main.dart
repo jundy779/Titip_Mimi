@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'entry.dart';
+import 'daily_list.dart';
 import 'editor.dart';
 import 'journal.dart';
 
@@ -564,6 +565,7 @@ class _RoomState extends ConsumerState<Room> {
                           )
                         else ...[
                           if (widget.index == 0) ...[
+                            DailyList(prefs: ref.read(prefsProvider)),
                             Wrap(
                               spacing: 8,
                               runSpacing: 8,

@@ -375,3 +375,24 @@ body > dialog h2 { line-height:1.15; overflow-wrap:anywhere; }
   .heading-label { gap: .5rem; }
   .heading-label img { width: 2.25rem; }
 }
+
+.mimi-list {grid-column:1/-1; min-width:0}
+.mimi-list header,.list-meta,.list-group form {display:flex;align-items:center;gap:.55rem}
+.mimi-list header {justify-content:center;position:static;background:none;padding:0;border:0}
+.mimi-list header img {object-fit:contain}
+.mimi-list h2 {margin:0}
+.list-meta {justify-content:space-between;flex-wrap:wrap;margin:1rem 0}
+.list-meta label,.list-memo {display:grid;gap:.25rem}
+.list-grid {display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:.75rem}
+.group-0 {grid-row:span 3}
+.list-group h3 {margin:0 0 .4rem;border-radius:.6rem;padding:.4rem .65rem;background:color-mix(in srgb,currentColor 9%,transparent)}
+.group-2 h3 {background:color-mix(in srgb,#a077dc 22%,transparent)}
+.list-group [data-rows] label {display:flex;gap:.65rem;align-items:center;min-height:44px;border-bottom:1px solid color-mix(in srgb,currentColor 23%,transparent);overflow-wrap:anywhere}
+.list-group label:has(:checked) {text-decoration:line-through}
+.list-group input[type=checkbox] {width:19px;height:19px;flex:none;accent-color:#aa3865}
+.list-group form {margin:.4rem 0}
+.list-group form input {flex:1;min-width:0;width:0}
+.mimi-list :is(input:not([type=checkbox]),select,textarea) {box-sizing:border-box;max-width:100%;font:inherit;color:inherit;background:transparent;border:1px solid color-mix(in srgb,currentColor 35%,transparent);border-radius:.55rem;padding:.45rem}
+.list-memo textarea {resize:vertical}
+.list-memo:last-child {grid-column:1/-1}
+@media(max-width:560px){.list-grid{grid-template-columns:minmax(0,1fr)}.group-0{grid-row:auto}}

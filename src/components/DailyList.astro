@@ -1,0 +1,12 @@
+<section class="sheet mimi-list" aria-labelledby="list-heading">
+  <header><img src="/bow.webp" alt="" width="45" height="38"/><h2 id="list-heading">To-Do List</h2></header>
+  <div class="list-meta"><label>Tanggal <input type="date" data-list-date required /></label>
+    <label>Prioritas <select data-list-priority><option value="">Pilih</option><option>Santai</option><option>Penting</option><option>Utama</option></select></label></div>
+  <div class="list-grid">
+    {['Tugasku','Target','Rawat diri'].map((name,i)=><section class={'list-group group-'+i} data-list-group={name}>
+      <h3>{name}</h3><div data-rows></div><form><input aria-label={'Tambah ke '+name} placeholder="Tulis satu hal…" required maxlength="240"/><button type="submit" aria-label={'Tambah ke '+name}>Tambah</button></form>
+    </section>)}
+    {['Catatan','Pengingat'].map(name=><label class="list-memo">{name}<textarea data-memo={name} rows="2" maxlength="2000" placeholder={name==='Catatan'?'Yang mau kamu ingat…':'Pesan kecil untuk hari ini…'}/></label>)}
+  </div>
+  <small data-list-status role="status"></small>
+</section>

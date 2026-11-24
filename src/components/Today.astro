@@ -1,4 +1,5 @@
 ---
+import DailyList from './DailyList.astro';
 import { Image } from 'astro:assets';
 import welcome from '../../assets/mimi/v1/welcome.webp';
 import write from '../../assets/mimi/v1/write.webp';
@@ -27,6 +28,7 @@ const shortcuts = [
       <Image src={art} width={88} height={88} alt="" /><span>{label}</span>
     </button>)}
   </div>
+  <DailyList />
   <section class="sheet shelf">
     <div class="row"><h2>Koleksi</h2><button class="all">Lihat semua</button></div>
     <div class="previews"></div>

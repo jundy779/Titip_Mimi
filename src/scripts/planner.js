@@ -1,3 +1,4 @@
+import { mountDailyList } from './daily-list.js';
 import { accountCards } from './account-import.mjs';
 import { calendarButton, readCalendar } from './calendar.js';
 import { nextReminder } from './reminders.mjs';
@@ -295,6 +296,7 @@ function gallery(node,rows){
 }
 function home(p){
  p.replaceChildren(document.querySelector('#today-template').content.cloneNode(true));
+ mountDailyList(p.querySelector('.mimi-list'), day);
  p.querySelector('.date').textContent=today.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long'});
  p.querySelector('.quick').onclick=()=>capture(tab==='Agenda'?'agenda':tab==='Koleksi'&&selectedKind?selectedKind:'note');
  for(const shortcut of p.querySelectorAll('[data-capture-kind]')){
