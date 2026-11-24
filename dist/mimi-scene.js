@@ -80,14 +80,14 @@ export function makeScene(canvas) {
   }
   function cat(t,s){
     const step=s.running?Math.sin(t*16):0,breath=Math.sin(t*2)*.025,hop=s.running?Math.abs(step)*.11:0;
-    origin(s.catX,.1+hop,0,s.face);
+    origin(s.catX,.1+hop+s.lift-s.crouch*.09,0,s.face);
     ball(-.73,.59,-.22,.26,.56,.25,cream,-.55+.12*Math.sin(t*2.3));
     ball(0,.63,0,.60,.64,.46,cream);
     for(const side of [-1,1]){
       ball(side*.39,.19+step*side*.07,.32,.265,.19,.28,cream);
       ball(side*.39,.16+step*side*.07,.55,.12,.075,.03,inner);
       for(let j=-1;j<=1;j++)ball(side*.39+j*.06,.236+step*side*.07,.55,.027,.03,.02,inner);
-      ball(side*.49,.58+(s.mode==='chat'&&side===1?.15*Math.abs(Math.sin(t*3)):0),.28,.16,.31,.17,cream,side*.28);
+      ball(side*(.49+s.reach*.15),.58+s.reach*.22+(s.mode==='chat'&&side===1?.15*Math.abs(Math.sin(t*3)):0),.28,.16,.31,.17,cream,side*.28);
     }
     const nod=breath+(s.biting?-.09*Math.abs(Math.sin(t*12)):0),y=1.43+nod;
     for(const side of [-1,1]){
@@ -114,7 +114,7 @@ export function makeScene(canvas) {
     ball(s.catX,.11,0,.66,.026,.44,'#d9a6a0');cat(t,s);origin();
     if(s.mode==='feed'){ball(.82,.22,1.15,.39,.14,.31,'#cb8191');ball(.82,.31,1.15,.32,.07,.25,'#fae8d5');
       const x=s.drag?.x??.82,y=s.drag?.y??.44;ball(x,y,1.21,.17,.09,.08,'#e5ae69');ear(x-.16,y,1.21,.08,.105,.055,'#dda165',1.57);ball(x+.09,y+.025,1.28,.016,.016,.014,eye)}
-    if(s.mode==='wash'){for(let i=0;i<6-s.progress;i++){let a=i*2.4;ball(s.catX+Math.cos(a)*.61,1.3+Math.sin(a)*.39,.64,.105,.105,.09,'#bce3ea');ball(s.catX+Math.cos(a)*.61-.034,1.34+Math.sin(a)*.39,.71,.031,.031,.016,white)}}
+    if(s.mode==='wash'){for(const i of s.foam){let a=i*2.4;ball(s.catX+Math.cos(a)*.61,1.3+Math.sin(a)*.39,.64,.105,.105,.09,'#bce3ea');ball(s.catX+Math.cos(a)*.61-.034,1.34+Math.sin(a)*.39,.71,.031,.031,.016,white)}}
     if(s.mode==='play'){const x=s.ballX,y=s.ballY;ball(x,.12,1,.19,.02,.14,'#d39e99');ball(x,y,1,.20,.20,.20,'#c38aab');for(let j=-1;j<=1;j++)ball(x+j*.06,y,1.17,.012,.114,.016,'#e6b5c9',-.32)}
     if(!gl)paintScene();
   }

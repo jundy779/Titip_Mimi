@@ -1,4 +1,5 @@
 import {makeScene} from './mimi-scene.js';
+import {yarnGame} from './mimi-yarn.js';
 const el=id=>document.getElementById(id),canvas=document.querySelector('canvas');
 let scene;
 try{scene=makeScene(canvas)}catch(error){console.warn('Kamar Mimi',error)}
@@ -8,7 +9,7 @@ const modes={
  feed:['Seret biskuit ikan dari mangkuk ke mulut Mimi.','Suapi Mimi','Mimi mencium aroma ikan…'],
  wash:['Usap gelembung di bulu Mimi sampai bersih.','Usap bulu','Gelembungnya geli, hihi.'],
  chat:['Pilih cerita yang ingin kamu bagi dengan Mimi.','Pilih cerita','Sini, telinga Mimi siap.'],
- play:['Sentuh karpet untuk melempar benang ke sana.','Lempar benang','Mimi siap menangkap!']
+ play:['Pegang benangnya, tarik pelan, lalu kibaskan. Coba buat Mimi meleset!','Kibaskan benang','Kuping Mimi mengarah ke benang…']
 };
 let hearts=0;
 try{hearts=Math.max(0,Number(localStorage.getItem('mimi-room-hearts-v2'))||0)}catch{}
@@ -21,30 +22,73 @@ const stories=[
 ];
 function options(items){el('choices').replaceChildren();for(const [label,go] of items){const b=document.createElement('button');b.textContent=label;b.onclick=go;el('choices').append(b)}}
 function talk(){options(stories.map(([label,reply,next,end])=>[label,()=>{el('speech').textContent=reply;options([[next,()=>{reward(end);options([]);el('action').hidden=false;el('action').focus()}]]);el('choices').firstChild.focus()}]));el('action').hidden=true}
-let flight=null,biteEnd=0,lastRub=null;
-function select(mode){Object.assign(s,{mode,catX:0,face:0,progress:0,drag:null,running:false,biting:false,ballX:.9,ballY:.32});flight=null;lastRub=null;biteEnd=0;
- const [hint,act,words]=modes[mode];el('hint').textContent=hint;el('action').textContent=act;el('action').hidden=false;el('speech').textContent=words;options([]);
- document.querySelectorAll('nav button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===mode)));if(mode==='chat')talk()}
-function feed(){s.drag=null;s.biting=true;biteEnd=performance.now()+750;reward('Kriuk! Mimi suka bagian ekornya ♡')}
-function rub(){if(s.progress===6)s.progress=0;s.progress++;if(s.progress===6){reward('Wangi lagi! Mimi kasih sundulan kecil.');el('action').textContent='Mandi lagi'}else{el('speech').textContent='Prrr… sisa '+(6-s.progress)+' gelembung.';el('action').textContent='Usap lagi'}}
-function toss(x){if(flight)return;const target=Math.max(-1.20,Math.min(1.20,x));flight={start:performance.now(),from:s.ballX,target};el('speech').textContent='Hup! Kejar, Mimi!'}
-el('action').onclick=()=>{if(s.mode==='feed')feed();if(s.mode==='wash')rub();if(s.mode==='chat'){talk();el('choices').firstChild.focus()}if(s.mode==='play')toss(s.ballX>0?-1:1)};
+const say=words=>el('speech').textContent=words;
+const yarn=yarnGame(s,say,()=>reward('Kena! Mimi mendekap benangnya ♡'));
+let biteEnd=0,lastRub=null,activePointer=null;
+let pet={lastMeal:0,bites:0,washed:0};
+try{const old=JSON.parse(localStorage.getItem('mimi-care-v1')||'{}');for(const k of Object.keys(pet))if(Number.isFinite(old[k]))pet[k]=old[k]}catch{}
+function savePet(){try{localStorage.setItem('mimi-care-v1',JSON.stringify(pet))}catch{}}
+function select(mode){
+ yarn.reset();activePointer=null;
+ Object.assign(s,{mode,catX:0,face:0,progress:0,drag:null,running:false,biting:false,foam:new Set([0,1,2,3,4,5])});
+ lastRub=null;biteEnd=0;
+ const [hint,act,words]=modes[mode];el('hint').textContent=hint;el('action').textContent=act;el('action').hidden=false;say(words);options([]);
+ document.querySelectorAll('nav button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===mode)));
+ if(mode==='chat')talk();
+ if(mode==='wash'&&pet.washed&&Date.now()-pet.washed<3600000)say('Bulu Mimi masih wangi. Mau main busa lagi?');
+ if(mode==='feed'&&full())say('Perut Mimi masih kenyang. Main benang, yuk?');
+}
+function full(){return Date.now()-pet.lastMeal<1800000&&pet.bites>=3}
+function feed(){
+ s.drag=null;if(full()){say('Mimi mengendus sebentar. Perutnya masih kenyang ♡');return}
+ if(Date.now()-pet.lastMeal>=1800000)pet.bites=0;
+ pet.lastMeal=Date.now();pet.bites++;savePet();biteEnd=performance.now()+800;
+ reward(full()?'Nyam. Perut Mimi sudah kenyang ♡':'Kriuk! Kumis Mimi ikut bergerak.');
+}
+function rub(id){
+ if(!s.foam.delete(id))return;
+ if(!s.foam.size){pet.washed=Date.now();savePet();reward('Bersih! Mimi menggoyangkan telinganya.');el('action').textContent='Main busa lagi'}
+ else say('Prrr… sisa '+s.foam.size+' gelembung.');
+}
+function washAt(p){
+ for(const id of s.foam){const a=id*2.4;if(Math.hypot(p.x-s.catX-Math.cos(a)*.61,p.y-1.3-Math.sin(a)*.39)<.24){rub(id);break}}
+}
+el('action').onclick=()=>{
+ if(s.mode==='feed')feed();
+ if(s.mode==='wash'){if(s.foam.size)rub(s.foam.values().next().value);else select('wash')}
+ if(s.mode==='chat'){talk();el('choices').firstChild.focus()}
+ if(s.mode==='play')yarn.flick(s.ballX>0?-1:1);
+};
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>select(b.dataset.mode));
-canvas.onpointerdown=e=>{if(!scene)return;const p=scene.world(e,1.21),cat=scene.world(e,.5);canvas.setPointerCapture(e.pointerId);
- if(s.mode==='feed'&&Math.hypot(p.x-.82,p.y-.42)<.52)s.drag=p;
- if(s.mode==='wash'&&Math.hypot(cat.x,cat.y-1.45)<.95){rub();lastRub=cat}
- if(s.mode==='play')toss(p.x)};
-canvas.onpointermove=e=>{if(!scene)return;
+canvas.onpointerdown=e=>{
+ if(!scene||activePointer!==null)return;
+ activePointer=e.pointerId;canvas.setPointerCapture(e.pointerId);
+ if(s.mode==='play'){const p=scene.world(e,1);yarn.grab(p.x,p.y,e.timeStamp)}
+ if(s.mode==='feed'){const p=scene.world(e,1.21);if(Math.hypot(p.x-.82,p.y-.42)<.52)s.drag=p}
+ if(s.mode==='wash')lastRub=scene.world(e,.64);
+};
+canvas.onpointermove=e=>{
+ if(e.pointerId!==activePointer)return;
+ if(s.mode==='play'){const p=scene.world(e,1);yarn.pull(p.x,p.y,e.timeStamp)}
  if(s.drag)s.drag=scene.world(e,1.21);
- if(lastRub&&e.buttons){const p=scene.world(e,.5);if(Math.hypot(p.x,p.y-1.45)<.96&&Math.hypot(p.x-lastRub.x,p.y-lastRub.y)>.19){rub();lastRub=s.progress===6?null:p}}};
-canvas.onpointerup=e=>{if(s.drag){const p=scene.world(e,.55);if(Math.hypot(p.x-s.catX,p.y-1.31)<.45)feed();else el('speech').textContent='Dekatkan ikannya ke hidung Mimi, ya.'}s.drag=null;lastRub=null};
-canvas.onpointercancel=()=>{s.drag=null;lastRub=null};
-let lastFrame=-Infinity;
-function tick(now){requestAnimationFrame(tick);if(document.hidden||now-lastFrame<32)return;lastFrame=now;
- s.biting=now<biteEnd;
- if(flight){const t=(now-flight.start)/1000;const {from,target}=flight;
- if(t<.66){const f=t/.66;s.ballX=from+(target-from)*f;s.ballY=.32+Math.sin(f*Math.PI)*.95}
- else if(t<1.42){const f=(t-.66)/.76;s.catX=target*f;s.face=Math.sign(target)*.45;s.running=true;s.ballY=.32}
- else if(t<2.22){const f=(t-1.42)/.8;s.catX=target*(1-f);s.face=-Math.sign(target)*.40;s.ballX=s.catX;s.ballY=1.35+Math.sin(t*16)*.025}
- else{flight=null;s.running=false;s.catX=s.face=0;s.ballX=.68;s.ballY=.32;reward('Dapat! Benangnya Mimi bawa pulang.')}}scene?.render(now/1000,s)}
-select('feed');requestAnimationFrame(tick);
+ if(lastRub){const p=scene.world(e,.64);if(Math.hypot(p.x-lastRub.x,p.y-lastRub.y)>.06){washAt(p);lastRub=p}}
+};
+function finish(e){
+ if(e.pointerId!==activePointer)return;
+ if(s.drag&&e.type==='pointerup'){const p=scene.world(e,.55);if(Math.hypot(p.x-s.catX,p.y-1.31)<.45)feed();else say('Dekatkan ikannya ke hidung Mimi, ya.')}
+ yarn.release(e.timeStamp);s.drag=null;lastRub=null;activePointer=null;
+}
+canvas.onpointerup=canvas.onpointercancel=canvas.onlostpointercapture=finish;
+canvas.onkeydown=e=>{
+ if(s.mode!=='play'||!['ArrowLeft','ArrowRight'].includes(e.key))return;
+ e.preventDefault();yarn.flick(e.key==='ArrowLeft'?-1:1);
+};
+let lastFrame=0;
+function tick(now){
+ requestAnimationFrame(tick);if(document.hidden||now-lastFrame<32)return;
+ const dt=Math.min((now-lastFrame)/1000,.05);lastFrame=now;s.biting=now<biteEnd;
+ if(s.mode==='play')yarn.step(dt,now);
+ if(s.drag)s.face+=(Math.max(-.4,Math.min(.4,s.drag.x*.55))-s.face)*.2;
+ scene?.render(now/1000,s);
+}
+select('play');requestAnimationFrame(tick);
