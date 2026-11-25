@@ -5,6 +5,12 @@ import ThemeChoice from './ThemeChoice.astro';
 <template id="agenda-template">
   <section class="page-frame">
     <JournalHeading section="agenda" title="Agenda"><button class="primary" data-add>Tambah agenda</button></JournalHeading>
+    <details class="sheet reminder-settings" data-system-settings>
+      <summary>Atur pengingat</summary>
+      <p>Mimi bisa mengirim notifikasi selama halaman ini masih berjalan. Mau menutup web? Buka agenda mendatang lalu pilih “Ingatkan lewat kalender HP”.</p>
+      <p role="status" aria-live="polite"></p>
+      <div class="agenda-actions"><button type="button" data-enable>Aktifkan notifikasi browser</button><button type="button" data-test>Coba notifikasi</button></div>
+    </details>
     <div class="planner-columns">
       <div class="sheet timeline" data-schedule></div>
       <aside class="sheet import-calendar"><h2>Kalender lain</h2><div data-calendar-import></div></aside>

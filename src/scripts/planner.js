@@ -1,3 +1,5 @@
+import { downloadAlarm } from './calendar-alarm.mjs';
+import { mountSystemSettings, notifyDue } from './system-reminders.js';
 import { mountDailyList } from './daily-list.js';
 import { accountCards } from './account-import.mjs';
 import { calendarButton, readCalendar } from './calendar.js';
@@ -30,7 +32,12 @@ let tab='Hari Ini',items=[];
 let today=new Date(), day=localDay(today);
 try{items=JSON.parse(localStorage.getItem(key)||'null')||[{title:'Ambil jahitan',note:'Bawa nota waktu mengambil pesanan.',time:day+'T16:00',done:false},{title:'Undangan syukuran',note:'Contoh undangan di koleksi Iqlima.',time:'',done:false}]}catch{items=[]}
 function make(tag,txt){const n=document.createElement(tag);n.textContent=txt;return n}
-function save(next){try{localStorage.setItem(key,JSON.stringify(next));items=next;return true}catch{alert('Titipannya belum tersimpan. Penyimpanan browser mungkin penuh atau dibatasi.');return false}}
+function identifyReminders(entries) {
+  return entries.map(entry => entry.time && !entry.reminderId ?
+    {...entry, reminderId: globalThis.crypto?.randomUUID?.() || Date.now().toString(36) + Math.random().toString(36).slice(2)} : entry);
+}
+function save(next){try{next=identifyReminders(next);localStorage.setItem(key,JSON.stringify(next));items=next;return true}catch{alert('Titipannya belum tersimpan. Penyimpanan browser mungkin penuh atau dibatasi.');return false}}
+if(items.some(item=>item.time && !item.reminderId))save(items);
 const kinds = {note:'Catatan',account:'Akun',agenda:'Agenda'};
 const kindOf = item => item.kind || (item.time ? 'agenda' : 'note');
 let selectedKind = '', search = '', editing = null;
@@ -134,6 +141,7 @@ const p=el('page');p.replaceChildren();if(tab==='Profil'){
 if(tab==='Hari Ini'){home(p);return}
 if(tab==='Koleksi'){collection(p);return}
 p.append(el('agenda-template').content.cloneNode(true));
+mountSystemSettings(p.querySelector('[data-system-settings]'));
 addImport(p.querySelector('[data-calendar-import]'));
 p.querySelector('[data-add]').onclick=()=>capture('agenda');
 agendaList(p.querySelector('[data-schedule]'),items.filter(item=>item.time).sort((a,b)=>a.time.localeCompare(b.time)));
@@ -291,7 +299,15 @@ function detail(x){
  if(!x.icsId){const edit=make('button','Ubah');edit.onclick=()=>{dlg.close();capture(kindOf(x),x)};dlg.append(edit)}
  if(x.time){dlg.append(make('p',new Date(x.time).toLocaleString('id-ID')));
  const toggle=make('button',x.done?'Batalkan selesai':'Tandai selesai');
- toggle.onclick=()=>{if(save(items.map(i=>i===x?{...i,done:!i.done}:i))){dlg.close();render()}};dlg.append(toggle,calendarButton(x))}
+ toggle.onclick=()=>{if(save(items.map(i=>i===x?{...i,done:!i.done}:i))){dlg.close();render()}};dlg.append(toggle,calendarButton(x));
+ if(!x.done && x.reminderId && (x.snoozeUntil || Date.parse(x.time))>Date.now()){
+   const alarm=make('button','Ingatkan lewat kalender HP');
+   alarm.onclick=()=>downloadAlarm(x);
+   dlg.append(alarm,make('p','Buka file .ics di kalender HP, cek pengingatnya, lalu simpan. Kalau jadwal berubah, ubah juga di kalendermu.'));
+ }
+ if(!x.done && nextReminder([x])){const later=make('button','Tunda 10 menit');later.onclick=()=>{
+   if(save(items.map(i=>i===x?{...i,snoozeUntil:Date.now()+600000}:i))){dlg.close();render();el('notice').textContent='Mimi ingetin lagi 10 menit dari sekarang.'}
+ };dlg.append(later)}}
  const close=make('button','Tutup');close.className='quiet';close.onclick=()=>dlg.close();dlg.append(close);document.body.append(dlg);dlg.onclose=()=>dlg.remove();dlg.showModal()
 }
 function gallery(node,rows){
@@ -350,6 +366,7 @@ let shown;
 let previewReminder=false;
 let floatingReminder=false;
 function refreshReminder(){
+  void notifyDue(items);
   const due=nextReminder(items);
   if(due!==shown){
     shown=due;
@@ -391,3 +408,21 @@ function updateClock(){
 setInterval(updateClock,5000);
 document.addEventListener('visibilitychange',updateClock);
 render();
+
+function openReminder(id) {
+  el('box').open && el('box').close();
+  document.querySelectorAll('dialog[open]').forEach(dialog=>dialog.close());
+  tab='Agenda';render();
+  if(id==='test'){document.querySelector('[data-system-settings]').open=true;return}
+  const item=items.find(entry=>entry.reminderId===id);
+  if(item)detail(item);
+  else el('notice').textContent='Agenda ini sudah tidak ada di perangkat ini.';
+}
+navigator.serviceWorker?.addEventListener('message', event=>{
+  if(event.data?.type==='mimi-open-agenda')openReminder(event.data.id);
+});
+const fromAlert=new URL(location.href);
+if(fromAlert.searchParams.has('agenda')){
+  openReminder(fromAlert.searchParams.get('agenda'));
+  fromAlert.searchParams.delete('agenda');history.replaceState(null,'',fromAlert);
+}

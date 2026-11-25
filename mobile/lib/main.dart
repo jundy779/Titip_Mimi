@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'entry.dart';
+import 'device_reminders.dart';
 import 'daily_list.dart';
 import 'editor.dart';
 import 'journal.dart';
@@ -22,12 +23,10 @@ final entriesProvider = StateNotifierProvider<Entries, List<Entry>>(
 );
 
 class Entries extends StateNotifier<List<Entry>> {
-  Entries(this.prefs)
-    : super(
-        (jsonDecode(prefs.getString('entries') ?? '[]') as List)
-            .map((j) => Entry.fromJson(j))
-            .toList(),
-      );
+  Entries(this.prefs) : super(readStored(prefs));
+  static List<Entry> readStored(SharedPreferences prefs) =>
+    (jsonDecode(prefs.getString('entries') ?? '[]') as List)
+      .map((j) => Entry.fromJson(j)).toList();
   final SharedPreferences prefs;
   Future<void> _tail = Future.value();
   Future<void> put(Entry item) =>
@@ -44,6 +43,7 @@ class Entries extends StateNotifier<List<Entry>> {
         throw StateError('Gagal menyimpan');
       }
       state = next;
+      if (prefs.getBool(reminderPreference) == true) await syncDeviceReminders(prefs, next);
     });
     _tail = operation.catchError((Object _) {});
     return operation;
@@ -71,7 +71,8 @@ final router = GoRouter(
           reverseTransitionDuration: Duration.zero,
           transitionsBuilder: (context, animation, secondary, child) =>
               FadeTransition(opacity: animation, child: child),
-          child: Room(index: paths.indexOf(state.uri.path)),
+          child: Room(index: paths.indexOf(state.uri.path),
+              reminder: state.uri.queryParameters['reminder']),
         ),
       ),
   ],
@@ -79,6 +80,19 @@ final router = GoRouter(
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
+  Future<void> openPending() async {
+    final id = await reminderChannel.invokeMethod<String>('take');
+    if (id != null) router.go(Uri(path: '/agenda', queryParameters: {'reminder': id}).toString());
+  }
+  reminderChannel.setMethodCallHandler((call) async {
+    if (call.method == 'available') await openPending();
+  });
+  WidgetsBinding.instance.addPostFrameCallback((_) async {
+    try { await openPending(); } on Exception { /* Unsupported host. */ }
+    if (prefs.getBool(reminderPreference) == true) {
+      await syncDeviceReminders(prefs, Entries.readStored(prefs));
+    }
+  });
   runApp(
     ProviderScope(
       overrides: [prefsProvider.overrideWithValue(prefs)],
@@ -131,7 +145,8 @@ class MimiApp extends ConsumerWidget {
 }
 
 class Room extends ConsumerStatefulWidget {
-  const Room({super.key, required this.index});
+  const Room({super.key, required this.index, this.reminder});
+  final String? reminder;
   final int index;
   @override
   ConsumerState<Room> createState() => _RoomState();
@@ -144,7 +159,30 @@ class _RoomState extends ConsumerState<Room> {
   @override
   void initState() {
     super.initState();
+    openReminder();
     timer = Timer.periodic(const Duration(seconds: 5), (_) => setState(() {}));
+  }
+
+  @override
+  void didUpdateWidget(Room oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.reminder != oldWidget.reminder) openReminder();
+  }
+
+  void openReminder() {
+    final id = widget.reminder;
+    if (id == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final matches = ref.read(entriesProvider).where((e) => e.id == id);
+      router.go('/agenda');
+      if (matches.isNotEmpty) {
+        detail(matches.first);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:
+          Text(id == '__test__' ? 'Tes pengingat Mimi sampai ♡' : 'Agenda ini sudah tidak ada.')));
+      }
+    });
   }
 
   @override
@@ -313,6 +351,11 @@ class _RoomState extends ConsumerState<Room> {
                   },
                   child: const Text('Ubah'),
                 ),
+                if (e.isDue(DateTime.now()))
+                  TextButton(onPressed: () {
+                    Navigator.pop(sheet);
+                    update(e, snooze: true);
+                  }, child: const Text('Tunda 10 menit')),
                 if (e.time != null)
                   TextButton(
                     onPressed: () {
@@ -645,6 +688,8 @@ class _RoomState extends ConsumerState<Room> {
                               height: 96,
                               excludeFromSemantics: true,
                             ),
+                          if (widget.index == 2)
+                            DeviceReminderSettings(prefs: ref.read(prefsProvider), entries: entries),
                           if (rows.isEmpty)
                             Padding(
                               padding: const EdgeInsets.symmetric(vertical: 24),

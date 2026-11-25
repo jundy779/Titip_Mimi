@@ -449,3 +449,8 @@ body > dialog h2 { line-height:1.15; overflow-wrap:anywhere; }
   .mimi-play-link:hover .mimi-play-arrow { transform: translateX(2px); }
   .mimi-play-link:active { transform: translateY(1px); }
 }
+
+.reminder-settings { margin-block: .75rem 1rem; }
+.reminder-settings summary { cursor: pointer; font-weight: 650; padding-block: .4rem; }
+.reminder-settings [role=status] { font-weight: 600; }
+.reminder-settings button:disabled { opacity: .6; cursor: default; }

@@ -74,3 +74,9 @@ Uji animasi Kamar Mimi di web. Simulasi jadwal frame 30, 60, 90 dan 120 Hz mengh
 Uji simulasi 30, 60 dan 120 Hz memastikan urutan mengintai, menerkam, memeluk lalu duduk, dengan satu hati per tangkapan. Build web berhasil. Pengujian laju bingkai pada perangkat fisik masih terbuka.
 
 Uji handler memeriksa reaksi cilukba dua tahap, tos lewat sentuhan, elusan langsung dalam empat mode, tombol Elus Mimi dan akhir reaksi. Build web berhasil. Pengujian sentuh di perangkat fisik masih terbuka.
+
+## Pilot pengingat perangkat, 24 November 2026
+
+Build Astro dan tiga tes Node lulus. Jalankan `node --test tests/reminder-delivery.test.mjs`. Tes menyimulasikan izin ditolak, aktivasi, notifikasi contoh, pencegahan kirim ulang, penundaan, agenda selesai, dan ketukan menuju agenda yang sama. Ekspor kalender diuji dengan WIB, Unicode, judul multibaris, alarm saat acara mulai, serta tautan kembali. Web menjadwalkan selama halaman berjalan. Pengingat setelah web ditutup memakai salinan yang pengguna simpan di aplikasi kalender.
+
+Android dan iOS mempunyai implementasi penjadwalan lokal. Build dan uji layar terkunci pada perangkat asli masih terbuka. Untuk penerimaan, buat dua agenda dengan nama sama dan jam berbeda, aktifkan izin, tutup aplikasi, kunci HP, dan ketuk pengingat pertama. Periksa detail yang terbuka, tunda sepuluh menit, kunci lagi, lalu selesaikan setelah pengingat kedua datang. Ulangi setelah ubah jadwal, matikan pengingat, tolak izin, dan pada Android setelah restart. Periksa keterlambatan mode hemat daya. REM-1 untuk pengiriman media Telegram menunggu integrasi backend.

@@ -1,6 +1,6 @@
 # Titip Mimi untuk Android dan iOS
 
-Aplikasi Flutter ini menyimpan catatan, petunjuk akun, agenda, dan pilihan tema di perangkat. Pengingat muncul ketika aplikasi terbuka. Web dan mobile memiliki penyimpanan lokal masing-masing.
+Aplikasi Flutter ini menyimpan catatan, petunjuk akun, agenda, dan pilihan tema di perangkat. Di Agenda, buka **Atur pengingat** untuk memberi izin dan menjadwalkan hingga 60 agenda terdekat pada perangkat. **Coba notifikasi** menjadwalkan tes sekitar satu menit kemudian. Android memakai alarm yang waktunya dapat bergeser ketika perangkat menghemat daya. Membuka aplikasi memperbarui daftar agenda yang dijadwalkan. Build dan pengujian layar terkunci pada Android serta iOS masih menunggu verifikasi. Web dan mobile memiliki penyimpanan lokal masing-masing.
 
 Gunakan Flutter 3.35.7 atau versi kompatibel. Jalankan dari direktori ini.
 
