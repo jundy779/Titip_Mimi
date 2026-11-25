@@ -165,8 +165,6 @@ button.collection-item {background:var(--mimi-surface-container);color:var(--ink
   @keyframes detail-rise {from{opacity:.7;transform:translateY(16px)}to{opacity:1;transform:none}}
 }
 
-.agenda-group {margin:1.5rem 0 0}
-.agenda-group summary {cursor:pointer;font-weight:650;min-height:var(--mimi-target)}
 .agenda-group small {display:block;color:var(--mimi-on-surface-variant)}
 button.agenda-title {display:block;background:transparent;color:var(--mimi-on-surface);text-align:left;padding:.25rem 0;font:bold 1.35rem/1.25 Georgia,serif;overflow-wrap:anywhere}
 [data-import] summary {cursor:pointer;color:var(--mimi-primary);padding-block:.65rem}
@@ -222,7 +220,6 @@ button.agenda-title {display:block;background:transparent;color:var(--mimi-on-su
 .planner-columns { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(15rem,1fr); align-items: start; gap: clamp(1rem,2vw,2rem); }
 .planner-columns .sheet { min-width: 0; }
 .planner-columns p { color: var(--mimi-on-surface-variant); max-width: 56ch; }
-.timeline .agenda-group:first-child { margin-top: 0; }
 .agenda-group h3 { color: var(--mimi-primary); margin: 0 0 1rem; font-size: 1rem; }
 .timeline .entry { margin-inline-start: .3rem; position: relative; border: 0; border-inline-start: 2px solid var(--line); padding: 0 0 1.25rem 1.2rem; }
 .timeline .entry:last-child { padding-bottom: .25rem; }
@@ -450,7 +447,73 @@ body > dialog h2 { line-height:1.15; overflow-wrap:anywhere; }
   .mimi-play-link:active { transform: translateY(1px); }
 }
 
-.reminder-settings { margin-block: .75rem 1rem; }
-.reminder-settings summary { cursor: pointer; font-weight: 650; padding-block: .4rem; }
-.reminder-settings [role=status] { font-weight: 600; }
+/* Agenda uses one sheet for reminders, scheduled items and completed items. */
+.timeline.sheet {
+  --agenda-inset: clamp(.875rem, 2vw, 1.25rem);
+  padding: 0;
+  border-radius: 1rem;
+  box-shadow: none;
+}
+.timeline [data-schedule] > * {
+  margin: 0;
+  border-top: 1px solid var(--line);
+}
+.timeline [data-schedule] > section,
+.timeline .collection-empty { padding: 1rem var(--agenda-inset); }
+.timeline details > summary {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  list-style: none;
+  min-height: 3rem;
+  padding: .5rem var(--agenda-inset);
+  color: var(--ink);
+  font-size: .9375rem;
+  line-height: 1.35;
+  font-weight: 600;
+  cursor: pointer;
+}
+.timeline details > summary::-webkit-details-marker { display: none; }
+.timeline details > summary::before {
+  content: '';
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  background: var(--mimi-primary);
+  mask: var(--agenda-symbol) center / contain no-repeat;
+}
+.reminder-settings {
+  --agenda-symbol: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 17c1.5-1.6 2-3 2-6a5 5 0 0 1 10 0c0 3 .5 4.4 2 6H5Zm5 3a2.5 2.5 0 0 0 4 0M12 4V3'/%3E%3C/svg%3E");
+}
+details.agenda-group {
+  --agenda-symbol: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cpath d='m8.5 12 2.4 2.5 4.8-5'/%3E%3C/svg%3E");
+}
+.timeline details > summary::after {
+  content: '';
+  width: .45rem;
+  height: .45rem;
+  flex: none;
+  margin-inline: auto .2rem;
+  border: solid currentColor;
+  border-width: 0 1.5px 1.5px 0;
+  opacity: .7;
+  transform: translateY(-.1rem) rotate(45deg);
+}
+.timeline details[open] > summary::after { transform: translateY(.1rem) rotate(225deg); }
+@media (prefers-reduced-motion: no-preference) {
+  .timeline details > summary::after { transition: transform 160ms ease; }
+}
+.timeline summary:focus-visible {
+  outline: 2px solid var(--mimi-primary);
+  outline-offset: -3px;
+  border-radius: .85rem;
+}
+@media (hover: hover) {
+  .timeline summary:hover { color: var(--mimi-primary); }
+}
+.reminder-content { padding: 0 var(--agenda-inset) 1rem; }
+.reminder-content p { margin: .45rem 0 .75rem; font-size: .875rem; }
+.reminder-content p:last-child { margin: .75rem 0 0; }
 .reminder-settings button:disabled { opacity: .6; cursor: default; }
+.timeline details.agenda-group .entry { margin-inline: var(--agenda-inset); }
+.timeline details.agenda-group .entry:last-child { padding-bottom: 1rem; }

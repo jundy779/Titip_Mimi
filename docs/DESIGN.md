@@ -110,3 +110,5 @@ Mimi memakai enam pose yang dihubungkan dengan mekanik bermain. Saat santai ia m
 Di browser WebGL, karakter utama kembali memakai tubuh 3D dengan gerak mata dan kaki depan terpisah. Perangkat tanpa WebGL memakai pose ilustrasi utuh agar sambungan segitiga tidak tampak. Usapan, cilukba, dan tos tersedia langsung dari teras.
 
 Pintasan Main sama Mimi di Hari Ini berupa satu tautan kartu dengan maskot menyapa, label singkat, dan panah. Seluruh kartu bisa diketuk atau dibuka lewat keyboard.
+
+Di web, Atur pengingat dan Selesai berbagi satu panel Agenda. Gunakan tinggi minimum 48 piksel, tepi kiri yang sama, ikon lonceng atau centang di kiri, serta panah buka-tutup di kanan. Isi tampil ketika baris dibuka. Animasi panah mengikuti preferensi gerakan perangkat.
