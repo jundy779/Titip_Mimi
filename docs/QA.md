@@ -86,3 +86,15 @@ Android dan iOS mempunyai implementasi penjadwalan lokal. Build dan uji layar te
 ### 26 November 2026 · audit tampilan jurnal
 
 Build Astro dan tiga tes pengingat Node lulus. Di Chrome, uji antarmuka dengan data terisolasi lulus pada viewport 320, 360, 390, 768 dan 1280 piksel untuk tema terang dan gelap. Pemeriksaan mencakup navigasi empat halaman, formulir catatan, akun dan agenda, pencarian, detail, penundaan, penyelesaian, tema Kamar Mimi, dan empat pilihan kegiatan. Pada tiga lebar ponsel kartu utama sama lebar dan judul sapaan 18 piksel. Pemeriksaan visual ponsel dan tablet mengungkap lebar kartu yang sempat berbeda, kemudian diperbaiki dan diuji ulang. Pasangan teks utama, teks sekunder dan tombol terhadap warna dasarnya memiliki rasio kontras minimum 5,8:1. Revisi tema Flutter belum dibangun atau diperiksa pada Android dan iPhone fisik.
+
+### Pemeriksaan komponen web, 26 November 2026
+
+Build yang diuji memakai kode aplikasi `b5e7405`. Pengujian tambahan memakai Chrome dengan viewport 390 px, file sintetis dan penyimpanan uji terpisah. Salin `tests/browser/components.html` ke direktori hasil build pada origin uji kosong untuk menjalankannya. Uji responsif lima lebar layar memakai `tests/browser/planner.html`.
+
+| Bagian | Hasil yang diamati | Pemeriksaan yang masih terbuka |
+|---|---|---|
+| Hari Ini dan To-Do | Centang bertahan setelah urungkan. Batal dan setuju hapus permanen menghasilkan status yang tepat. Fokus kembali ke input. Ringkasan Target dan Rawat diri, memo, pengingat tertulis, prioritas dan pemisahan tanggal berfungsi. | Kemudahan penggunaan sehari-hari oleh Iqlima dan input sentuh dengan keyboard HP. |
+| Koleksi, formulir dan kartu akun | Validasi kosong, tambah, edit, riwayat, pencatatan ganti sandi, batal di konfirmasi pertama dan kedua serta hapus final lulus. Pencarian kosong dapat diatur ulang. Impor CSV meminta pilihan, menyimpan metadata dan mengenali duplikat. | Uji ekspor asli lintas versi browser. Integrasi brankas otomatis merupakan pekerjaan terpisah. |
+| Agenda dan pengingat | File kalender rusak menghasilkan pesan. Impor valid dan impor ulang menghasilkan tepat satu agenda. Draf Google membawa judul yang benar dan tombol alarm tersedia. Tiga tes Node pengingat lulus. | Simpan pada kalender tujuan dan periksa pengiriman pada layar terkunci di Android dan iOS. |
+| Navigasi dan aksesibilitas | Enter membuka formulir catatan, Tab berpindah ke judul, Escape menutup dan mengembalikan fokus ke Tulis catatan. Sakelar tema, ukuran responsif dan pilihan kegiatan game tercakup dalam uji sebelumnya. | Pembaca layar, pembesaran teks sistem, seluruh urutan fokus, Safari dan Firefox. |
+| Kamar Mimi dan aplikasi Flutter | Empat mode game web sudah diuji sebagai pilihan. Tema aplikasi Flutter ada di kode. | Kelancaran gerak, input sentuh dan perangkat grafis; build Android dan iOS serta uji HP fisik. |

@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="id">
+<meta charset="utf-8">
+<title>Uji komponen Titip Mimi</title>
+<h1>Uji komponen Titip Mimi</h1>
+<p>Jalankan pada salinan build dengan penyimpanan kosong. Semua akun, file dan tugas di sini adalah contoh.</p>
+<button id="start">Mulai uji komponen</button>
+<pre id="report" role="status"></pre>
+<iframe title="Aplikasi uji" style="width:390px;height:700px"></iframe>
+<script type="module">
+const frame = document.querySelector('iframe');
+const report = document.querySelector('#report');
+const start = document.querySelector('#start');
+const entriesKey = 'ruang-iqlima-demo-v1';
+const dateKey = 'mimi-daily-list:2091-05-07';
+const read = () => JSON.parse(localStorage.getItem(entriesKey) || '[]');
+const scope = () => frame.contentDocument;
+const find = selector => scope().querySelector(selector);
+const all = selector => Array.from(scope().querySelectorAll(selector));
+const click = selector => find(selector).click();
+const input = (selector, value, event = 'input') => {
+  const field = find(selector);
+  field.value = value;
+  field.dispatchEvent(new frame.contentWindow.Event(event, {bubbles:true}));
+};
+function assert(result, message) { if (!result) throw Error(message); }
+async function until(check, message) {
+  const end = performance.now() + 3000;
+  while (!check()) {
+    if (performance.now() >= end) throw Error(message);
+    await new Promise(resolve => setTimeout(resolve, 20));
+  }
+}
+function load(path = '/') {
+  return new Promise(resolve => { frame.onload = resolve; frame.src = path; });
+}
+function button(label, root = scope()) {
+  const target = [...root.querySelectorAll('button')].find(b => b.textContent.trim() === label && b.getClientRects().length);
+  assert(target, 'Tombol ' + label);
+  target.click();
+}
+function upload(selector, filename, text) {
+  const data = new frame.contentWindow.DataTransfer();
+  data.items.add(new frame.contentWindow.File([text], filename, {type:'text/plain'}));
+  const field = find(selector);
+  field.files = data.files;
+  field.dispatchEvent(new frame.contentWindow.Event('change', {bubbles:true}));
+}
+function pass(title) { report.textContent += 'Lulus · ' + title + '\n'; }
+
+async function dailyList() {
+  input('[data-list-date]', '2091-05-07', 'change');
+  const task = '[data-list-group="Tugasku"]';
+  input(task + ' form input', 'Uji pita');
+  find(task + ' form').requestSubmit();
+  click(task + ' [type=checkbox]');
+  click(task + ' .list-remove');
+  button('Urungkan', find(task));
+  assert(find(task + ' [type=checkbox]').checked, 'Centang saat dipulihkan');
+  click(task + ' .list-remove');
+  frame.contentWindow.confirm = () => false;
+  button('Hapus permanen', find(task));
+  assert(find(task + ' .list-undo'), 'Batal hapus tugas');
+  frame.contentWindow.confirm = () => true;
+  button('Hapus permanen', find(task));
+  assert(!find(task + ' .list-undo'), 'Tugas fiktif terhapus');
+  assert(scope().activeElement === find(task + ' form input'), 'Fokus setelah hapus');
+  for (const name of ['Target','Rawat diri']) {
+    const group=find('[data-list-group="' + name + '"]');
+    group.closest('details').open = true;
+    group.querySelector('input').value = 'Uji ' + name;
+    group.querySelector('form').requestSubmit();
+    group.querySelector('[type=checkbox]').click();
+    assert(find('[data-summary="'+name+'"]').textContent === '1/1', 'Ringkasan ' + name);
+  }
+  input('[data-memo="Catatan"]','Uji catatan');
+  input('[data-memo="Pengingat"]','Uji pesan');
+  input('[data-list-priority]','Utama','change');
+  input('[data-list-date]','2091-05-08','change');
+  assert(!find('[data-memo="Catatan"]').value,'Batas hari');
+  await load();
+  input('[data-list-date]','2091-05-07','change');
+  assert(find('[data-list-priority]').value === 'Utama' && find('[data-memo="Pengingat"]').value === 'Uji pesan','Isi harian sesudah reload');
+  pass('To-Do, centang, urungkan, konfirmasi hapus, fokus, target, rawat diri, memo, pengingat, prioritas dan tanggal');
+}
+
+async function accounts() {
+  click('[data-capture-kind=account]');
+  assert(!find('#form').checkValidity(), 'Validasi akun kosong');
+  input('#judul','Akun uji'); input('#identity','uji@example.invalid');
+  find('#form').requestSubmit();
+  click('.collection-item'); button('Ubah',find('.item-detail[open]'));
+  input('#judul','Akun uji baru'); find('#form').requestSubmit();
+  assert(read()[0].history.map(x=>x.label).join(',') === 'Ditambahkan,Diedit','Riwayat edit');
+  click('.collection-item');
+  button('Aku baru ganti sandi',find('.item-detail[open]'));
+  let modal = () => all('dialog[open]').at(-1);
+  assert(scope().activeElement.textContent === 'Batal', 'Fokus aman pada konfirmasi');
+  button('Catat',modal());
+  await until(()=>read()[0].history.length===3,'Riwayat perubahan sandi');
+  for (const step of ['Batal','Lanjutkan','Ya, hapus kartu']) {
+    button('Hapus kartu akun',find('.item-detail[open]'));
+    if (step === 'Batal') button('Batal',modal());
+    else {
+      button('Lanjutkan',modal());
+      await until(()=>modal()?.getAttribute('aria-label')==='Yakin hapus dari Mimi?', 'Konfirmasi kedua');
+      button(step==='Lanjutkan'?'Batal':step,modal());
+    }
+    await until(()=>all('dialog[open]').length===(step==='Ya, hapus kartu'?0:1),'Tutup konfirmasi akun');
+    assert(read().length===(step==='Ya, hapus kartu'?0:1),'Status kartu sesudah '+step);
+  }
+  const importer=find('[data-import]');
+  importer.open=true;
+  const file='[data-import] input[type=file]';
+  const csv='name,url,username,password\nContoh,https://example.invalid/,qa,rahasia-fiktif';
+  upload(file,'akun.csv',csv);
+  await until(()=>find('[data-preview] input'),'Pratinjau CSV');
+  assert(find('[data-confirm]').disabled,'Belum memilih akun');
+  click('[data-preview] input');click('[data-confirm]');
+  assert(read().length===1 && !JSON.stringify(read()).includes('rahasia-fiktif'),'Impor metadata');
+  importer.open=true; upload(file,'akun.csv',csv);
+  await until(()=>find('[data-import-message]').textContent.includes('Tidak ada kartu baru'),'Duplikat CSV');
+  input('.collection-tools input','tak-ada-xxx');
+  assert(!find('.collection-item') && find('.collection-empty'),'Pencarian kosong');
+  click('[data-reset]');assert(find('.collection-item'),'Atur ulang pencarian');
+  pass('Akun, validasi, riwayat, konfirmasi sandi, batal di kedua tahap hapus, hapus final, CSV terpilih dan duplikat');
+}
+
+async function calendars() {
+  click('[data-section=Agenda]');
+  const selector='[data-calendar-import] input';
+  const ics=['BEGIN:VCALENDAR','VERSION:2.0','BEGIN:VEVENT','UID:uimimi-qa','DTSTART:20910507T040000Z','SUMMARY:Agenda uji','END:VEVENT','END:VCALENDAR'].join('\r\n');
+  upload(selector,'rusak.ics','bukan kalender');
+  await until(()=>find('#notice').textContent.includes('belum bisa dibaca'),'Pesan file rusak');
+  upload(selector,'agenda.ics',ics);
+  await until(()=>read().some(x=>x.icsId==='uimimi-qa'),'Impor agenda');
+  upload(selector,'agenda.ics',ics);
+  await until(()=>find('#notice').textContent.includes('1 sudah ada'),'Agenda duplikat');
+  assert(read().filter(e=>e.icsId==='uimimi-qa').length===1,'Agenda unik');
+  click('.agenda-title'); const dlg=find('.item-detail[open]');
+  const link=dlg.querySelector('a');
+  assert(new URL(link.href).searchParams.get('text')==='Agenda uji','Judul draf Google');
+  assert([...dlg.querySelectorAll('button')].some(b=>b.textContent==='Ingatkan lewat kalender HP'),'Ekspor alarm');
+  pass('Kalender, file rusak, impor, duplikat, detail, tombol alarm dan draf Google');
+}
+
+start.onclick = async () => {
+  if ([entriesKey,dateKey,'mimi-daily-list:2091-05-08'].some(k=>localStorage.getItem(k)!==null)) {
+    report.textContent='Gunakan penyimpanan uji kosong.';return;
+  }
+  start.disabled=true;report.textContent='';
+  try {
+    localStorage.setItem(entriesKey,'[]');
+    await load(); await dailyList(); await accounts(); await calendars();
+    report.textContent+='Semua kelompok lulus.';
+  } catch (error) { report.textContent+='Gagal · '+error.message; }
+  finally {
+    frame.src='about:blank';localStorage.removeItem(entriesKey);localStorage.removeItem(dateKey);
+    start.disabled=false;
+  }
+};
+</script></html>
