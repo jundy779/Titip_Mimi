@@ -18,24 +18,25 @@ const shortcuts = [
     <Image class="welcome-art" src={welcome} width={260} height={260} alt="Mimi menyapa Iqlima" fetchpriority="high" />
     <button class="primary quick">Titip sesuatu</button>
   </section>
-  <section class="sheet agenda">
-    <h2>Agenda hari ini</h2>
-    <div class="next"></div>
-    <div class="day-progress" hidden><p></p><progress aria-label="Agenda hari ini yang sudah selesai"></progress></div>
-  </section>
   <div class="journal-actions" role="group" aria-label="Pintasan titipan">
     {shortcuts.map(({kind,label,art}) => <button type="button" data-capture-kind={kind}>
       <Image src={art} width={88} height={88} alt="" /><span>{label}</span>
     </button>)}
   </div>
-<a class="mimi-play-link" href="/kamar-mimi.html">
+  <section class="sheet agenda">
+    <h2>Agenda hari ini</h2>
+    <div class="next"></div>
+    <div class="day-progress" hidden><p></p><progress aria-label="Agenda hari ini yang sudah selesai"></progress></div>
+  </section>
+  <DailyList />
+  <a class="mimi-play-link" href="/kamar-mimi.html">
     <span class="mimi-play-art"><Image src={welcome} width={88} height={88} alt="" /></span>
     <span>Main sama Mimi</span>
     <span class="mimi-play-arrow" aria-hidden="true">→</span>
   </a>
-  <DailyList />
   <section class="sheet shelf">
     <div class="row"><h2>Koleksi</h2><button class="all">Lihat semua</button></div>
     <div class="previews"></div>
   </section>
 </div>
+

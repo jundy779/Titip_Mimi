@@ -36,8 +36,13 @@ const sections = [
     <main>
       <aside id="reminder" class="card" hidden aria-labelledby="reminder-heading">
         <img src="/remind.webp" width="72" height="72" alt="" />
-        <div><h2 id="reminder-heading">Mimi mau ingetin ♡</h2><p id="due-title" role="status"></p>
-        <div class="chips" id="due-actions"><button id="due-open" class="quiet">Lihat titipan</button><button id="due-snooze">Tunda 10 menit</button><button id="due-done" class="primary">Sudah selesai</button></div><button id="due-close" class="quiet" hidden>Tutup</button></div>
+        <div class="reminder-copy"><h2 id="reminder-heading">Mimi mau ingetin ♡</h2><p id="due-title" role="status"></p></div>
+        <button id="due-close" class="quiet" aria-label="Tutup pengingat" hidden><span aria-hidden="true">×</span></button>
+        <div class="chips" id="due-actions">
+          <button id="due-open" class="quiet">Lihat titipan</button>
+          <button id="due-snooze">Tunda 10 menit</button>
+          <button id="due-done" class="primary">Sudah selesai</button>
+        </div>
       </aside>
       <div id="page"><Today /></div>
       <p id="notice" role="status"></p>

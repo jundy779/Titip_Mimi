@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 
 enum JournalStyle {
   home('welcome', 0xfffbd7d5, 0xff4e3046),
-  note('write', 0xfff9e1e7, 0xff49303d),
-  collection('letter', 0xfff9e1e7, 0xff49303d),
-  agenda('planner', 0xffe1efe6, 0xff293e37),
-  account('privacy', 0xffeee5f6, 0xff3d3349),
-  profile('welcome', 0xffeee5f6, 0xff3d3349);
+  note('write', 0xfff8e6ea, 0xff49303d),
+  collection('letter', 0xfff8e6ea, 0xff49303d),
+  agenda('planner', 0xffe7f1eb, 0xff293e37),
+  account('privacy', 0xffefe9f6, 0xff3d3349),
+  profile('welcome', 0xffefe9f6, 0xff3d3349);
 
   const JournalStyle(this.pose, this.light, this.dark);
   final String pose;
@@ -44,7 +44,7 @@ class JournalHeading extends StatelessWidget {
     ),
     child: Row(
       children: [
-        style.sticker(56),
+        style.sticker(MediaQuery.sizeOf(context).width <= 600 ? 40 : 52),
         const SizedBox(width: 12),
         Expanded(
           child: Text(
@@ -68,7 +68,7 @@ class JournalPaper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => CustomPaint(
-    painter: _GridPainter(Theme.of(context).colorScheme.outline.withAlpha(28)),
+    painter: _GridPainter(Theme.of(context).colorScheme.outline.withAlpha(18)),
     child: child,
   );
 }

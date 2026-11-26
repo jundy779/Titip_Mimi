@@ -112,3 +112,9 @@ Di browser WebGL, karakter utama kembali memakai tubuh 3D dengan gerak mata dan 
 Pintasan Main sama Mimi di Hari Ini berupa satu tautan kartu dengan maskot menyapa, label singkat, dan panah. Seluruh kartu bisa diketuk atau dibuka lewat keyboard.
 
 Di web, Atur pengingat dan Selesai berbagi satu panel Agenda. Gunakan tinggi minimum 48 piksel, tepi kiri yang sama, ikon lonceng atau centang di kiri, serta panah buka-tutup di kanan. Isi tampil ketika baris dibuka. Animasi panah mengikuti preferensi gerakan perangkat.
+
+### Jurnal Mimi v1.3
+
+Gunakan kertas krem hangat, teks plum, tombol utama rose, dan aksen mint untuk Agenda serta lilac untuk akun dan Profil. Palet di `design/tokens.json` dipakai juga oleh Kamar Mimi. Sakelar di Profil menentukan kedua tampilan. Pertahankan ilustrasi dan pita Mimi yang sudah dikenali Iqlima.
+
+Pada desktop, letakkan To-Do List di samping ringkasan Agenda, Kamar Mimi, dan Koleksi. Pada ponsel, susun kartu satu kolom dengan lebar yang sama. Judul halaman utama berukuran 18 piksel di ponsel. Pengingat memuat judul agenda dan tiga tindakan dalam panel ringkas. Formulir ponsel terbuka dari bawah dengan tombol Simpan di akhir. Kamar Mimi menampilkan pilihan kegiatan sebelum instruksi dan tindakan utamanya.

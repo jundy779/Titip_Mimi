@@ -13,27 +13,57 @@ const themeKey = 'titip-mimi-theme';
 function assert(ok, message) {
   if (!ok) throw new Error(message);
 }
-function openHome() {
+function openPage(path = '/') {
   return new Promise(resolve => {
     frame.onload = resolve;
-    frame.src = '/';
+    frame.src = path;
   });
 }
 async function checkWidth(width) {
   frame.style.width = width + 'px';
   localStorage.setItem(itemsKey, '[]');
-  await openHome();
+  await openPage();
   const doc = () => frame.contentDocument;
   const one = selector => doc().querySelector(selector);
   const click = selector => { assert(one(selector), 'Elemen hilang ' + selector); one(selector).click(); };
   const fits = () => assert(doc().documentElement.scrollWidth <= width, 'Halaman meluap: ' + doc().body.dataset.page);
   const stored = () => JSON.parse(localStorage.getItem(itemsKey));
   assert(doc().documentElement.dataset.theme === 'light', 'Tema awal');
-  for (const section of ['Koleksi','Agenda','Profil','Hari Ini']) {
-    click('[data-section="' + section + '"]');
-    assert(doc().body.dataset.page === section, 'Navigasi ' + section);
-    fits();
+  for (const theme of ['light', 'dark']) {
+    if (theme === 'dark') {
+      click('[data-section="Profil"]');
+      click('[data-dark-switch]');
+    }
+    for (const section of ['Koleksi','Agenda','Profil','Hari Ini']) {
+      click('[data-section="' + section + '"]');
+      assert(doc().body.dataset.page === section, 'Navigasi ' + section);
+      assert(doc().documentElement.dataset.theme === theme, 'Tema ' + section);
+      fits();
+    }
+    if (width <= 600) {
+      const journal = one('.journal').getBoundingClientRect();
+      for (const selector of ['.agenda', '.mimi-list', '.shelf', '.mimi-play-link']) {
+        assert(Math.abs(one(selector).getBoundingClientRect().width - journal.width) <= 1, 'Lebar kartu ' + selector);
+      }
+    }
+    for (const kind of ['note','account','agenda']) {
+      click('[data-capture-kind="' + kind + '"]');
+      const modal = one('#box[open]');
+      assert(modal && modal.scrollWidth <= modal.clientWidth + 1, 'Lebar formulir ' + kind);
+      click('#cancel');
+    }
+    await openPage('/kamar-mimi.html');
+    assert(doc().documentElement.dataset.theme === theme, 'Tema Kamar Mimi');
+    for (const mode of ['feed','wash','chat','play']) {
+      click('[data-mode="' + mode + '"]');
+      assert(one('[aria-pressed="true"]').dataset.mode === mode, 'Kegiatan ' + mode);
+      fits();
+    }
+    await openPage();
   }
+  click('[data-section="Profil"]');
+  click('[data-dark-switch]');
+  click('[data-section="Hari Ini"]');
   const heading = frame.contentWindow.getComputedStyle(one('#page h1')).fontSize;
   click('[data-capture-kind="agenda"]');
   one('#judul').value = 'Uji ambil pesanan';
@@ -43,7 +73,7 @@ async function checkWidth(width) {
   const before = Date.now();
   click('#due-snooze');
   assert(stored()[0].snoozeUntil >= before + 600000 && stored()[0].snoozeUntil <= Date.now() + 600000, 'Tunda sepuluh menit');
-  await openHome();
+  await openPage();
   assert(one('#reminder').hidden && stored()[0].time === '2020-01-02T10:00', 'Tunda setelah muat ulang');
   click('[data-section="Koleksi"]');
   const search = one('#page input');
@@ -52,7 +82,7 @@ async function checkWidth(width) {
   click('.collection-results .collection-item');
   assert(one('dialog[open] h2').textContent === 'Uji ambil pesanan', 'Buka hasil pencarian');
   Array.from(one('dialog[open]').querySelectorAll('button')).find(button => button.textContent === 'Tandai selesai').click();
-  await openHome();
+  await openPage();
   click('[data-section="Agenda"]');
   assert(stored()[0].done && one('details.agenda-group summary').textContent === 'Selesai (1)' && one('#reminder').hidden, 'Status selesai setelah muat ulang');
   report.textContent += width + ' px lulus; ukuran judul beranda ' + heading + '\n';
@@ -72,6 +102,7 @@ start.onclick = async () => {
   } finally {
     frame.src = 'about:blank';
     localStorage.removeItem(itemsKey);
+    localStorage.removeItem(themeKey);
     start.disabled = false;
   }
 };

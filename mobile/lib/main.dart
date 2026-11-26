@@ -107,25 +107,36 @@ class MimiApp extends ConsumerWidget {
     final dark = b == Brightness.dark;
     final colors =
         ColorScheme.fromSeed(
-          seedColor: const Color(0xffaa3865),
+          seedColor: const Color(0xff96395f),
           brightness: b,
         ).copyWith(
-          primary: Color(dark ? 0xffffa9c8 : 0xffaa3865),
-          surface: Color(dark ? 0xff221820 : 0xfffff4f7),
+          primary: Color(dark ? 0xffffa9c8 : 0xff96395f),
+          surface: Color(dark ? 0xff302730 : 0xfffffcf8),
+          onSurface: Color(dark ? 0xfffaecf2 : 0xff402e39),
+          onSurfaceVariant: Color(dark ? 0xffd7c2ce : 0xff705965),
+          outlineVariant: Color(dark ? 0xff574650 : 0xffe9d5da),
         );
     return ThemeData(
       useMaterial3: true,
       colorScheme: colors,
-      scaffoldBackgroundColor: Color(dark ? 0xff221820 : 0xfffffbf5),
+      scaffoldBackgroundColor: Color(dark ? 0xff241c23 : 0xfffbf3f4),
       cardTheme: CardThemeData(
-        color: Color(dark ? 0xff30232c : 0xfffffbf5),
+        color: colors.surface,
+        elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
           side: BorderSide(color: colors.outlineVariant),
         ),
       ),
-      inputDecorationTheme: const InputDecorationTheme(
-        border: OutlineInputBorder(),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: colors.surface,
+        indicatorColor: Color(dark ? 0xff593348 : 0xfff8dfe8),
+        elevation: 0,
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: colors.surface,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
