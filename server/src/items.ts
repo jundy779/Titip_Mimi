@@ -10,7 +10,11 @@ export interface ItemData {
   icsId?: string; allDay?: boolean; endDay?: string; startUTC?: string; endUTC?: string;
   reminderId?: string; snoozeUntil?: number; extensionId?: string;
   repeat?: 'daily' | 'weekly' | 'monthly'; repeatDay?: number; repeated?: string; helpAskedAt?: string;
+  attachments?: Attachment[]; source?: 'telegram';
 }
+// Lampiran hanya menyimpan file_unique_id. file_id Telegram tetap di server (tabel telegram_files),
+// dan proksi media hanya melayani file yang tercatat milik pemilik yang sedang masuk.
+export interface Attachment { kind: 'photo' | 'video' | 'document'; id: string; name?: string; mime?: string; size?: number }
 export interface Change extends Partial<ItemData> { clientId: string; updatedAt: number; deleted?: boolean }
 export type Status = 'saved' | 'stale' | 'invalid';
 
@@ -49,11 +53,23 @@ export function clean(raw: Record<string, unknown>): ItemData | string {
   if (item.repeat === 'monthly' && Number.isInteger(raw.repeatDay) && (raw.repeatDay as number) >= 1 && (raw.repeatDay as number) <= 31) item.repeatDay = raw.repeatDay as number;
   if (['daily', 'weekly', 'monthly'].includes(raw.repeated as string)) item.repeated = raw.repeated as string;
   if (isIso(raw.helpAskedAt)) item.helpAskedAt = raw.helpAskedAt as string;
+  if (Array.isArray(raw.attachments)) {
+    const list = raw.attachments.slice(0, 10).flatMap((a: any) => {
+      if (!a || !['photo', 'video', 'document'].includes(a.kind) || typeof a.id !== 'string' || !/^[\w-]{1,100}$/.test(a.id)) return [];
+      const out: Attachment = { kind: a.kind, id: a.id };
+      const name = str(a.name, 120); if (name) out.name = name;
+      const mime = str(a.mime, 80); if (mime && /^[\w.+-]+\/[\w.+-]+$/.test(mime)) out.mime = mime;
+      if (Number.isSafeInteger(a.size) && a.size >= 0) out.size = a.size;
+      return [out];
+    });
+    if (list.length) item.attachments = list;
+  }
+  if (raw.source === 'telegram') item.source = 'telegram';
   if (typeof raw.snoozeUntil === 'number' && Number.isFinite(raw.snoozeUntil) && raw.snoozeUntil > 0) item.snoozeUntil = raw.snoozeUntil;
   return item;
 }
 
-const searchText = (i: ItemData) => [i.title, i.note, i.identity, i.method].filter(Boolean).join(' ').toLocaleLowerCase('id');
+const searchText = (i: ItemData) => [i.title, i.note, i.identity, i.method, ...(i.attachments || []).map(a => a.name)].filter(Boolean).join(' ').toLocaleLowerCase('id');
 
 interface Row { client_id: string; kind: string; data: string; deleted: number; updated_at: number; seq: number }
 const toWire = (r: Row) => ({ ...JSON.parse(r.data), clientId: r.client_id, updatedAt: r.updated_at, deleted: r.deleted === 1, seq: r.seq });
@@ -98,6 +114,26 @@ export class Items {
     const rows = this.db.prepare('SELECT client_id, kind, data, deleted, updated_at, seq FROM items WHERE owner_id = ? AND seq > ? ORDER BY seq LIMIT 2000').all(ownerId, cursor) as Row[];
     const max = rows.length ? rows[rows.length - 1].seq : cursor;
     return { results, items: rows.map(toWire), cursor: max, more: rows.length === 2000 };
+  }
+
+  // Dipakai bot dan pengingat: tulis satu titipan dari sisi server. Waktu ubah dibuat lebih baru
+  // dari versi tersimpan supaya perangkat lain menerimanya lewat sinkron biasa.
+  get(ownerId: string, clientId: string): (ItemData & { updatedAt: number }) | undefined {
+    const row = this.db.prepare('SELECT client_id, kind, data, deleted, updated_at, seq FROM items WHERE owner_id = ? AND client_id = ?').get(ownerId, clientId) as Row | undefined;
+    if (!row || row.deleted) return undefined;
+    return { ...JSON.parse(row.data), clientId: row.client_id, updatedAt: row.updated_at };
+  }
+  put(ownerId: string, raw: Partial<ItemData> & { clientId: string }, now = Date.now()): ItemData {
+    const item = clean(raw as Record<string, unknown>);
+    if (typeof item === 'string') throw new Error('titipan tidak valid: ' + item);
+    return this.db.transaction(() => {
+      const existing = this.db.prepare('SELECT updated_at FROM items WHERE owner_id = ? AND client_id = ?').get(ownerId, item.clientId) as { updated_at: number } | undefined;
+      const updatedAt = Math.max(now, (existing?.updated_at ?? 0) + 1);
+      const data = JSON.stringify(item);
+      if (existing) this.db.prepare('UPDATE items SET kind = ?, search = ?, data = ?, deleted = 0, updated_at = ?, seq = ? WHERE owner_id = ? AND client_id = ?').run(item.kind, searchText(item), data, updatedAt, this.nextSeq(), ownerId, item.clientId);
+      else this.db.prepare('INSERT INTO items (owner_id, client_id, kind, search, data, deleted, updated_at, seq) VALUES (?, ?, ?, ?, ?, 0, ?, ?)').run(ownerId, item.clientId, item.kind, searchText(item), data, updatedAt, this.nextSeq());
+      return item;
+    })();
   }
 
   search(ownerId: string, q: string) {

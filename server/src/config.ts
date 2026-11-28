@@ -10,6 +10,14 @@ export interface Config {
   staticDir: string | null;
   cookieSecure: boolean;
   sessionDays: number;
+  telegram: {
+    token: string;            // dari @BotFather, rahasia
+    username: string;         // nama bot tanpa @, untuk tautan t.me
+    webhookSecret: string;    // dicocokkan dengan header X-Telegram-Bot-Api-Secret-Token
+    mode: 'webhook' | 'polling' | 'off';
+    publicUrl: string;        // alamat HTTPS server, untuk setWebhook
+    reminderEveryMs: number;
+  };
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -23,6 +31,14 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     staticDir: env.STATIC_DIR === '' ? null : env.STATIC_DIR || '../dist',
     cookieSecure: env.COOKIE_SECURE ? env.COOKIE_SECURE === 'true' : production,
     sessionDays: Number(env.SESSION_DAYS) || 30,
+    telegram: {
+      token: env.TELEGRAM_BOT_TOKEN || '',
+      username: (env.TELEGRAM_BOT_USERNAME || '').replace(/^@/, ''),
+      webhookSecret: env.TELEGRAM_WEBHOOK_SECRET || '',
+      mode: !env.TELEGRAM_BOT_TOKEN ? 'off' : env.TELEGRAM_MODE === 'polling' ? 'polling' : 'webhook',
+      publicUrl: (env.PUBLIC_URL || '').replace(/\/$/, ''),
+      reminderEveryMs: Number(env.REMINDER_EVERY_MS) || 30000,
+    },
   };
 }
 

@@ -12,12 +12,18 @@ import { GOOGLE_VERIFIER, GoogleVerifier } from './google';
 import { Sessions } from './sessions';
 import { AuthController, AuthGuard } from './auth';
 import { Items, ItemsController } from './items';
+import { TELEGRAM_API, TelegramApi } from './telegram/api';
+import { TelegramBot } from './telegram/bot';
+import { Reminders } from './telegram/reminders';
+import { MediaController, TelegramController } from './telegram/controller';
 
 // Perubahan lewat cookie wajib membawa header X-Mimi agar form dari situs lain tidak bisa memalsukannya.
 @Injectable()
 class CsrfMiddleware implements NestMiddleware {
   use(req: Request, _res: Response, next: NextFunction) {
     const unsafe = !['GET', 'HEAD', 'OPTIONS'].includes(req.method);
+    // Webhook Telegram tidak memakai cookie; keasliannya dicek lewat secret token di controller.
+    if (req.originalUrl.split('?')[0] === '/v1/telegram/webhook') return next();
     if (unsafe && !req.headers.authorization && req.headers['x-mimi'] !== '1') {
       throw new ForbiddenException({ code: 'missing_header', message: 'Permintaan ditolak.' });
     }
@@ -25,25 +31,26 @@ class CsrfMiddleware implements NestMiddleware {
   }
 }
 
-export function appModule(config: Config, db: Db, google: GoogleVerifier): DynamicModule {
+export function appModule(config: Config, db: Db, google: GoogleVerifier, telegram: TelegramApi | null = null): DynamicModule {
   @Module({})
   class Root {
     configure(consumer: MiddlewareConsumer) { consumer.apply(CsrfMiddleware).forRoutes('*'); }
   }
   return {
     module: Root,
-    controllers: [AuthController, ItemsController],
+    controllers: [AuthController, ItemsController, TelegramController, MediaController],
     providers: [
       { provide: CONFIG, useValue: config },
       { provide: DB, useValue: db },
       { provide: GOOGLE_VERIFIER, useValue: google },
-      Sessions, Items, AuthGuard,
+      { provide: TELEGRAM_API, useValue: telegram },
+      Sessions, Items, AuthGuard, TelegramBot, Reminders,
     ],
   };
 }
 
-export async function createApp(config: Config, db: Db, google: GoogleVerifier, log = true): Promise<INestApplication> {
-  const app = await NestFactory.create(appModule(config, db, google), { logger: log ? ['error', 'warn'] : false, bodyParser: false });
+export async function createApp(config: Config, db: Db, google: GoogleVerifier, log = true, telegram: TelegramApi | null = null): Promise<INestApplication> {
+  const app = await NestFactory.create(appModule(config, db, google, telegram), { logger: log ? ['error', 'warn'] : false, bodyParser: false });
   const server = app.getHttpAdapter().getInstance() as express.Express;
   server.set('trust proxy', 1);
   server.disable('x-powered-by');

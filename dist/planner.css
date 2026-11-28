@@ -755,3 +755,15 @@ dialog #form > .row:last-child, .iqlima-dialog .row:last-child {
 @media (vertical-viewport-segments:2) {
   dialog[open] { top:env(viewport-segment-top 0 1); max-height:calc(env(viewport-segment-height 0 1) - 1rem); }
 }
+
+/* Telegram di Profil dan lampiran dari Telegram */
+.telegram-quiet p { margin:.25rem 0 .5rem; color:var(--mimi-on-surface-variant); font-size:.9rem; }
+.quiet-times { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.75rem; }
+.telegram-quiet .quiet-times label { display:grid; gap:.3rem; margin:0; min-width:0; font-weight:600; }
+.telegram-quiet .quiet-times input { display:block; width:100%; min-width:0; box-sizing:border-box; margin:0; min-height:44px; padding-inline:.6rem; }
+.quiet-off { display:flex; align-items:center; gap:.6rem; min-height:44px; margin:.5rem 0 0; }
+.quiet-off input { width:1.375rem; height:1.375rem; min-height:0; accent-color:var(--mimi-primary); }
+.attachments { display:grid; gap:.6rem; margin:.75rem 0; }
+.attachment img, .attachment video { display:block; width:100%; max-height:60vh; object-fit:contain; border-radius:14px; background:var(--mimi-surface-container); }
+.attachment a.button { display:inline-flex; align-items:center; min-height:44px; padding:0 1rem; border-radius:var(--mimi-radius-pill); text-decoration:none; background:var(--mimi-primary-container); color:var(--mimi-on-primary-container); overflow-wrap:anywhere; }
+@media (max-width:359px) { .telegram-quiet .quiet-times { gap:.5rem; } .telegram-quiet .quiet-times input { padding-inline:.4rem; font-size:.9rem; } }

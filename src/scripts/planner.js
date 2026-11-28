@@ -155,6 +155,7 @@ const p=el('page');p.replaceChildren();if(tab==='Profil'){
   };
   p.querySelector('[data-open-agenda]').onclick=()=>{tab='Agenda';render()};
   sync.mountProfile(p.querySelector('[data-account]'));
+  sync.mountTelegram(p.querySelector('[data-telegram]'));
   mountCare(p.querySelector('[data-care-section]'),iqlimaApi);
   const manja=p.querySelector('[data-manja-switch]');
   manja.checked=readState(localStorage).enabled;
@@ -254,7 +255,7 @@ function collection(page){
         button.append(img);
       }
       const copy=make('div','');
-      copy.append(make('small',kinds[kindOf(item)]),make('b',item.title));
+      copy.append(make('small',kinds[kindOf(item)]+(item.attachments?.length?' · 📎 '+item.attachments.length+' lampiran':'')+(item.source==='telegram'?' · dari Telegram':'')),make('b',item.title));
       const preview=kindOf(item)==='account'?[item.identity,item.method].filter(Boolean).join(' · '):item.note;
       if(preview)copy.append(make('span',preview));
       button.append(copy);
@@ -330,6 +331,24 @@ function accountActions(dlg,card){
   };
   dlg.append(changed,remove);
 }
+// Foto, video, dan dokumen yang dikirim lewat Telegram. Dimuat lewat server (token bot tidak pernah ke browser).
+function attachmentsOf(x){
+ const box=make('div','');box.className='attachments';
+ for(const a of x.attachments){
+  const slot=make('div','');slot.className='attachment attachment-'+a.kind;
+  const wait=make('p',a.kind==='photo'?'Memuat foto…':a.kind==='video'?'Memuat video…':'Menyiapkan dokumen…');wait.className='muted';
+  slot.append(wait);box.append(slot);
+  sync.media(a.id).then(url=>{
+   let node;
+   if(a.kind==='photo'){node=new Image();node.src=url;node.alt='Foto: '+x.title;node.loading='lazy';node.className='full'}
+   else if(a.kind==='video'){node=document.createElement('video');node.src=url;node.controls=true;node.preload='metadata';node.className='full'}
+   else{node=document.createElement('a');node.href=url;node.textContent='📎 '+(a.name||'Buka dokumen');node.className='button quiet';node.rel='noopener';if(url.startsWith('blob:'))node.download=a.name||'dokumen'}
+   node.addEventListener('error',()=>{wait.textContent='Lampiran belum bisa dibuka. Coba lagi nanti, atau buka dari Telegram.';node.replaceWith(wait)});
+   wait.replaceWith(node);
+  }).catch(e=>{wait.textContent=e.message||'Lampiran ini ada di Telegram. Masuk dulu untuk membukanya.'});
+ }
+ return box;
+}
 function detail(x){
  const dlg=document.createElement('dialog');
  dlg.className='item-detail';dlg.dataset.kind=kindOf(x);
@@ -339,6 +358,7 @@ function detail(x){
  dlg.setAttribute('aria-label',x.title);
  if(kindOf(x)==='account'){dlg.append(make('p',x.identity),make('p','Cara masuk: '+x.method));accountActions(dlg,x)}
  else {const note=make('p',x.note);note.className='note-body';dlg.append(note)}
+ if(x.attachments?.length)dlg.append(attachmentsOf(x));
  if(x.repeat)dlg.append(make('p','↻ '+repeats[x.repeat]));
  if(x.helpAskedAt)dlg.append(make('p','Udah minta tolong Jundy · '+new Date(x.helpAskedAt).toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short'})));
  if(!x.icsId){const edit=make('button','Ubah');edit.onclick=()=>{dlg.close();capture(kindOf(x),x)};dlg.append(edit)}

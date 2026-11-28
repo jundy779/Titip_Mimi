@@ -143,3 +143,44 @@ Diuji di Chrome headless pada 12 ukuran: 280×653 (layar penutup HP lipat paling
 Yang dicek per ukuran di Hari Ini, Koleksi, Agenda, Profil, Tumpahkan pikiran, Titip, dan Kamar Mimi: tidak ada gulir ke samping, tidak ada elemen keluar layar, target sentuh minimal 40px, teks minimal 12px, tombol utama dialog terlihat tanpa menggulir, dan di layar ganda tidak ada tombol, teks, atau gambar yang menyeberangi engsel.
 
 Ukuran iPhone Fold masih perkiraan dari bocoran resolusi (dibagi skala 3), belum dicoba di perangkat asli. Tata letak dua panel di Flutter (`verticalHinge` di `mobile/lib/main.dart`) belum dikompilasi karena Flutter SDK tidak tersedia di lingkungan ini.
+
+## TG-1 dan REM-1: bot Telegram dan pengingat (28 Nov 2026, malam)
+
+**Lulus dengan data uji, belum diterima Iqlima.** Telegram dan Google diganti tiruan; akun fiktif iqlima.uji@contoh.id dan jundy.uji@contoh.id, pengguna Telegram fiktif 7001 dan 7002. Belum ada bot sungguhan yang dibuat.
+
+- `cd server && npm test`: 37 lulus, 0 gagal. Termasuk 19 tes Telegram:
+  - Webhook tanpa secret yang benar dijawab 404.
+  - Tautan sekali pakai: ditolak kalau kedaluwarsa, sudah dipakai, atau Telegram-nya milik akun lain. Kode hanya tersimpan sebagai hash.
+  - Grup dan pengguna yang belum tersambung tidak bisa menitip.
+  - Teks jadi satu titipan. Jadwal baru aktif setelah dikonfirmasi, dan tombol milik akun lain tidak berpengaruh.
+  - Update berulang tidak membuat titipan dobel (lewat handler maupun webhook).
+  - Balasan berisi waktu mengonfirmasi jadwal; balasan tanpa waktu dijawab dengan contoh.
+  - Album jadi satu titipan dan `file_id` tidak dikirim ke browser.
+  - Foto pemilik lain dijawab 404, termasuk saat id lampirannya disalin lewat sinkron.
+  - Dokumen HTML dipaksa unduh. File lebih dari 20 MB dijawab 413, dan Telegram mati dijawab 502.
+  - Pengingat terkirim sekali dengan foto, dan bisa ditandai selesai serta ditunda dari Telegram. Titipan yang selesai atau dijadwal ulang sebelum terkirim dilewati, begitu juga yang terlambat lebih dari 6 jam.
+  - Jam tenang menahan pengingat sampai 06.00 tanpa dihitung gagal.
+  - Coba ulang dengan jeda 1 menit, menghormati `retry_after`, dan berhenti setelah 5 kali.
+  - Bot diblokir: sambungan diputus otomatis.
+  - Dua proses pengingat bersamaan hanya mengirim sekali.
+  - Rutinitas harian maju ke jadwal berikutnya.
+  - `/stop` dan Putuskan menghentikan pengingat yang menunggu.
+  - `/cari` hanya mencari titipan sendiri.
+  - Polling tidak dobel dengan webhook.
+  - Pengurai waktu server sama dengan `iqlima.mjs`.
+  - Upgrade database 1→2 berisi data.
+- Uji browser (Chrome 153 headless, 390 dan 320 px, server asli + Telegram tiruan): 17 pemeriksaan lulus di tiap ukuran.
+  - Profil meminta masuk Google dulu, lalu menampilkan Hubungkan Telegram dan membuat tautan t.me.
+  - Setelah `/start`, status berubah sendiri menjadi tersambung.
+  - Foto nota dengan caption "nota jahit jam 4 sore" ditawari jadwal 16.00, lalu dikonfirmasi lewat tombol.
+  - Koleksi menampilkan "📎 1 lampiran · dari Telegram", dan foto terbuka di detail lewat `/v1/media`.
+  - `file_id` tidak ada di halaman maupun localStorage.
+  - Jam tenang dari Profil tersimpan, dan pengingat 16.00 terkirim sebagai foto dengan tombol selesai dan tunda.
+  - Putuskan berhasil, tanpa error JavaScript.
+- Regresi web: 36 tes Node, audit 12 ukuran layar, uji fitur Iqlima 25, dan uji web 22. Semua lulus.
+
+**Risiko tersisa:**
+- Belum dicoba dengan Bot API sungguhan: format balasan Telegram, batas laju, dan unduhan file di jaringan nyata.
+- Video dan dokumen besar belum diuji di HP.
+- Pengurai waktu memakai jam lokal proses Node. Jalankan server dengan `TZ=UTC` (bawaan image Docker) agar tidak ada lompatan musim panas.
+- Satu lampiran pertama ikut di pengingat; lampiran lain lewat tombol "Semua lampiran".

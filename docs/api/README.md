@@ -60,3 +60,39 @@ curl -X POST https://mimi.contoh.id/v1/sync -H "Authorization: Bearer $TOKEN_B" 
 ```
 
 Untuk Flutter: gunakan `google_sign_in` untuk mendapat ID token dengan Client ID web yang sama (serverClientId), kirim ke `/v1/auth/google` dengan `X-Mimi-Client: token`, simpan token di penyimpanan aman perangkat, lalu panggil `/v1/sync` dengan header `Authorization: Bearer`.
+
+## Telegram (TG-1, REM-1)
+
+Bot opsional. Tanpa `TELEGRAM_BOT_TOKEN` semua endpoint di bawah menjawab `503 telegram_disabled` dan pengingat Telegram mati. Token bot hanya ada di server; browser tidak pernah menerima token atau `file_id`.
+
+| Operasi | Permintaan | Respons |
+|---|---|---|
+| Status | `GET /v1/telegram` | `200 { enabled, linked, username, linkedAt, timezone, quietStart, quietEnd }`. Jam tenang dalam menit sejak 00.00 di zona pengguna; `null` berarti mati. Bawaan 1320 (22.00) sampai 360 (06.00). |
+| Buat tautan | `POST /v1/telegram/link` body `{}` | `200 { url: "https://t.me/<bot>?start=<kode>", expiresAt }`. Kode acak 144 bit, sekali pakai, berlaku 10 menit, hanya hash-nya yang disimpan. Membuat tautan baru membatalkan kode lama milik pengguna yang sama. |
+| Jam tenang | `POST /v1/telegram/settings` body `{ "quietStart": 1320, "quietEnd": 360 }` atau keduanya `null` | `200` status terbaru. `400 bad_quiet` bila di luar 0–1439 atau hanya satu yang `null`. |
+| Putuskan | `POST /v1/telegram/unlink` | `204`. Pengingat yang menunggu dibatalkan (`skipped`). Titipan tetap ada. |
+| Lampiran | `GET /v1/media/<id>` (`id` = `attachments[].id`) | Isi file. Gambar, mp4/webm, dan PDF tampil langsung; tipe lain dipaksa unduh (`application/octet-stream`, `attachment`). Selalu `Content-Security-Policy: sandbox` dan `Cache-Control: private, max-age=3600`. |
+| Webhook | `POST /v1/telegram/webhook` (hanya untuk Telegram) | `200 {}`. Wajib header `X-Telegram-Bot-Api-Secret-Token` yang sama dengan `TELEGRAM_WEBHOOK_SECRET`; selain itu `404`. Tidak butuh `X-Mimi`. |
+
+| Status | `code` | Arti dan cara mencoba ulang |
+|---|---|---|
+| 404 | `not_found` | Lampiran tidak ada atau milik orang lain (sengaja tidak dibedakan) |
+| 413 | `too_big` | File lebih dari 20 MB, batas unduh Bot API. Buka dari Telegram; pengingat tetap membawa file lewat `file_id`. |
+| 502 | `telegram_unavailable` | Telegram tidak terjangkau saat mengambil file. Aman dicoba lagi. |
+| 503 | `telegram_disabled` | Bot belum diatur di server |
+
+**Bentuk titipan dari Telegram.** Sama dengan titipan web, ditambah dua kolom opsional yang ikut sinkron dan divalidasi server:
+
+```json
+{
+  "clientId": "tg-Qm9rU2VuZGlyaQ", "kind": "note", "title": "Nota jahit", "note": "bawa uang 35rb",
+  "time": "", "done": false, "source": "telegram",
+  "attachments": [{ "kind": "photo", "id": "AQADb2xyZGVtbw", "mime": "image/jpeg", "size": 1737 }]
+}
+```
+
+Klien boleh mengirim ulang `attachments` lewat `/v1/sync` (misalnya saat mengubah judul), tetapi `/v1/media` hanya melayani `id` yang tercatat dari Telegram milik pemilik itu. Menyalin `id` milik akun lain tidak membuka filenya.
+
+**Alur di Telegram.** Satu kiriman (teks, foto, video, dokumen, atau satu album) menjadi satu titipan tanpa jadwal. Mimi membalas dengan tombol waktu: dari caption atau teks ("jumat jam 4 sore"), atau pilihan cepat "Nanti malam 19.00" dan "Besok pagi 08.00". Membalas pesan Mimi dengan waktu ("besok jam 9 pagi") juga mengonfirmasi. Jadwal baru aktif setelah dikonfirmasi. Perintah: `/cari kata`, `/tenang 22-6` atau `/tenang mati`, `/stop`.
+
+**Pengingat.** Saat jatuh tempo, Mimi mengirim judul, waktu dalam zona pengguna, catatan, dan lampiran pertama, dengan tombol **Sudah selesai**, **Tunda 10 menit**, **Tunda 1 jam**. Selesai dari Telegram sama dengan di web: rutinitas berulang menjadi riwayat dan jadwal berikutnya dibuat. Tunda mengisi `snoozeUntil`, sama dengan web.

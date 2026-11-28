@@ -66,7 +66,21 @@ import ThemeChoice from './ThemeChoice.astro';
           <button type="button" class="quiet" data-logout hidden>Keluar</button>
         </div>
         <div><h3>Google Kalender</h3><p>Ambil agenda dari file kalender, atau kirim satu agenda ke Google Kalender.</p><button data-open-agenda>Buka Agenda</button></div>
-        <div><h3>Telegram</h3><p>Belum terhubung. Kiriman foto lewat Telegram akan tersedia setelah layanan akun aktif.</p></div>
+        <div data-telegram>
+          <h3>Telegram</h3>
+          <p data-telegram-status role="status"></p>
+          <button type="button" class="primary" data-telegram-link hidden>Hubungkan Telegram</button>
+          <fieldset class="theme-choice telegram-quiet" data-telegram-quiet hidden>
+            <legend>Jam tenang</legend>
+            <p>Pengingat di jam ini Mimi tahan sampai jam tenang selesai.</p>
+            <div class="quiet-times">
+              <label>Mulai<input type="time" data-quiet-start /></label>
+              <label>Sampai<input type="time" data-quiet-end /></label>
+            </div>
+            <label class="quiet-off"><input type="checkbox" data-quiet-off /> Matikan jam tenang</label>
+          </fieldset>
+          <button type="button" class="quiet" data-telegram-unlink hidden>Putuskan Telegram</button>
+        </div>
       </section>
     </div>
   </section>

@@ -200,6 +200,7 @@ export function createSync({ getItems, setItems, notify = () => {} }) {
     ask.hidden = !state.user || state.migrated;
     $('[data-migrate-text]').textContent = 'Pindahkan ' + count + ' titipan dari browser ini ke akunmu? Titipan di browser tetap ada.';
     button.hidden = Boolean(state.user);
+    if (tgBox?.isConnected && Boolean(tg) !== Boolean(state.user)) void refreshTelegram();
     if (!state.user && !button.dataset.ready) {
       button.dataset.ready = 'loading';
       loadGoogle().then(() => {
@@ -217,6 +218,89 @@ export function createSync({ getItems, setItems, notify = () => {} }) {
     renderProfile();
   }
 
+  // ---------- Telegram di Profil ----------
+  // Status diambil dari server. Tautan "Hubungkan" sekali pakai dan berlaku 10 menit.
+  let tg = null, tgBox = null, tgNote = '', tgPoll = 0;
+  const clock = m => m == null ? '' : String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+  const minutes = v => { const m = /^(\d{2}):(\d{2})$/.exec(v || ''); return m ? +m[1] * 60 + +m[2] : null; };
+  async function refreshTelegram() {
+    if (!enabled || !state.user) { tg = null; renderTelegram(); return; }
+    try { tg = await api('/v1/telegram'); } catch (error) { tg = null; tgNote = error.status === 503 || error.status === 404 ? '' : 'Status Telegram belum bisa dimuat.'; }
+    renderTelegram();
+  }
+  function renderTelegram() {
+    if (!tgBox?.isConnected) return;
+    const $ = sel => tgBox.querySelector(sel);
+    const text = $('[data-telegram-status]'), linkBtn = $('[data-telegram-link]'), quiet = $('[data-telegram-quiet]'), cut = $('[data-telegram-unlink]');
+    linkBtn.hidden = quiet.hidden = cut.hidden = true;
+    if (!enabled || !state.user) { text.textContent = 'Masuk dengan akun Google dulu. Setelah itu Telegram bisa dihubungkan, dan foto nota yang kamu kirim ke Mimi muncul di sini.'; return; }
+    if (!tg) { text.textContent = tgNote || 'Memuat status Telegram…'; return; }
+    if (!tg.enabled) { text.textContent = 'Bot Telegram belum diaktifkan di server.'; return; }
+    if (!tg.linked) {
+      text.textContent = tgNote || 'Belum terhubung. Setelah terhubung, kirim teks, foto nota, video, atau dokumen ke Mimi di Telegram, dan pengingat datang lewat Telegram juga.';
+      linkBtn.hidden = false;
+      return;
+    }
+    clearInterval(tgPoll); tgNote = '';
+    text.textContent = 'Tersambung' + (tg.username ? ' ke @' + tg.username : '') + ' ♡ Kirim apa saja ke Mimi di Telegram, nanti muncul di Koleksi.';
+    quiet.hidden = cut.hidden = false;
+    const off = tg.quietStart == null || tg.quietStart === tg.quietEnd;
+    $('[data-quiet-off]').checked = off;
+    $('[data-quiet-start]').value = clock(off ? 1320 : tg.quietStart);
+    $('[data-quiet-end]').value = clock(off ? 360 : tg.quietEnd);
+    $('[data-quiet-start]').disabled = $('[data-quiet-end]').disabled = off;
+  }
+  async function linkTelegram() {
+    const pending = window.open('', '_blank');
+    try {
+      const { url } = await api('/v1/telegram/link', {});
+      if (pending) pending.location.href = url; else location.href = url;
+      tgNote = 'Telegram terbuka. Ketuk Mulai (Start) di sana, lalu kembali ke sini ♡';
+      renderTelegram();
+      clearInterval(tgPoll);
+      const until = Date.now() + 10 * 60000;
+      tgPoll = setInterval(() => { if (Date.now() > until || tg?.linked) clearInterval(tgPoll); else if (!document.hidden) void refreshTelegram(); }, 3000);
+    } catch (error) {
+      pending?.close();
+      tgNote = error.message || 'Belum bisa membuat tautan Telegram.'; renderTelegram();
+    }
+  }
+  async function saveQuiet() {
+    const $ = sel => tgBox.querySelector(sel);
+    const off = $('[data-quiet-off]').checked;
+    const body = off ? { quietStart: null, quietEnd: null } : { quietStart: minutes($('[data-quiet-start]').value), quietEnd: minutes($('[data-quiet-end]').value) };
+    if (!off && (body.quietStart == null || body.quietEnd == null)) return;
+    try { tg = await api('/v1/telegram/settings', body); notify(off ? 'Jam tenang dimatikan.' : 'Jam tenang ' + clock(body.quietStart) + ' sampai ' + clock(body.quietEnd) + ' ♡'); }
+    catch (error) { notify(error.message || 'Jam tenang belum tersimpan.'); }
+    renderTelegram();
+  }
+  async function unlinkTelegram() {
+    try { await api('/v1/telegram/unlink', {}); notify('Telegram sudah diputus. Titipanmu tetap aman.'); } catch (error) { notify(error.message || 'Belum bisa memutus Telegram.'); }
+    await refreshTelegram();
+  }
+  function mountTelegram(el) {
+    tgBox = el;
+    el.querySelector('[data-telegram-link]').onclick = () => linkTelegram();
+    el.querySelector('[data-telegram-unlink]').onclick = () => unlinkTelegram();
+    for (const sel of ['[data-quiet-start]', '[data-quiet-end]', '[data-quiet-off]']) el.querySelector(sel).onchange = () => saveQuiet();
+    renderTelegram();
+    void refreshTelegram();
+  }
+
+  // Lampiran dari Telegram. Satu domain: cookie sesi cukup. Beda domain: ambil dengan token lalu jadikan blob.
+  const mediaCache = new Map();
+  function media(id) {
+    if (!enabled || !state.user || !/^[\w-]{1,100}$/.test(id)) return Promise.reject(new Error('Masuk dulu untuk membuka lampiran.'));
+    if (!crossOrigin) return Promise.resolve(apiBase + '/v1/media/' + id);
+    if (!mediaCache.has(id)) {
+      mediaCache.set(id, fetch(apiBase + '/v1/media/' + id, { headers: token() ? { Authorization: 'Bearer ' + token() } : {} })
+        .then(r => { if (!r.ok) throw new Error(r.status === 413 ? 'File ini lebih dari 20 MB. Buka dari Telegram, ya.' : 'Lampiran belum bisa dibuka.'); return r.blob(); })
+        .then(b => URL.createObjectURL(b))
+        .catch(e => { mediaCache.delete(id); throw e; }));
+    }
+    return mediaCache.get(id);
+  }
+
   // Titipan lama belum punya ID sinkron: beri ID tanpa mengubah waktu perubahan.
   const items = getItems();
   if (items.some(i => !i.clientId)) setItems(items.map(i => i.clientId ? i : { ...i, clientId: uuid(), updatedAt: i.updatedAt || 1 }), true);
@@ -228,5 +312,5 @@ export function createSync({ getItems, setItems, notify = () => {} }) {
     if (ready()) void sync();
     if (location.search.includes('mimi-debug')) globalThis.__mimiLogin = login;
   }
-  return { stamp, schedule, sync, mountProfile, get state() { return state; }, enabled };
+  return { stamp, schedule, sync, mountProfile, mountTelegram, media, get state() { return state; }, enabled };
 }

@@ -4,7 +4,10 @@ import request from 'supertest';
 import type { INestApplication } from '@nestjs/common';
 import { createApp } from '../src/app';
 import { loadConfig } from '../src/config';
-import { openDatabase, Db } from '../src/db';
+import { openDatabase, Db, SCHEMA_VERSION } from '../src/db';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { GoogleVerifier, OAuthGoogleVerifier } from '../src/google';
 
 // Akun uji fiktif. Verifier palsu menggantikan Google agar tes tidak butuh internet.
@@ -190,7 +193,26 @@ test('pencarian aman dari karakter khusus LIKE', async () => {
 
 test('migrasi database tercatat dan bisa dibuka ulang', () => {
   const v = ctx.db.prepare('SELECT version FROM schema_version').get() as { version: number };
-  assert.equal(v.version, 1);
+  assert.equal(v.version, SCHEMA_VERSION);
+  assert.equal(SCHEMA_VERSION, 2);
+});
+
+test('database versi 1 berisi data naik ke versi 2 tanpa kehilangan apa pun', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'mimi-mig-'));
+  const path = join(dir, 'lama.sqlite');
+  const old = openDatabase(path, 1);
+  old.prepare("INSERT INTO users (id, google_sub, email, name, created_at) VALUES ('u1', 'g-1', 'iqlima.uji@contoh.id', 'Uji A', 1)").run();
+  old.prepare("INSERT INTO items (owner_id, client_id, kind, search, data, updated_at, seq) VALUES ('u1', 'lama-0001', 'note', 'nota', '{\"title\":\"nota\"}', 5, 1)").run();
+  old.close();
+  const upgraded = openDatabase(path);
+  assert.equal((upgraded.prepare('SELECT version FROM schema_version').get() as any).version, 2);
+  assert.deepEqual(upgraded.prepare('SELECT quiet_start, quiet_end FROM users').get(), { quiet_start: 1320, quiet_end: 360 });
+  assert.equal((upgraded.prepare("SELECT data FROM items WHERE client_id = 'lama-0001'").get() as any).data, '{"title":"nota"}');
+  assert.equal((upgraded.prepare("SELECT COUNT(*) n FROM sqlite_master WHERE name LIKE 'telegram_%' AND type = 'table'").get() as any).n, 5);
+  upgraded.close();
+  // Dibuka lagi: tidak menjalankan migrasi dua kali.
+  assert.equal((openDatabase(path).prepare('SELECT version FROM schema_version').get() as any).version, 2);
+  rmSync(dir, { recursive: true, force: true });
 });
 
 test('login dibatasi 10 kali per menit per alamat', async () => {
