@@ -10,6 +10,12 @@ class MimiAlarm : BroadcastReceiver() {
     companion object {
         const val channelId = "mimi_agenda"
         const val testId = "__test__"
+        private val careText = mapOf(
+            "water" to Pair("Minum air ♡", "Minum dulu, yuk. Mimi juga lagi minum susu ♡"),
+            "meal" to Pair("Makan ♡", "Udah waktunya makan. Kamu juga butuh diurus ♡"),
+            "rest" to Pair("Istirahat sebentar ♡", "Regangkan badan sebentar, yuk. Mimi ikut menggeliat ♡"),
+            "sleep" to Pair("Waktunya tidur ♡", "Udah malam. Titip sisa pikiran ke Mimi, terus istirahat ya ♡"),
+        )
         private fun store(c: Context) = c.getSharedPreferences("agenda_alarms", Context.MODE_PRIVATE)
         private fun current(c: Context) = JSONObject(store(c).getString("schedule", "{}") ?: "{}")
         private fun identity(id: String) = Uri.Builder().scheme("mimi").authority("agenda").appendPath(id).build()
@@ -75,8 +81,10 @@ class MimiAlarm : BroadcastReceiver() {
         @Suppress("DEPRECATION")
         val builder = if (Build.VERSION.SDK_INT >= 26) Notification.Builder(context, channelId)
             else Notification.Builder(context).setPriority(Notification.PRIORITY_HIGH)
+        // Jaga diri ("care:water-09:00:2026-11-29") punya judul dan kalimatnya sendiri, sama dengan web.
+        val care = careText[if (id.startsWith("care:")) id.removePrefix("care:").substringBefore('-') else ""]
         manager.notify(id, 1, builder.setSmallIcon(android.R.drawable.ic_popup_reminder)
-            .setContentTitle(if (id == testId) "Tes pengingat Mimi" else "Mimi mau ingetin ♡")
-            .setContentText("Ketuk untuk membuka Agenda.").setContentIntent(tap).setAutoCancel(true).build())
+            .setContentTitle(care?.first ?: if (id == testId) "Tes pengingat Mimi" else "Mimi mau ingetin ♡")
+            .setContentText(care?.second ?: "Ketuk untuk membuka Agenda.").setContentIntent(tap).setAutoCancel(true).build())
     }
 }

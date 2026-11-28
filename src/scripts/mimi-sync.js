@@ -200,6 +200,7 @@ export function createSync({ getItems, setItems, notify = () => {} }) {
       ? (state.migrated ? 'Masuk sebagai ' + state.user.email + '.' + (when ? ' Tersinkron ' + when + '.' : '') : 'Masuk sebagai ' + state.user.email + '.')
       : 'Masuk dengan Google supaya titipan muncul di HP dan laptop.');
     out.hidden = !state.user;
+    $('[data-app-link]').hidden = !state.user;
     ask.hidden = !state.user || state.migrated;
     $('[data-migrate-text]').textContent = 'Pindahkan ' + count + ' titipan dari browser ini ke akunmu? Titipan di browser tetap ada.';
     button.hidden = Boolean(state.user);
@@ -218,6 +219,18 @@ export function createSync({ getItems, setItems, notify = () => {} }) {
     el.querySelector('[data-migrate-yes]').onclick = () => migrate();
     el.querySelector('[data-migrate-later]').onclick = () => { el.querySelector('[data-migrate]').hidden = true; notify('Oke, titipan tetap di browser ini dulu. Tawaran ini ada di Profil kapan saja.'); };
     el.querySelector('[data-logout]').onclick = () => logout();
+    // Aplikasi HP masuk dengan kode sekali pakai dari sini, tanpa login Google di HP.
+    el.querySelector('[data-app-code]').onclick = async () => {
+      const box = el.querySelector('[data-app-out]');
+      try {
+        const { code } = await call('/v1/auth/device-code', {});
+        const server = apiBase || location.origin;
+        box.hidden = false;
+        box.replaceChildren('Di aplikasi Titip Mimi, buka Profil lalu isi bagian Akun Titip Mimi:', document.createElement('br'),
+          'Alamat server: ', Object.assign(document.createElement('b'), { textContent: server }), document.createElement('br'),
+          'Kode: ', Object.assign(document.createElement('b'), { className: 'app-code', textContent: code.slice(0, 4) + '-' + code.slice(4) }), ' (10 menit, sekali pakai)');
+      } catch (e) { notify(e.message || 'Kode belum bisa dibuat.'); }
+    };
     renderProfile();
   }
 

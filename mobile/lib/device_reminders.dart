@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'entry.dart';
+import 'iqlima.dart';
 
 const reminderChannel = MethodChannel('id.fusionify.titip_mimi/reminders');
 const reminderPreference = 'device_reminders';
@@ -12,11 +13,18 @@ Future<void> _pending = Future.value();
 Future<void> syncDeviceReminders(SharedPreferences prefs, List<Entry> entries) {
   final operation = _pending.then((_) async {
     final enabled = prefs.getBool(reminderPreference) ?? false;
-    final future = entries.where((e) =>
-      enabled && !e.done && e.due?.isAfter(DateTime.now()) == true).toList()
-      ..sort((a, b) => a.due!.compareTo(b.due!));
+    final now = DateTime.now();
+    // Agenda dan jaga diri (minum, makan, istirahat, tidur) dititipkan ke HP bersama,
+    // diurutkan menurut waktu. iOS hanya menyimpan 64 notifikasi tertunda, jadi Mimi titip 60.
+    final due = <String, DateTime>{
+      if (enabled)
+        for (final e in entries)
+          if (!e.done && e.due?.isAfter(now) == true) e.id: e.due!,
+      if (enabled) ...careSchedule(readCareSettings(prefs.getString(careSettingsKey)), now),
+    };
+    final soonest = due.entries.toList()..sort((a, b) => a.value.compareTo(b.value));
     await reminderChannel.invokeMethod<void>(enabled ? 'sync' : 'disable', {
-      for (final e in future.take(60)) e.id: e.due!.millisecondsSinceEpoch,
+      for (final e in soonest.take(60)) e.key: e.value.millisecondsSinceEpoch,
     });
     reminderProblem.value = null;
   });
@@ -65,7 +73,7 @@ class _DeviceReminderSettingsState extends State<DeviceReminderSettings> {
       childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       expandedCrossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Mimi menitipkan hingga 60 agenda terdekat ke pengingat HP. Waktu tampil mengikuti pengaturan perangkat.'),
+        const Text('Mimi menitipkan hingga 60 pengingat terdekat (agenda dan jaga diri) ke HP, jadi tetap muncul walau aplikasi ditutup.'),
         Wrap(spacing: 8, children: [
           TextButton(onPressed: busy ? null : () => change(),
             child: Text(enabled ? 'Matikan pengingat HP' : 'Aktifkan pengingat HP')),

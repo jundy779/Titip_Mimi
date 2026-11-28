@@ -48,6 +48,20 @@ sqlite3 /data/mimi.sqlite "SELECT client_id, occurrence, attempts, error FROM re
 
 `retry` dicoba lagi setelah 1, 5, 15, lalu 60 menit (atau sesuai `retry_after` dari Telegram), paling banyak 5 kali, lalu `failed`. `error = 'gone'` berarti Iqlima memblokir bot atau menghapus obrolan; sambungan otomatis diputus dan Profil kembali menawarkan **Hubungkan Telegram**.
 
+## Notifikasi walau web ditutup
+
+Tidak perlu langkah tambahan: server membuat kunci VAPID sekali dan menyimpannya di tabel `settings`. Iqlima menekan **Aktifkan walau web ditutup** di Profil atau Agenda > Atur pengingat di setiap browser yang dipakai. Server harus bisa menghubungi layanan push browser (`fcm.googleapis.com`, `*.push.services.mozilla.com`, `web.push.apple.com`, `*.notify.windows.com`); endpoint lain ditolak. Di iPhone, Web Push hanya jalan setelah Ruang Iqlima ditambahkan ke Layar Utama dan dibuka dari sana.
+
+Kunci VAPID ikut ke backup. Kalau kuncinya hilang atau diganti, semua langganan lama berhenti menerima; Iqlima cukup menekan Aktifkan lagi.
+
+## Menyambungkan aplikasi HP
+
+Di web yang sudah masuk: Profil > **Sambungkan aplikasi HP** menampilkan alamat server dan kode 8 huruf (10 menit, sekali pakai). Di aplikasi: Profil > Akun Titip Mimi, isi keduanya, tekan Sambungkan. HP tidak butuh login Google. Alamat server harus `https://` (kecuali alamat jaringan lokal untuk uji).
+
+## Uji otomatis di GitHub
+
+`.github/workflows/ci.yml` menjalankan tes web dan server, lalu `flutter analyze`, `flutter test`, dan `flutter build apk --debug` setiap push ke `main` atau `claude/**`. Lihat hasilnya di tab Actions. Kalau langkah Flutter gagal, perbaiki dulu sebelum membangun APK untuk HP Iqlima. `pubspec.lock` diperbarui oleh `flutter pub get`; commit hasilnya dari mesin yang punya Flutter.
+
 ## Memindahkan data dari demo lama
 
 Data prototipe tersimpan di browser pada alamat demo lama (`*.chatgpt.site`). Browser tidak bisa membaca data itu dari alamat baru. Pilihannya:

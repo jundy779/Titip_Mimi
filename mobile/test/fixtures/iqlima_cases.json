@@ -1,0 +1,435 @@
+{
+ "now": "2026-11-28T09:05",
+ "dumps": [
+  {
+   "text": "bayar kos besok\njemput adik jam 4 sore\nbeli kado ibu tgl 5",
+   "rows": [
+    {
+     "title": "Bayar kos",
+     "kind": "agenda",
+     "time": "2026-11-29T09:00",
+     "source": "bayar kos besok"
+    },
+    {
+     "title": "Jemput adik",
+     "kind": "agenda",
+     "time": "2026-11-28T16:00",
+     "source": "jemput adik jam 4 sore"
+    },
+    {
+     "title": "Beli kado ibu",
+     "kind": "agenda",
+     "time": "2026-12-05T09:00",
+     "source": "beli kado ibu tgl 5"
+    }
+   ]
+  },
+  {
+   "text": "- jangan lupa telpon dokter senin jam 10 pagi",
+   "rows": [
+    {
+     "title": "Telpon dokter",
+     "kind": "agenda",
+     "time": "2026-11-30T10:00",
+     "source": "jangan lupa telpon dokter senin jam 10 pagi"
+    }
+   ]
+  },
+  {
+   "text": "1) rapat jumat 14:30; 2) setor tugas lusa",
+   "rows": [
+    {
+     "title": "Rapat",
+     "kind": "agenda",
+     "time": "2026-12-04T14:30",
+     "source": "rapat jumat 14:30"
+    },
+    {
+     "title": "Setor tugas",
+     "kind": "agenda",
+     "time": "2026-11-30T09:00",
+     "source": "setor tugas lusa"
+    }
+   ]
+  },
+  {
+   "text": "kirim berkas 7 desember jam 8 malam",
+   "rows": [
+    {
+     "title": "Kirim berkas",
+     "kind": "agenda",
+     "time": "2026-12-07T20:00",
+     "source": "kirim berkas 7 desember jam 8 malam"
+    }
+   ]
+  },
+  {
+   "text": "makan siang jam 12 siang",
+   "rows": [
+    {
+     "title": "Makan siang",
+     "kind": "agenda",
+     "time": "2026-11-28T12:00",
+     "source": "makan siang jam 12 siang"
+    }
+   ]
+  },
+  {
+   "text": "nonton bareng sabtu jam 7 malam",
+   "rows": [
+    {
+     "title": "Nonton bareng",
+     "kind": "agenda",
+     "time": "2026-11-28T19:00",
+     "source": "nonton bareng sabtu jam 7 malam"
+    }
+   ]
+  },
+  {
+   "text": "arisan sabtu",
+   "rows": [
+    {
+     "title": "Arisan",
+     "kind": "agenda",
+     "time": "2026-12-05T09:00",
+     "source": "arisan sabtu"
+    }
+   ]
+  },
+  {
+   "text": "cuci baju nanti jam 9",
+   "rows": [
+    {
+     "title": "Cuci baju",
+     "kind": "agenda",
+     "time": "2026-11-28T09:00",
+     "source": "cuci baju nanti jam 9"
+    }
+   ]
+  },
+  {
+   "text": "bayar listrik bulan depan",
+   "rows": [
+    {
+     "title": "Bayar listrik",
+     "kind": "agenda",
+     "time": "2026-12-01T09:00",
+     "source": "bayar listrik bulan depan"
+    }
+   ]
+  },
+  {
+   "text": "beli obat tanggal 30",
+   "rows": [
+    {
+     "title": "Beli obat",
+     "kind": "agenda",
+     "time": "2026-11-30T09:00",
+     "source": "beli obat tanggal 30"
+    }
+   ]
+  },
+  {
+   "text": "servis motor minggu depan pukul 13.15",
+   "rows": [
+    {
+     "title": "Servis motor",
+     "kind": "agenda",
+     "time": "2026-12-05T13:15",
+     "source": "servis motor minggu depan pukul 13.15"
+    }
+   ]
+  },
+  {
+   "text": "jam 25 rusak",
+   "rows": [
+    {
+     "title": "Jam 25 rusak",
+     "kind": "note",
+     "time": "",
+     "source": "jam 25 rusak"
+    }
+   ]
+  },
+  {
+   "text": "a\n\n   \nhalo",
+   "rows": [
+    {
+     "title": "Halo",
+     "kind": "note",
+     "time": "",
+     "source": "halo"
+    }
+   ]
+  },
+  {
+   "text": "Bayar BPJS pada",
+   "rows": [
+    {
+     "title": "Bayar BPJS",
+     "kind": "note",
+     "time": "",
+     "source": "Bayar BPJS pada"
+    }
+   ]
+  }
+ ],
+ "care": [
+  {
+   "now": "2026-11-28T09:00",
+   "due": {
+    "id": "water-09:00",
+    "kind": "water",
+    "label": "Minum air",
+    "text": "Segelas air buat kamu yang lagi sibuk ♡"
+   }
+  },
+  {
+   "now": "2026-11-28T09:44",
+   "due": {
+    "id": "water-09:00",
+    "kind": "water",
+    "label": "Minum air",
+    "text": "Segelas air buat kamu yang lagi sibuk ♡"
+   }
+  },
+  {
+   "now": "2026-11-28T09:45",
+   "due": null
+  },
+  {
+   "now": "2026-11-28T12:40",
+   "due": {
+    "id": "meal-12:30",
+    "kind": "meal",
+    "label": "Makan",
+    "text": "Udah waktunya makan. Kamu juga butuh diurus ♡"
+   }
+  },
+  {
+   "now": "2026-11-28T22:30",
+   "due": {
+    "id": "sleep-22:30",
+    "kind": "sleep",
+    "label": "Waktunya tidur",
+    "text": "Udah malam. Titip sisa pikiran ke Mimi, terus istirahat ya ♡"
+   }
+  },
+  {
+   "now": "2026-11-28T07:29",
+   "due": null
+  },
+  {
+   "now": "2026-11-29T10:31",
+   "due": {
+    "id": "rest-10:30",
+    "kind": "rest",
+    "label": "Istirahat sebentar",
+    "text": "Lima menit buat diri sendiri dulu ♡"
+   }
+  }
+ ],
+ "careShown": {
+  "now": "2026-11-28T09:10",
+  "shown": {
+   "water-09:00": "2026-11-28"
+  },
+  "due": null
+ },
+ "birthdays": [
+  {
+   "mmdd": "08-15",
+   "now": "2026-11-28T10:00",
+   "info": {
+    "today": false,
+    "daysLeft": 260
+   }
+  },
+  {
+   "mmdd": "11-28",
+   "now": "2026-11-28T10:00",
+   "info": {
+    "today": true,
+    "daysLeft": 0
+   }
+  },
+  {
+   "mmdd": "12-03",
+   "now": "2026-11-28T10:00",
+   "info": {
+    "today": false,
+    "daysLeft": 5
+   }
+  },
+  {
+   "mmdd": "11-27",
+   "now": "2026-11-28T10:00",
+   "info": {
+    "today": false,
+    "daysLeft": 364
+   }
+  },
+  {
+   "mmdd": "02-29",
+   "now": "2026-03-01T10:00",
+   "info": {
+    "today": true,
+    "daysLeft": 0
+   }
+  },
+  {
+   "mmdd": "rusak",
+   "now": "2026-11-28T10:00",
+   "info": null
+  }
+ ],
+ "leo": [
+  {
+   "now": "2026-07-22T10:00",
+   "leo": false
+  },
+  {
+   "now": "2026-07-23T10:00",
+   "leo": true
+  },
+  {
+   "now": "2026-08-22T10:00",
+   "leo": true
+  },
+  {
+   "now": "2026-08-23T10:00",
+   "leo": false
+  }
+ ],
+ "help": [
+  {
+   "title": "Ambil jahitan",
+   "time": "2026-12-01T16:00",
+   "note": "bawa nota",
+   "text": "Jundy, aku minta tolong ya: Ambil jahitan (Selasa, 1 Desember pukul 16.00)\nbawa nota\n\nDikirim dari Titip Mimi ♡"
+  },
+  {
+   "title": "Bayar kos",
+   "time": "",
+   "note": "",
+   "text": "Jundy, aku minta tolong ya: Bayar kos\n\nDikirim dari Titip Mimi ♡"
+  },
+  {
+   "title": "Jemput adik",
+   "time": "2026-12-06T09:05",
+   "note": "",
+   "text": "Jundy, aku minta tolong ya: Jemput adik (Minggu, 6 Desember pukul 09.05)\n\nDikirim dari Titip Mimi ♡"
+  }
+ ],
+ "phones": [
+  {
+   "v": "0812-3456-7890",
+   "clean": "6281234567890",
+   "wa": "https://wa.me/6281234567890?text=halo%20%E2%99%A1%20%26%20tolong"
+  },
+  {
+   "v": "+62 812 3456 7890",
+   "clean": "6281234567890",
+   "wa": "https://wa.me/6281234567890?text=halo%20%E2%99%A1%20%26%20tolong"
+  },
+  {
+   "v": "123",
+   "clean": "",
+   "wa": "https://wa.me/?text=halo%20%E2%99%A1%20%26%20tolong"
+  },
+  {
+   "v": "62812345678901234",
+   "clean": "",
+   "wa": "https://wa.me/62812345678901234?text=halo%20%E2%99%A1%20%26%20tolong"
+  }
+ ],
+ "igs": [
+  {
+   "v": "@jundy.uji",
+   "clean": "jundy.uji",
+   "link": "https://ig.me/m/jundy.uji"
+  },
+  {
+   "v": "https://www.instagram.com/jundy.uji/",
+   "clean": "jundy.uji",
+   "link": "https://ig.me/m/jundy.uji"
+  },
+  {
+   "v": "nama dengan spasi",
+   "clean": "",
+   "link": ""
+  },
+  {
+   "v": "",
+   "clean": "",
+   "link": ""
+  }
+ ],
+ "crisis": [
+  {
+   "v": "aku capek banget",
+   "support": false
+  },
+  {
+   "v": "rasanya pengen mati aja",
+   "support": true
+  },
+  {
+   "v": "Self-harm lagi",
+   "support": true
+  },
+  {
+   "v": "mati lampu",
+   "support": false
+  }
+ ],
+ "careKinds": {
+  "water": {
+   "label": "Minum air",
+   "slots": [
+    "09:00",
+    "11:00",
+    "13:00",
+    "15:00",
+    "17:00",
+    "19:00"
+   ],
+   "lines": [
+    "Minum dulu, yuk. Mimi juga lagi minum susu ♡",
+    "Segelas air buat kamu yang lagi sibuk ♡"
+   ]
+  },
+  "meal": {
+   "label": "Makan",
+   "slots": [
+    "07:30",
+    "12:30",
+    "19:00"
+   ],
+   "lines": [
+    "Udah waktunya makan. Kamu juga butuh diurus ♡",
+    "Isi perut dulu, kerjaannya bisa nunggu sebentar ♡"
+   ]
+  },
+  "rest": {
+   "label": "Istirahat sebentar",
+   "slots": [
+    "10:30",
+    "15:30"
+   ],
+   "lines": [
+    "Regangkan badan sebentar, yuk. Mimi ikut menggeliat ♡",
+    "Lima menit buat diri sendiri dulu ♡"
+   ]
+  },
+  "sleep": {
+   "label": "Waktunya tidur",
+   "slots": [
+    "22:30"
+   ],
+   "lines": [
+    "Udah malam. Titip sisa pikiran ke Mimi, terus istirahat ya ♡"
+   ]
+  }
+ }
+}

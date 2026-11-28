@@ -875,3 +875,6 @@ dialog #form > .row:last-child, .iqlima-dialog .row:last-child {
 .push-actions { display:flex; flex-wrap:wrap; gap:.5rem; margin:.4rem 0; }
 .push-actions button[hidden] { display:none; }
 .push-note:empty { display:none; }
+.app-out { margin:.5rem 0; padding:.6rem .75rem; border-radius:var(--mimi-radius-field); background:var(--mimi-surface); border:1px dashed var(--line); overflow-wrap:anywhere; }
+.app-out b { overflow-wrap:anywhere; }
+.app-out .app-code { font-size:1.25rem; letter-spacing:.1em; font-family:ui-monospace,monospace; }

@@ -73,6 +73,22 @@ export class AuthController {
     res.clearCookie(COOKIE, { path: '/' });
   }
 
+  // Sambungkan aplikasi HP: web yang sudah masuk membuat kode, HP menukarnya jadi token sesi.
+  @Post('auth/device-code')
+  @HttpCode(200)
+  @UseGuards(AuthGuard)
+  deviceCode(@Req() req: AuthedRequest) { return this.sessions.createDeviceCode(req.user.id); }
+
+  @Post('auth/device-code/redeem')
+  @HttpCode(200)
+  redeem(@Body() body: { code?: unknown }, @Req() req: Request) {
+    if (this.limited('device:' + (req.ip || 'unknown'))) throw new HttpException({ code: 'too_many', message: 'Terlalu sering. Tunggu sebentar, ya.' }, HttpStatus.TOO_MANY_REQUESTS);
+    const got = this.sessions.redeemDeviceCode(body?.code);
+    if (!got) throw new BadRequestException({ code: 'bad_code', message: 'Kodenya salah atau sudah kedaluwarsa. Buat kode baru di Profil web, ya.' });
+    const { user, token, expiresAt } = got;
+    return { user: { id: user.id, name: user.name, email: user.email }, token, expiresAt };
+  }
+
   @Get('me')
   @UseGuards(AuthGuard)
   me(@Req() req: AuthedRequest) {

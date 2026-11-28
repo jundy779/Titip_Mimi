@@ -11,6 +11,9 @@ import 'daily_list.dart';
 import 'editor.dart';
 import 'journal.dart';
 import 'mimi_manja.dart';
+import 'iqlima.dart';
+import 'server.dart';
+import 'teman.dart';
 
 final prefsProvider = Provider<SharedPreferences>(
   (ref) => throw StateError('Penyimpanan belum siap'),
@@ -31,9 +34,20 @@ final daysAwayProvider = Provider<int>((ref) {
   prefs.setString(manjaLastVisitKey, mimiDayKey(now));
   return away;
 });
-final entriesProvider = StateNotifierProvider<Entries, List<Entry>>(
-  (ref) => Entries(ref.watch(prefsProvider)),
-);
+// Akun Mimi dan sinkron dengan web. Tanpa akun, semuanya tetap tersimpan di HP.
+final syncProvider = Provider<MimiSync>((ref) {
+  final sync = MimiSync(ref.watch(prefsProvider));
+  ref.onDispose(sync.dispose);
+  return sync;
+});
+final entriesProvider = StateNotifierProvider<Entries, List<Entry>>((ref) {
+  final entries = Entries(ref.watch(prefsProvider));
+  final sync = ref.watch(syncProvider);
+  entries.stamp = sync.stamp;
+  entries.afterWrite = sync.schedule;
+  sync.attach(read: () => entries.current, writeQuiet: entries.replaceQuiet);
+  return entries;
+});
 
 class Entries extends StateNotifier<List<Entry>> {
   Entries(this.prefs) : super(readStored(prefs));
@@ -41,14 +55,25 @@ class Entries extends StateNotifier<List<Entry>> {
     (jsonDecode(prefs.getString('entries') ?? '[]') as List)
       .map((j) => Entry.fromJson(j)).toList();
   final SharedPreferences prefs;
+  /// Diisi sinkron: memberi updatedAt pada yang berubah dan mencatat yang dihapus.
+  List<Entry> Function(List<Entry> prev, List<Entry> next)? stamp;
+  void Function()? afterWrite;
+  List<Entry> get current => state;
   Future<void> _tail = Future.value();
   Future<void> put(Entry item) =>
       _write(() => [item, ...state.where((e) => e.id != item.id)]);
+  Future<void> putAll(List<Entry> items) {
+    final ids = items.map((e) => e.id).toSet();
+    return _write(() => [...items, ...state.where((e) => !ids.contains(e.id))]);
+  }
   Future<void> remove(String id) =>
       _write(() => state.where((e) => e.id != id).toList());
-  Future<void> _write(List<Entry> Function() change) {
+  /// Data dari server: disimpan tanpa ditandai sebagai perubahan di HP.
+  Future<void> replaceQuiet(List<Entry> next) => _write(() => next, quiet: true);
+  Future<void> _write(List<Entry> Function() change, {bool quiet = false}) {
     final operation = _tail.then((_) async {
-      final next = change();
+      var next = change();
+      if (!quiet && stamp != null) next = stamp!(state, next);
       if (!await prefs.setString(
         'entries',
         jsonEncode(next.map((e) => e.toJson()).toList()),
@@ -56,6 +81,7 @@ class Entries extends StateNotifier<List<Entry>> {
         throw StateError('Gagal menyimpan');
       }
       state = next;
+      if (!quiet) afterWrite?.call();
       if (prefs.getBool(reminderPreference) == true) await syncDeviceReminders(prefs, next);
     });
     _tail = operation.catchError((Object _) {});
@@ -199,6 +225,11 @@ class _RoomState extends ConsumerState<Room> {
     if (id == null) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      if (id.startsWith('care:')) {
+        // Notifikasi jaga diri: kembali ke Hari Ini, kartunya ada di sana.
+        router.go('/');
+        return;
+      }
       final matches = ref.read(entriesProvider).where((e) => e.id == id);
       router.go('/agenda');
       if (matches.isNotEmpty) {
@@ -263,6 +294,9 @@ class _RoomState extends ConsumerState<Room> {
           initialKind: kind ?? (widget.index == 2 ? 'Agenda' : 'Catatan'),
           save: (entry) async {
             await ref.read(entriesProvider.notifier).put(entry);
+            if (needsSupport('${entry.title} ${entry.body}') && mounted) {
+              WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) showSupport(context); });
+            }
             say(entry.kind == 'Akun'
                 ? 'account'
                 : entry.time != null
@@ -375,6 +409,37 @@ class _RoomState extends ConsumerState<Room> {
     }
   }
 
+  void dump() {
+    showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => DumpSheet(save: (fresh) async {
+        await ref.read(entriesProvider.notifier).putAll(fresh);
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${fresh.length} titipan sudah Mimi simpan. Pikiranmu boleh lebih ringan sekarang ♡')));
+        say('saved');
+      }),
+    );
+  }
+
+  void help(Entry e) {
+    showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      showDragHandle: true,
+      builder: (_) => HelpSheet(
+        entry: e,
+        prefs: ref.read(prefsProvider),
+        // Sama dengan web: catat bahwa Iqlima sudah minta tolong.
+        asked: () => ref.read(entriesProvider.notifier).put(
+          Entry.fromJson({...e.toJson(), 'extra': {...e.extra, 'helpAskedAt': DateTime.now().toUtc().toIso8601String()}}),
+        ),
+      ),
+    );
+  }
+
   void detail(Entry e) {
     showModalBottomSheet<void>(
       context: context,
@@ -389,6 +454,17 @@ class _RoomState extends ConsumerState<Room> {
             JournalHeading(e.kind, JournalStyle.forKind(e.kind)),
             Text(e.title, style: Theme.of(context).textTheme.headlineSmall),
             SelectableText(e.body),
+            if (e.place != null)
+              Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: [
+                Text('📍 ${e.place}'),
+                TextButton(
+                  onPressed: () => openLink(context, 'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(e.place!)}'),
+                  child: const Text('Buka peta'),
+                ),
+              ]),
+            AttachmentList(entry: e, sync: ref.read(syncProvider)),
+            if (e.extra['helpAskedAt'] is String)
+              Text('Udah minta tolong Jundy · ${historyStamp(context, DateTime.parse(e.extra['helpAskedAt'] as String).toLocal())}'),
             if (e.kind == 'Akun') ...[
               Text('Cara masuk: ${e.method}'),
               Text(
@@ -427,6 +503,11 @@ class _RoomState extends ConsumerState<Room> {
                   },
                   child: const Text('Ubah'),
                 ),
+                if (e.kind != 'Akun')
+                  TextButton(onPressed: () {
+                    Navigator.pop(sheet);
+                    help(e);
+                  }, child: const Text('Minta tolong Jundy')),
                 if (e.isDue(DateTime.now()))
                   TextButton(onPressed: () {
                     Navigator.pop(sheet);
@@ -460,6 +541,7 @@ class _RoomState extends ConsumerState<Room> {
           if (e.kind == 'Akun' || (widget.index == 1 && e.body.isNotEmpty))
             e.body,
           if (e.time != null) stamp(context, e.time!),
+          if (e.attachments.isNotEmpty) '📎 ${e.attachments.length} lampiran${e.fromTelegram ? ' · dari Telegram' : ''}',
           if (e.done) 'Selesai',
         ].join(' · '),
         maxLines: 2,
@@ -518,9 +600,21 @@ class _RoomState extends ConsumerState<Room> {
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       const Text(
-        'Titipanmu tersimpan di perangkat ini. Pengingat muncul saat aplikasi terbuka.',
+        'Titipanmu tersimpan di HP ini. Sambungkan akun supaya sama dengan web.',
       ),
       const SizedBox(height: 16),
+      AccountCard(sync: ref.read(syncProvider), localCount: ref.watch(entriesProvider).length),
+      const Divider(height: 32),
+      CareSettings(
+        prefs: ref.read(prefsProvider),
+        changed: () {
+          final prefs = ref.read(prefsProvider);
+          if (prefs.getBool(reminderPreference) == true) syncDeviceReminders(prefs, ref.read(entriesProvider));
+        },
+      ),
+      const Divider(height: 32),
+      PersonalSettings(prefs: ref.read(prefsProvider)),
+      const Divider(height: 32),
       SwitchListTile(
         title: const Text('Mode gelap'),
         value: ref.watch(themeProvider) == ThemeMode.dark,
@@ -559,7 +653,7 @@ class _RoomState extends ConsumerState<Room> {
       ),
       const ListTile(
         title: Text('Telegram'),
-        subtitle: Text('Penautan akun belum tersedia.'),
+        subtitle: Text('Hubungkan dari Profil di web. Setelah akun tersambung di sini, foto nota dan pesan yang kamu kirim ke Mimi di Telegram ikut muncul di Koleksi.'),
       ),
     ],
   );
@@ -579,6 +673,7 @@ class _RoomState extends ConsumerState<Room> {
               e.title,
               e.body,
               e.method,
+              e.place ?? '',
             ].join(' ').toLowerCase().contains(query.trim().toLowerCase()),
       ),
       _ => agenda,
@@ -603,6 +698,7 @@ class _RoomState extends ConsumerState<Room> {
         );
     final manja = ref.watch(manjaProvider);
     final hello = mimiGreeting(now, daysAway: ref.watch(daysAwayProvider));
+    final celebrate = celebrateLine(ref.read(prefsProvider).getString(birthdayKey), now);
     return Scaffold(
       appBar: AppBar(title: const Text('Ruang Iqlima')),
       bottomNavigationBar: wide
@@ -694,6 +790,10 @@ class _RoomState extends ConsumerState<Room> {
                             pose: manja ? hello.pose : 'welcome',
                             onPet: pet,
                           ),
+                        if (widget.index == 0 && celebrate.isNotEmpty)
+                          Card(child: Padding(padding: const EdgeInsets.all(14), child: Text(celebrate))),
+                        if (widget.index == 0)
+                          CareBanner(prefs: ref.read(prefsProvider), now: now, changed: () => setState(() {})),
                         if (due.isNotEmpty)
                           Card(
                             child: Padding(
@@ -759,6 +859,16 @@ class _RoomState extends ConsumerState<Room> {
                                     ).color(context),
                                     onPressed: () => edit(null, kind),
                                   ),
+                                ActionChip(
+                                  avatar: const Text('💭'),
+                                  label: const Text('Tumpahkan pikiran'),
+                                  onPressed: dump,
+                                ),
+                                ActionChip(
+                                  avatar: const Text('🧶'),
+                                  label: const Text('Kamar Mimi'),
+                                  onPressed: () => openKamar(context, ref.read(syncProvider)),
+                                ),
                               ],
                             ),
                             const SizedBox(height: 16),

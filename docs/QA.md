@@ -257,3 +257,44 @@ Ukuran iPhone Fold masih perkiraan dari bocoran resolusi (dibagi skala 3), belum
 - OCR baru diuji pada gambar rapi; undangan asli bisa salah baca, jadi form selalu meminta Iqlima mengecek sebelum simpan.
 - Dikte belum diuji di HP nyata, dan Safari iOS belum dicoba sama sekali.
 - Isi surat lewat tautan WhatsApp terbaca oleh siapa pun yang memegang tautannya.
+
+## Notifikasi walau web ditutup dan aplikasi Flutter menyusul web (28 November, malam)
+
+- Server: 60 tes lulus. Termasuk 10 tes baru di `push.test.ts`:
+  - Langganan push hanya untuk layanan push resmi. http, IP, domain tiruan, port lain, dan kunci salah ditolak. Browser yang sama berpindah pemilik tanpa ganda.
+  - Pengingat agenda hanya ke perangkat pemiliknya, sekali per kejadian, juga saat dua putaran berjalan bersamaan.
+  - Jadwal berubah atau sudah selesai sebelum kirim: dilewati.
+  - Jam tenang: agenda ditunda sampai 06.00, jaga diri dilewati.
+  - Jaga diri mengikuti pilihan, jendela 45 menit, sekali sehari. Jadwalnya sama persis dengan web.
+  - Layanan push gagal: 503 dicoba lagi bertahap, 410/404 menghapus perangkat, berhenti setelah 5 kali.
+  - Tombol notifikasi: selesai (rutinitas membuat jadwal berikutnya) dan tunda lewat token. Token palsu, kedaluwarsa, atau kejadian lama ditolak. Tanpa `X-Mimi` ditolak.
+  - Kunci VAPID tetap sama setelah server dinyalakan ulang. Pesan benar-benar terenkripsi (aes128gcm).
+  - Kode sambung HP: sekali pakai walau ditukar bersamaan, kedaluwarsa 10 menit, kode baru membatalkan yang lama, tebakan beruntun dibatasi, token baru hanya melihat data pemiliknya.
+  - Upgrade database 1→5.
+- Web unit: 44 lulus. Termasuk service worker (push tampil dengan tombol, tidak dobel saat web dilihat, tombol mengirim token) dan berkas acuan Flutter yang harus selalu sama dengan logika web.
+- Uji browser `push-e2e` (Chrome headless, layanan push palsu, 390 dan 320 px): 25 pemeriksaan lulus di tiap ukuran.
+  - Aktifkan dari Profil, server mencatat perangkat dan pilihan jaga diri, ubah jaga diri ikut terkirim, dan tes sampai.
+  - Agenda yang dibuat di web terkirim lewat push dengan tag yang sama dengan notifikasi halaman, tidak terkirim ulang.
+  - Service worker menampilkan push tes. Saat web sedang dilihat (fokus), push agenda tidak menggandakan. Saat pindah tab, notifikasi agenda tampil dengan tombol Selesai dan Tunda.
+  - Tombol Selesai dari konteks service worker menandai agenda selesai, dan web ikut berubah setelah sinkron.
+  - Akun kedua tidak menerima pengingat akun pertama.
+  - Sambungkan aplikasi HP: Profil menampilkan alamat server dan kode, kode ditukar jadi sesi, dan tidak bisa dipakai dua kali.
+  - Keluar mencabut langganan di browser dan di server.
+  - Tanpa error JavaScript.
+- Regresi diulang:
+  - `partner-e2e` 49.
+  - `telegram-e2e` 17.
+  - `botsetup-e2e` 17.
+  - `sync-e2e` 16.
+  - `iqlima` 25.
+  - `web` 22.
+  - Audit ukuran layar tanpa temuan.
+- Flutter: **belum dikompilasi di sini.** SDK Flutter tidak bisa diunduh di lingkungan ini (storage.googleapis.com dan unduhan GitHub diblokir).
+  - Tes baru sudah ditulis: `iqlima_test.dart` (paritas dengan web lewat berkas acuan), `server_test.dart` (pemetaan titipan, sinkron dua arah, offline, sesi habis, dua HP bersamaan dengan server palsu), dan `teman_test.dart` (tumpahkan pikiran, detail dengan peta, lampiran, minta tolong, Profil, ulang tahun, kartu jaga diri).
+  - Semuanya pertama kali dijalankan oleh GitHub Actions (`.github/workflows/ci.yml`).
+
+**Risiko tersisa:**
+- Push sungguhan ke Google/Mozilla/Apple belum dicoba dari server online; uji memakai layanan palsu dan enkripsi lokal.
+- iPhone butuh Ruang Iqlima di Layar Utama untuk Web Push.
+- Kode Dart, Kotlin, dan Swift yang baru bisa gagal kompilasi sampai Actions hijau.
+- Flutter belum punya surat dan rencana berdua, baca undangan dari foto, dikte, dan pengelola sandi.

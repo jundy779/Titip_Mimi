@@ -155,7 +155,12 @@ const migrations: string[] = [
      error TEXT NOT NULL DEFAULT '',
      PRIMARY KEY (owner_id, key)
    );
-   CREATE INDEX push_deliveries_due ON push_deliveries(status, next_try);`,
+   CREATE INDEX push_deliveries_due ON push_deliveries(status, next_try);
+   CREATE TABLE device_codes (
+     code_hash TEXT PRIMARY KEY,
+     user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+     expires_at INTEGER NOT NULL
+   );`,
 ];
 
 export type Db = Database.Database;

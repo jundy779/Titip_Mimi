@@ -23,6 +23,8 @@
 
 **Pribadi secara bawaan.** Iqlima memilih sendiri apa yang ia bagikan. Yang terbagi dengan pasangan hanya surat dan rencana berdua; keduanya bisa diputus kapan saja dari Profil. Akses pasangan ke seluruh koleksi tidak termasuk kesepakatan, dan server tidak menyediakan jalan ke sana.
 
+**Notifikasi** • Di web, pengingat agenda dan jaga diri sampai walau web ditutup lewat Web Push (butuh akun dan server; di iPhone setelah ditambahkan ke Layar Utama). Di aplikasi HP, pengingat dititipkan ke sistem dan muncul walau aplikasi ditutup. Telegram tetap jalur ketiga.
+
 **Batas yang disengaja** • Foto undangan dibaca di browser (tesseract.js, data bahasa Indonesia dimuat sekali dari CDN atau dari server sendiri), tidak dikirim ke server Mimi. Dikte memakai pengenal suara bawaan browser, sehingga di Chrome suara diproses layanan Google dan tombolnya tidak muncul di browser yang tidak mendukung. Mimi tidak pernah menyimpan kata sandi; integrasi pengelola kata sandi hanya mencatat tempatnya dan membuka halamannya.
 
 **Backlog setelah pilot** • Stiker dan animasi tambahan, baca undangan berbentuk PDF, serta impor kartu akun dari ekspor pengelola kata sandi (tanpa sandinya). Pilih berdasarkan masalah yang benar-benar dialami Iqlima.

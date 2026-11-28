@@ -1,0 +1,48 @@
+# Serah terima: notifikasi walau web ditutup, dan Flutter menyusul web
+
+- **Dari → ke:** Claude → Cursor (review keamanan dan kode), lalu Jundy (cek GitHub Actions, server online, uji HP). Branch `claude/mimi-manja-extension`, juga di `main`.
+- **Tujuan Iqlima:** pengingat agenda dan minum/makan tetap muncul walau web ditutup. Fitur harian yang ada di web juga ada di aplikasi HP.
+- **Perubahan:**
+  - Server:
+    - `server/src/push.ts` (Web Push, antrean, tombol notifikasi).
+    - Migrasi 5 (`push_subscriptions`, `care_settings`, `push_deliveries`, `device_codes`).
+    - `auth.ts` dan `sessions.ts` mendapat kode sambung HP.
+    - Paket `web-push` 3.6.7.
+  - Web:
+    - `src/scripts/mimi-push.js`.
+    - `public/mimi-reminders-sw.js` (push, tombol, perpanjangan langganan).
+    - Bagian "Walau web ditutup" di Profil dan Agenda.
+    - Tombol "Sambungkan aplikasi HP" di Profil.
+  - Flutter:
+    - `lib/iqlima.dart` (port logika web).
+    - `lib/server.dart` (akun dan sinkron).
+    - `lib/teman.dart` (layar dan lembar baru).
+    - `entry.dart` menyimpan `updatedAt`, `attachments`, dan kolom web lain.
+    - Jaga diri ikut ke pengingat HP; Kotlin dan Swift memberi judulnya sendiri.
+    - Izin INTERNET dan `<queries>` di Android.
+    - Paket `http` dan `url_launcher`.
+  - CI: `.github/workflows/ci.yml`.
+  - Kontrak di [docs/api](../../api/README.md) (Web Push dan Sambungkan aplikasi HP). Skema di [docs/database](../../database/README.md) migrasi 5. Operasi di [runbook](../../runbooks/README.md).
+- **Cara mencoba:**
+  - Jalankan `cd server && npm test`.
+  - Jalankan `TZ=Asia/Jakarta node --test tests/*.test.mjs`.
+  - Uji browser: `e2e-server.js` sekarang selalu memakai layanan push palsu (`GET /__uji/push`, `POST /__uji/push-tick?now=`).
+  - Flutter: `cd mobile && flutter pub get && flutter analyze && flutter test` di mesin dengan Flutter, atau lihat tab Actions.
+  - Akun fiktif saja.
+- **Bukti:** [QA](../../QA.md) bagian "Notifikasi walau web ditutup dan aplikasi Flutter menyusul web".
+- **Dampak privasi:**
+  - Server menyimpan alamat langganan push dan kuncinya per browser, plus pilihan jaga diri.
+  - Isi pesan push (judul agenda, catatan singkat) terenkripsi untuk browser tujuan, tetapi metadata pengiriman melewati layanan push Google, Mozilla, Apple, atau Microsoft.
+  - Tombol di notifikasi bekerja tanpa sesi lewat token HMAC 48 jam untuk satu titipan. Siapa pun yang memegang notifikasinya bisa menandai selesai atau menunda agenda itu, tidak lebih.
+  - Kode sambung HP hanya disimpan sebagai hash.
+  - Kontak Jundy di aplikasi HP hanya disimpan di HP (shared_preferences), sama dengan web.
+- **Belum teruji / keputusan terbuka:**
+  - Kompilasi dan tes Flutter (tunggu Actions).
+  - Push sungguhan dari server online.
+  - Web Push di iPhone.
+  - Pengguna dengan Telegram dan push sama-sama aktif menerima dua pengingat; perlu ditanyakan ke Iqlima apakah mau memilih satu.
+  - `pubspec.lock` belum diperbarui untuk `http` dan `url_launcher`.
+- **Langkah berikutnya:**
+  - Jundy: buka Actions, kirim log bila ada yang merah.
+  - Cursor: review `push.ts`, terutama allowlist endpoint dan token aksi.
+  - Iqlima: coba "Aktifkan walau web ditutup" di HP-nya setelah server online.

@@ -83,6 +83,9 @@ class _EditorState extends State<EntryEditor> {
         snooze: old?.time == time ? old?.snooze : null,
         done: old?.done ?? false,
         history: old?.history ?? const [],
+        // Lampiran Telegram dan kolom dari web ikut terbawa saat diubah di HP.
+        attachments: old?.attachments ?? const [],
+        extra: old?.extra ?? const {},
       );
       if (kind == 'Akun') {
         if (old == null) {

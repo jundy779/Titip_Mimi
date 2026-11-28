@@ -62,8 +62,21 @@ import UserNotifications
 
   private func request(_ id: String, _ millis: NSNumber) -> UNNotificationRequest {
     let content = UNMutableNotificationContent()
-    content.title = id == testID ? "Tes pengingat Mimi" : "Mimi mau ingetin ♡"
-    content.body = "Ketuk untuk membuka Agenda."
+    // Jaga diri ("care:water-09:00:2026-11-29") punya judul dan kalimatnya sendiri, sama dengan web.
+    let careKind = id.hasPrefix("care:") ? String(id.dropFirst(5).split(separator: "-").first ?? "") : ""
+    let careText: [String: (String, String)] = [
+      "water": ("Minum air ♡", "Minum dulu, yuk. Mimi juga lagi minum susu ♡"),
+      "meal": ("Makan ♡", "Udah waktunya makan. Kamu juga butuh diurus ♡"),
+      "rest": ("Istirahat sebentar ♡", "Regangkan badan sebentar, yuk. Mimi ikut menggeliat ♡"),
+      "sleep": ("Waktunya tidur ♡", "Udah malam. Titip sisa pikiran ke Mimi, terus istirahat ya ♡"),
+    ]
+    if let care = careText[careKind] {
+      content.title = care.0
+      content.body = care.1
+    } else {
+      content.title = id == testID ? "Tes pengingat Mimi" : "Mimi mau ingetin ♡"
+      content.body = "Ketuk untuk membuka Agenda."
+    }
     content.sound = .default
     content.userInfo = ["id": id, "at": millis]
     let seconds = millis.doubleValue / 1000 - Date().timeIntervalSince1970

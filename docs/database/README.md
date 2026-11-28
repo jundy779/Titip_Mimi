@@ -1,4 +1,4 @@
-# Model data (migrasi 4)
+# Model data (migrasi 5)
 
 SQLite dengan WAL, foreign key aktif, dan `busy_timeout` 5 detik. Migrasi berurutan di `server/src/db.ts`, masing-masing dalam transaksi, versinya di `schema_version`.
 
@@ -18,6 +18,10 @@ SQLite dengan WAL, foreign key aktif, dan `busy_timeout` 5 detik. Migrasi beruru
 | partner_codes | Migrasi 4. `code_hash` (SHA-256 kode 8 huruf), `owner_id`, kedaluwarsa (24 jam), `used_at`. Kode mentah tidak disimpan. Kode lama pemilik dihapus saat membuat yang baru. |
 | letters | Migrasi 4. `id` UUID, `from_id`, `to_id`, `body` ≤ 1000, `sticker` dari daftar tetap, `created_at`, `read_at`, `hidden_from`, `hidden_to` (sembunyikan per sisi, bukan hapus). Indeks `(to_id, created_at)`. |
 | plans | Migrasi 4. `id`, `pair_id`, `created_by`, `title` ≤ 100, `note` ≤ 500, `place` ≤ 160, `time`, `done`, `deleted`, `updated_at`, `updated_by`. Last-write-wins per rencana, sama dengan titipan. |
+| push_subscriptions | Migrasi 5. Satu baris per browser: `id` (SHA-256 endpoint), `owner_id`, `endpoint`, kunci `p256dh` dan `auth`, label perangkat, `last_ok`, `failures`. Browser yang sama didaftarkan akun lain pindah pemilik. Maksimal 10 per pemilik. 404/410 dari layanan push menghapus barisnya. |
+| care_settings | Migrasi 5. Pilihan jaga diri (minum, makan, istirahat, tidur) per pemilik, dikirim dari web saat notifikasi aktif. |
+| push_deliveries | Migrasi 5. Kunci `(owner_id, key)`: `agenda\|<clientId>\|<occurrence>` atau `care\|<jenis-jam>\|<tanggal>`. Status, percobaan, `next_try`, sewa, sama dengan `reminder_deliveries`. |
+| device_codes | Migrasi 5. Kode sekali pakai untuk menyambungkan aplikasi HP: hash kode, pemilik, kedaluwarsa 10 menit. Dihapus saat ditukar (`DELETE … RETURNING`) sehingga dua penukaran bersamaan tidak bisa sama-sama berhasil. |
 | reminder_deliveries | Kunci `(owner_id, client_id, occurrence)`; `occurrence` = `"<time>\|<snoozeUntil atau 0>"`. Status `pending`, `sending`, `sent`, `retry`, `failed`, `skipped`, jumlah percobaan, `next_try`, `lease_until`, id pesan terkirim, kode error terakhir |
 
 Satu perubahan sinkron diproses dalam satu transaksi. Tombstone dipertahankan agar perangkat lain tahu titipan sudah dihapus.
@@ -29,6 +33,8 @@ Satu perubahan sinkron diproses dalam satu transaksi. Tombstone dipertahankan ag
 **Migrasi 2 → 3.** Hanya menambah tabel `settings` dalam satu transaksi. Server versi lama mengabaikannya; bot dari Profil berhenti sampai versi baru dipasang lagi.
 
 **Migrasi 3 → 4.** Hanya menambah empat tabel di atas beserta indeksnya dalam satu transaksi; tabel lama tidak disentuh. Bila gagal, transaksi batal dan `schema_version` tetap 3. Server versi lama mengabaikan tabel baru, jadi rollback cukup menjalankan image lama dengan volume yang sama (fitur pasangan berhenti, surat dan rencana tetap tersimpan). Uji `database versi 1 berisi data naik ke versi terbaru tanpa kehilangan apa pun` di `api.test.ts` membuka database versi 1 berisi data lalu menaikkannya sampai versi 4.
+
+**Migrasi 4 → 5.** Hanya menambah empat tabel di atas dalam satu transaksi. Bila gagal, `schema_version` tetap 4. Server versi lama mengabaikan tabel baru; rollback cukup menjalankan image lama dengan volume yang sama (notifikasi push dan sambung HP berhenti, data lain utuh). Kunci VAPID dan rahasia tombol notifikasi disimpan di `settings` (`push.vapid_public`, `push.vapid_private`, `push.action_secret`) dan ikut ke backup.
 
 **Pasangan dan privasi.** Semua kueri surat dan rencana diturunkan dari `partners` milik pengguna yang sedang masuk, tidak dari id di permintaan. Tabel `items` tidak pernah di-join dengan `partners`, jadi tidak ada jalan dari pasangan ke koleksi. Setelah putus, surat dan rencana tetap ada di database dan muncul lagi hanya bila dua orang yang sama tersambung kembali (`pair_id` sama).
 

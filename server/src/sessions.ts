@@ -42,6 +42,29 @@ export class Sessions {
     return this.user(row.user_id);
   }
 
+  // Kode sekali pakai untuk menyambungkan aplikasi HP: dibuat di web yang sudah masuk,
+  // diketik di HP, ditukar menjadi sesi baru. Berlaku 10 menit, hanya hash yang disimpan.
+  createDeviceCode(userId: string, now = Date.now()) {
+    const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const bytes = randomBytes(8);
+    const code = Array.from(bytes, b => alphabet[b % alphabet.length]).join('');
+    const expiresAt = now + 10 * 60000;
+    this.db.transaction(() => {
+      this.db.prepare('DELETE FROM device_codes WHERE user_id = ? OR expires_at < ?').run(userId, now);
+      this.db.prepare('INSERT INTO device_codes (code_hash, user_id, expires_at) VALUES (?, ?, ?)').run(hash(code), userId, expiresAt);
+    })();
+    return { code, expiresAt };
+  }
+  redeemDeviceCode(raw: unknown, now = Date.now()) {
+    const code = typeof raw === 'string' ? raw.toUpperCase().replace(/[^A-Z0-9]/g, '') : '';
+    if (code.length !== 8) return null;
+    // Hapus dulu baru pakai: dua permintaan bersamaan tidak bisa menukar kode yang sama.
+    const row = this.db.prepare('DELETE FROM device_codes WHERE code_hash = ? RETURNING user_id, expires_at').get(hash(code)) as { user_id: string; expires_at: number } | undefined;
+    if (!row || row.expires_at < now) return null;
+    const user = this.user(row.user_id);
+    return user ? { user, ...this.create(user.id, now) } : null;
+  }
+
   revoke(token: string | undefined) {
     if (token) this.db.prepare('DELETE FROM sessions WHERE token_hash = ?').run(hash(token));
   }

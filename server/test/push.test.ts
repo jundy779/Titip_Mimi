@@ -9,6 +9,7 @@ import { loadConfig } from '../src/config';
 import { openDatabase, Db } from '../src/db';
 import { GoogleVerifier } from '../src/google';
 import { careKinds as serverCare, Push, PushSender } from '../src/push';
+import { Sessions } from '../src/sessions';
 
 // Dua akun fiktif; layanan push palsu yang mencatat kiriman dan bisa disuruh gagal.
 const people: Record<string, { sub: string; email: string; emailVerified: boolean; name: string }> = {
@@ -221,4 +222,34 @@ test('tes dari Profil, kunci VAPID tetap sama setelah server dinyalakan ulang, p
   assert.match(String(req.headers.Authorization), /^vapid t=.+, k=/);
   assert.ok((req.body as Buffer).length > 100);
   assert.ok(!(req.body as Buffer).toString().includes('Tes dari Mimi'), 'isi terenkripsi');
+});
+
+test('sambungkan aplikasi HP: kode sekali pakai dari web ditukar jadi sesi, kedaluwarsa 10 menit', async () => {
+  assert.equal((await ctx.http.post('/v1/auth/device-code').set('X-Mimi', '1')).status, 401);
+  const made = await ctx.http.post('/v1/auth/device-code').set(as(ctx.a));
+  assert.match(made.body.code, /^[A-HJ-NP-Z2-9]{8}$/);
+  assert.equal((ctx.db.prepare('SELECT COUNT(*) n FROM device_codes WHERE code_hash = ?').get(made.body.code) as any).n, 0, 'kode mentah tidak disimpan');
+  // Dua tukar bersamaan: hanya satu yang berhasil.
+  const pretty = made.body.code.toLowerCase().replace(/(....)/, '$1-');
+  const [x, y] = await Promise.all([1, 2].map(() => ctx.http.post('/v1/auth/device-code/redeem').set('X-Mimi', '1').send({ code: pretty })));
+  assert.deepEqual([x.status, y.status].sort(), [200, 400]);
+  const ok = x.status === 200 ? x : y;
+  assert.equal(ok.body.user.email, 'iqlima.uji@contoh.id');
+  // Token baru bisa dipakai, dan hanya melihat data pemiliknya.
+  const saved = await agenda(ctx.a, 'hp-000001', '2026-12-01T10:00');
+  assert.equal(saved.body.results?.[0]?.status, 'saved', JSON.stringify(saved.body));
+  const viaPhone = await ctx.http.post('/v1/sync').set(as(ok.body.token)).send({ changes: [], since: 0 });
+  assert.ok(viaPhone.body.items?.some((i: any) => i.clientId === 'hp-000001'), JSON.stringify({ status: viaPhone.status, body: viaPhone.body, ok: ok.body }));
+  assert.equal(await item(ctx.b, 'hp-000001'), undefined);
+  // Kode baru membatalkan kode lama; kode kedaluwarsa ditolak.
+  const sessions = ctx.app.get(Sessions);
+  const old = sessions.createDeviceCode(ctx.ids['cred-a'], Date.now() - 11 * 60000);
+  assert.equal((await ctx.http.post('/v1/auth/device-code/redeem').set('X-Mimi', '1').send({ code: old.code })).body.code, 'bad_code');
+  const first = (await ctx.http.post('/v1/auth/device-code').set(as(ctx.a))).body.code;
+  await ctx.http.post('/v1/auth/device-code').set(as(ctx.a));
+  assert.equal((await ctx.http.post('/v1/auth/device-code/redeem').set('X-Mimi', '1').send({ code: first })).body.code, 'bad_code');
+  // Tebakan beruntun dibatasi.
+  let limited = false;
+  for (let i = 0; i < 12; i++) if ((await ctx.http.post('/v1/auth/device-code/redeem').set('X-Mimi', '1').send({ code: 'AAAAAAAA' })).status === 429) limited = true;
+  assert.ok(limited);
 });

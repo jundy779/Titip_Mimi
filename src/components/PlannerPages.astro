@@ -73,6 +73,10 @@ import ThemeChoice from './ThemeChoice.astro';
             <button type="button" class="primary" data-migrate-yes>Pindahkan titipan</button>
             <button type="button" class="quiet" data-migrate-later>Nanti saja</button>
           </div>
+          <div class="app-link" data-app-link hidden>
+            <button type="button" data-app-code>Sambungkan aplikasi HP</button>
+            <p class="app-out" data-app-out role="status" hidden></p>
+          </div>
           <button type="button" class="quiet" data-logout hidden>Keluar</button>
         </div>
         <div><h3>Google Kalender</h3><p>Ambil agenda dari file kalender, atau kirim satu agenda ke Google Kalender.</p><button data-open-agenda>Buka Agenda</button></div>

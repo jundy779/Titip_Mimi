@@ -134,3 +134,42 @@ Semua di bawah `/v1/partner`, butuh sesi dan header `X-Mimi: 1` untuk POST. Iden
 **Tanpa server.** Web juga bisa mengirim surat dan ajakan tanpa akun: isinya dikemas di bagian `#` alamat (`/#surat?d=<base64url JSON>` atau `/#rencana?d=...`), dikirim lewat WhatsApp, lalu disimpan di browser penerima. Bagian `#` tidak pernah sampai ke server web. Isi divalidasi ulang saat dibuka (panjang, stiker, format waktu); tautan rusak diabaikan.
 
 Contoh dua akun fiktif: `iqlima.uji@contoh.id` membuat kode, `jundy.uji@contoh.id` memasukkannya, lalu keduanya melihat `GET /v1/partner` → `paired: true`.
+
+## Notifikasi walau web ditutup (Web Push)
+
+Butuh sesi. Endpoint langganan datang dari browser dan hanya diterima untuk layanan push resmi (`https://` tanpa port lain ke `fcm.googleapis.com`, `android.googleapis.com`, `*.push.services.mozilla.com`, `web.push.apple.com`, `*.push.apple.com`, `*.notify.windows.com`), supaya server tidak bisa disuruh menghubungi alamat sembarang.
+
+| Aksi | Permintaan | Respons |
+|---|---|---|
+| Status | `GET /v1/push` | `{ "publicKey": "<VAPID base64url>", "devices": 1, "care": { "water": true, "meal": true, "rest": true, "sleep": true } }` (`care` `null` bila belum pernah dikirim) |
+| Daftar | `POST /v1/push/subscribe` `{ "subscription": <PushSubscription.toJSON()>, "label": "Chrome di Android" }` | Status seperti di atas. Ulang aman. |
+| Cabut | `POST /v1/push/unsubscribe` `{ "endpoint": "https://fcm.googleapis.com/…" }` | `204`. Hanya milik sendiri. |
+| Jaga diri | `POST /v1/push/care` `{ "water": true, "meal": false, "rest": true, "sleep": true }` | Pilihan tersimpan (kolom lain dibuang, selain `true` = mati) |
+| Tes | `POST /v1/push/test` | `{ "ok": true, "devices": 1 }`, atau `404 no_device` |
+| Tombol notifikasi | `POST /v1/push/action` `{ "t": "<token dari notifikasi>", "action": "done" \| "snooze" }` | `{ "ok": true, "message": "Selesai ♡ Mimi bangga" }`. Tanpa sesi: token HMAC berlaku 48 jam untuk satu titipan dan satu kejadian. Tetap butuh `X-Mimi: 1`. |
+
+**Isi pesan push** (terenkripsi aes128gcm untuk browser tujuan):
+
+```json
+{ "type": "agenda", "title": "Mimi mau ingetin ♡", "body": "Ambil jahitan\n🗓 Selasa, 1 Des, 16.00", "tag": "mimi-<reminderId>", "id": "<reminderId>",
+  "actions": [{ "action": "done", "title": "✓ Sudah selesai" }, { "action": "snooze", "title": "Tunda 10 menit" }], "t": "<token>" }
+```
+
+`type` juga `care` (tag `water-09:00`, sama dengan notifikasi dari halaman sehingga tidak dobel) dan `test`. Service worker tidak menampilkan agenda atau jaga diri kalau Ruang Iqlima sedang dibuka dan dilihat.
+
+**Aturan kirim.** Sama dengan Telegram: periksa ulang pemilik, selesai, dan jadwal tepat sebelum kirim; satu kejadian sekali; jam tenang menunda agenda sampai jam tenang selesai, sedangkan jaga diri yang jatuh di jam tenang dilewati. Gagal sementara (5xx, 429, jaringan) dicoba lagi 1/5/15/60 menit, maksimal 5 kali. Pengguna yang juga menautkan Telegram menerima keduanya.
+
+| Status | `code` | Arti |
+|---|---|---|
+| 400 | `bad_subscription` | Endpoint bukan layanan push resmi atau kunci tidak valid. Aktifkan ulang dari browser. |
+| 404 | `no_device` | Tes tanpa perangkat terdaftar |
+| 404 | `not_found`, `expired` | Token tombol palsu, kedaluwarsa, atau titipannya sudah tidak ada |
+
+## Sambungkan aplikasi HP
+
+| Aksi | Permintaan | Respons |
+|---|---|---|
+| Buat kode (web, butuh sesi) | `POST /v1/auth/device-code` `{}` | `{ "code": "K7MPQ2XA", "expiresAt": 1795880000000 }`. 10 menit, sekali pakai, kode lama pemilik batal. |
+| Tukar kode (HP, tanpa sesi) | `POST /v1/auth/device-code/redeem` `{ "code": "k7mp-q2xa" }` | `{ "user": { "id", "name", "email" }, "token": "<Bearer>", "expiresAt": … }`. Huruf kecil dan tanda hubung diabaikan. |
+
+`400 bad_code` untuk kode salah, dipakai, atau kedaluwarsa. `429 too_many` setelah 10 percobaan per menit dari alamat yang sama. Setelah itu HP memakai `Authorization: Bearer <token>` untuk `/v1/sync` dan `/v1/media/<id>`, sama seperti web di domain lain.
