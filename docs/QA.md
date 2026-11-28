@@ -135,3 +135,11 @@ Chrome 153 headless, jam palsu Sabtu 28 November 09.05 WIB, 390/1280/320 px: 24 
 Belum: Flutter belum punya fitur ini, notifikasi jaga diri saat web ditutup, dan penilaian Iqlima.
 
 28 November 2026 · Kontak Jundy. 36 tes Node lulus (termasuk pembersihan nomor dan username serta tautan atur sekali, dengan data fiktif). Uji Chrome: tautan atur sekali menyimpan kontak, membersihkan alamat, Profil menampilkan IG dan WA, dialog Minta tolong Jundy menawarkan Instagram dan WhatsApp, tanpa error. Uji fitur Iqlima diulang dan tetap lulus 24 cek. Repo diperiksa tidak memuat nomor atau username asli.
+
+## Ukuran layar (28 Nov 2026)
+
+Diuji di Chrome headless pada 12 ukuran: 280×653 (layar penutup HP lipat paling sempit), 320×568, 360×780, 375×667, 393×852, 440×956, 474×696 (perkiraan layar luar iPhone Fold), 852×393 (HP miring), 884×1104 (Galaxy Z Fold terbuka), 904×640 (perkiraan layar dalam iPhone Fold), 768×1024, dan 1114×720 dengan engsel 34px di x=540 (layar ganda gaya Surface Duo, lewat `Emulation.setDeviceMetricsOverride` + `displayFeature`).
+
+Yang dicek per ukuran di Hari Ini, Koleksi, Agenda, Profil, Tumpahkan pikiran, Titip, dan Kamar Mimi: tidak ada gulir ke samping, tidak ada elemen keluar layar, target sentuh minimal 40px, teks minimal 12px, tombol utama dialog terlihat tanpa menggulir, dan di layar ganda tidak ada tombol, teks, atau gambar yang menyeberangi engsel.
+
+Ukuran iPhone Fold masih perkiraan dari bocoran resolusi (dibagi skala 3), belum dicoba di perangkat asli. Tata letak dua panel di Flutter (`verticalHinge` di `mobile/lib/main.dart`) belum dikompilasi karena Flutter SDK tidak tersedia di lingkungan ini.

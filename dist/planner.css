@@ -691,3 +691,67 @@ body > dialog h2 { margin:.1rem 0 1rem; font:600 1.35rem/1.3 Georgia,serif; }
 .dump-row.skipped b { text-decoration:line-through; }
 .dump-actions button.primary { min-width:9rem; }
 .dump-actions button:disabled { opacity:.5; cursor:not-allowed; }
+
+/* Semua ukuran HP: layar lipat paling sempit, HP miring, sampai layar ganda */
+html { -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+body { padding-left:env(safe-area-inset-left); padding-right:env(safe-area-inset-right); }
+.list-priority select { min-height:44px; }
+.journal .intro .quick { white-space:nowrap; }
+
+/* Tombol dialog selalu kelihatan walau isinya perlu digulir */
+dialog #form > .row:last-child, .iqlima-dialog .row:last-child {
+  position:sticky; bottom:calc(-1 * clamp(1rem,2vw,1.5rem)); z-index:1;
+  margin-bottom:calc(-1 * clamp(1rem,2vw,1.5rem)); padding-block:.6rem clamp(1rem,2vw,1.5rem);
+  background:var(--mimi-surface-container); box-shadow:0 -10px 12px -10px #42273833;
+}
+.iqlima-dialog .row:last-child { bottom:-1.25rem; margin-bottom:-1.25rem; padding-bottom:1.25rem; }
+
+/* Layar penutup HP lipat dan HP lama (di bawah 360px) */
+@media (max-width:359px) {
+  body > main:not(.guide) { padding-inline:.75rem; }
+  .journal .intro { grid-template-columns:minmax(0,1fr) 4.25rem; gap:.5rem; padding:.9rem; }
+  .journal .intro h1 { font-size:1.75rem; }
+  .journal .intro .quick { grid-column:1/-1; justify-self:stretch; }
+  .journal-actions { gap:.35rem; }
+  .journal-actions button { font-size:.8125rem; }
+  .room-menu nav button { font-size:.8125rem; }
+}
+
+/* HP dimiringkan: tinggi layar pendek */
+@media (orientation:landscape) and (max-height:500px) {
+  dialog { max-height:calc(100dvh - 1rem); }
+  .dump-preview { max-height:35dvh; }
+}
+
+/* Layar ganda dengan engsel di tengah (dua layar kiri dan kanan) */
+@media (horizontal-viewport-segments:2) {
+  :root { --seg-a:env(viewport-segment-width 0 0); --seg-b-left:env(viewport-segment-left 1 0); --seg-b:env(viewport-segment-width 1 0); }
+  body > header.room-menu {
+    position:fixed; inset:0 auto 0 0; width:var(--seg-a); max-width:none; transform:none;
+    flex-direction:column; align-items:stretch; justify-content:flex-start; gap:1.25rem;
+    padding:max(2rem,env(safe-area-inset-top)) 1.5rem 1.5rem; border:0; background:var(--mimi-surface-container);
+  }
+  body > header.room-menu nav {
+    position:static; inset:auto; transform:none; width:auto; display:flex; flex-direction:column;
+    gap:.25rem; padding:0; border:0; border-radius:0; box-shadow:none; background:transparent;
+  }
+  body > header.room-menu nav button { flex-direction:row; justify-content:flex-start; font-size:1rem; padding:.7rem .9rem; }
+  body > header.room-menu::after {
+    content:''; flex:none; align-self:center; width:min(14rem,70%); aspect-ratio:1; margin-top:auto; border-radius:2rem;
+    background:url(mimi.webp) center / cover no-repeat; box-shadow:0 6px 18px #45273b1f;
+  }
+  body > main:not(.guide) { margin:0 0 0 var(--seg-b-left); width:var(--seg-b); max-width:none; padding:1.25rem 1rem 2rem; }
+  .spread, .journal { display:flex; flex-direction:column; align-items:stretch; gap:1rem; }
+  .planner-columns { grid-template-columns:minmax(0,1fr); }
+  .journal .intro { grid-template-columns:minmax(0,1fr) 31%; }
+  .journal-actions { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  dialog[open] { left:var(--seg-b-left); right:0; max-width:calc(var(--seg-b) - 2rem); }
+  #box[open] { width:calc(var(--seg-b) - 2rem); margin:auto; border-radius:var(--mimi-radius-card); }
+  .care-toast { left:calc(var(--seg-b-left) + var(--seg-b) / 2); }
+  #reminder.floating-reminder:not([hidden]) { width:min(25rem,calc(var(--seg-b) - 1.5rem)); }
+}
+
+/* Layar ganda atas bawah: dialog dan kabar tampil di layar bawah */
+@media (vertical-viewport-segments:2) {
+  dialog[open] { top:env(viewport-segment-top 0 1); max-height:calc(env(viewport-segment-height 0 1) - 1rem); }
+}

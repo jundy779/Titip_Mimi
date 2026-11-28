@@ -584,7 +584,23 @@ class _RoomState extends ConsumerState<Room> {
       _ => agenda,
     };
     final width = MediaQuery.sizeOf(context).width;
-    final wide = width >= 720;
+    final hinge = verticalHinge(context);
+    final wide = width >= 720 || hinge != null;
+    Widget rail(bool extended) => NavigationRail(
+          selectedIndex: widget.index,
+          extended: extended,
+          labelType: extended
+              ? NavigationRailLabelType.none
+              : NavigationRailLabelType.all,
+          onDestinationSelected: (i) => context.go(paths[i]),
+          destinations: [
+            for (var i = 0; i < pages.length; i++)
+              NavigationRailDestination(
+                icon: Icon(icons[i]),
+                label: Text(pages[i]),
+              ),
+          ],
+        );
     final manja = ref.watch(manjaProvider);
     final hello = mimiGreeting(now, daysAway: ref.watch(daysAwayProvider));
     return Scaffold(
@@ -624,23 +640,33 @@ class _RoomState extends ConsumerState<Room> {
         child: SafeArea(
           child: Row(
             children: [
-              if (wide)
-                NavigationRail(
-                  selectedIndex: widget.index,
-                  extended: width >= 1100,
-                  labelType: width >= 1100
-                      ? NavigationRailLabelType.none
-                      : NavigationRailLabelType.all,
-                  onDestinationSelected: (i) => context.go(paths[i]),
-                  destinations: [
-                    for (var i = 0; i < pages.length; i++)
-                      NavigationRailDestination(
-                        icon: Icon(icons[i]),
-                        label: Text(pages[i]),
+              // Layar ganda (engsel di tengah): menu dan Mimi di layar kiri,
+              // isi di layar kanan, tidak ada yang jatuh tepat di engsel.
+              if (hinge != null) ...[
+                SizedBox(
+                  width: hinge.left - MediaQuery.paddingOf(context).left,
+                  child: Column(
+                    children: [
+                      Expanded(child: rail(true)),
+                      Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(28),
+                          child: Image.asset(
+                            'assets/mimi/v1/welcome.webp',
+                            height: 180,
+                            semanticLabel: 'Mimi melambai',
+                          ),
+                        ),
                       ),
-                  ],
+                    ],
+                  ),
                 ),
-              if (wide) const VerticalDivider(width: 1),
+                SizedBox(width: hinge.width),
+              ] else if (wide) ...[
+                rail(width >= 1100),
+                const VerticalDivider(width: 1),
+              ],
               Expanded(
                 child: Center(
                   child: ConstrainedBox(
@@ -917,4 +943,16 @@ class MimiBubble extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Engsel tegak yang benar-benar memisahkan dua layar (misalnya Surface Duo).
+/// Lipatan mulus seperti Galaxy Z Fold atau iPhone Fold lebarnya nol, jadi
+/// layarnya tetap dianggap satu dan tata letak biasa yang dipakai.
+Rect? verticalHinge(BuildContext context) {
+  final height = MediaQuery.sizeOf(context).height;
+  for (final feature in MediaQuery.displayFeaturesOf(context)) {
+    final b = feature.bounds;
+    if (b.width > 0 && b.left > 0 && b.height >= height * .9) return b;
+  }
+  return null;
 }
