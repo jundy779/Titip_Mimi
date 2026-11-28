@@ -5,6 +5,7 @@ import welcome from '../../assets/mimi/v1/welcome.webp';
 import write from '../../assets/mimi/v1/write.webp';
 import planner from '../../assets/mimi/v1/planner.webp';
 import privacy from '../../assets/mimi/v1/privacy.webp';
+import letter from '../../assets/mimi/v1/letter.webp';
 const shortcuts = [
   {kind:'note', label:'Tulis catatan', art:write},
   {kind:'agenda', label:'Buat agenda', art:planner},
@@ -14,7 +15,7 @@ const shortcuts = [
 <div class="spread journal">
   <section class="intro">
     <div class="garden-scene" aria-hidden="true"><i class="garden-sun"></i><i class="garden-cloud"></i></div>
-    <div class="greeting"><p class="date"></p><h1>Hai, Iqlima&nbsp;♡</h1><p class="mimi-line" hidden></p></div>
+    <div class="greeting"><p class="date"></p><h1>Hai, Iqlima&nbsp;♡</h1><p class="mimi-line" hidden></p><p class="celebrate" data-celebrate hidden></p></div>
     <button type="button" class="welcome-art welcome-pet" aria-label="Elus Mimi" aria-describedby="pet-status">
       <Image src={welcome} width={260} height={260} alt="" fetchpriority="high" />
     </button>
@@ -25,6 +26,7 @@ const shortcuts = [
     {shortcuts.map(({kind,label,art}) => <button type="button" data-capture-kind={kind}>
       <Image src={art} width={88} height={88} alt="" /><span>{label}</span>
     </button>)}
+    <button type="button" data-dump><Image src={letter} width={88} height={88} alt="" /><span>Tumpahkan pikiran</span></button>
   </div>
   <section class="sheet agenda">
     <h2>Agenda hari ini</h2>
@@ -37,6 +39,26 @@ const shortcuts = [
     <span>Main sama Mimi</span>
     <span class="mimi-play-arrow" aria-hidden="true">→</span>
   </a>
+  <section class="iqlima-cards" aria-label="Teman harian">
+    <article class="sheet out-card" data-out>
+      <h2>Cek sebelum keluar</h2>
+      <p data-out-status role="status"></p>
+      <div data-out-list></div>
+      <form class="mini-add"><input aria-label="Tambah barang yang perlu dibawa" placeholder="Tambah, misalnya payung" maxlength="40" /><button>Tambah</button></form>
+    </article>
+    <article class="sheet proud-card" data-proud>
+      <h2>Dinding bangga <span class="leo-mark" aria-hidden="true">♌</span></h2>
+      <p data-proud-stats></p>
+      <p class="muted" data-proud-praise></p>
+      <ul data-proud-list></ul>
+      <form class="mini-add"><input aria-label="Kemenangan kecil hari ini" placeholder="Hari ini aku berhasil…" maxlength="120" /><button>Catat</button></form>
+    </article>
+    <article class="sheet lega-card">
+      <h2>Ruang lega</h2>
+      <p>Tempat menaruh yang berat-berat. Cuma buat kamu, nggak ikut sinkron.</p>
+      <button type="button" data-lega>Buka ruang lega</button>
+    </article>
+  </section>
   <section class="sheet shelf">
     <div class="row"><h2>Koleksi</h2><button class="all">Lihat semua</button></div>
     <div class="previews"></div>

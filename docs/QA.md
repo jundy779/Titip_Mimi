@@ -125,3 +125,11 @@ Server: `cd server && npm test` lulus 16 tes dengan verifier Google palsu dan ak
 Web (Chrome 153 headless, dua profil browser sebagai dua perangkat, server uji dengan web hasil build): 16 pemeriksaan lulus. Titipan lama diberi ID, tawaran pindah muncul dan tidak ada yang dikirim sebelum disetujui, dua titipan pindah, sesi lewat cookie tanpa token di localStorage, perangkat kedua menerima titipan tanpa ditanya, catatan baru dari perangkat dua muncul di perangkat satu, kartu akun tersinkron, hapus dengan dua konfirmasi menyebar, akun kedua terisolasi, keluar tetap menyimpan titipan lokal. Uji web lama (Mimi manja, extension) tetap lulus 22 cek.
 
 **Belum teruji:** login Google sungguhan (butuh Client ID dari Jundy dan akses ke accounts.google.com), Dockerfile (daemon Docker tidak tersedia di lingkungan ini), deploy HTTPS, Safari, pemindahan dari demo lama lewat `PUBLIC_MIMI_API`, Flutter. Status AUTH-1 dan MIG-1: lulus dengan data uji, belum diterima Iqlima.
+
+### 28 November 2026 · Teman harian Iqlima
+
+Node: 35 tes web lulus, termasuk 8 tes baru untuk pengenalan tanggal dan jam bahasa sehari-hari, rutinitas (termasuk selesai lebih awal dan tanggal 31), hitungan mingguan, pesan dan tautan WhatsApp, deteksi kalimat mengkhawatirkan, jadwal jaga diri, musim Leo, dan ulang tahun. Server: 17 tes lulus, termasuk kolom rutinitas dan minta tolong.
+
+Chrome 153 headless, jam palsu Sabtu 28 November 09.05 WIB, 390/1280/320 px: 24 pemeriksaan lulus. Pengingat minum muncul, tumpahkan pikiran menyimpan dua dari tiga baris dengan jadwal benar, cek sebelum keluar, kemenangan kecil, agenda bulanan membuat jadwal 30 Desember setelah selesai, pengaturan Profil tersimpan, pesan minta tolong dan tautan wa.me ke nomor Jundy, catatan sudah minta tolong, lencana ulang tahun, tanggapan ruang lega, ruang lega tidak masuk titipan, bantuan resmi untuk kalimat mengkhawatirkan, tanpa gulir horizontal, tanpa error konsol.
+
+Belum: Flutter belum punya fitur ini, notifikasi jaga diri saat web ditutup, dan penilaian Iqlima.

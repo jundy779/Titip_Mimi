@@ -302,6 +302,18 @@ export function makeScene(canvas) {
   bow.add(knot, leaf);
   head.add(bow);
 
+  // Surai singa untuk musim Leo dan ulang tahun Iqlima: kelopak keemasan di belakang kepala.
+  const mane = new THREE.Group();
+  for (let i = 0; i < 16; i++) {
+    const a = i / 16 * Math.PI * 2;
+    const tuft = part(new THREE.ConeGeometry(.17, .42, 8), toon(i % 2 ? 0xf2b24c : 0xe5892f, { rim: .5 }), { outline: .012 });
+    tuft.position.set(Math.cos(a) * .78, Math.sin(a) * .66 - .02, -.18);
+    tuft.rotation.z = a - Math.PI / 2;
+    mane.add(tuft);
+  }
+  mane.visible = false;
+  head.add(mane);
+
   // Wajah anime digambar di kanvas dan ditempel pada sisi depan kepala.
   const faceCanvas = document.createElement('canvas');
   faceCanvas.width = faceCanvas.height = 768;
@@ -688,6 +700,8 @@ export function makeScene(canvas) {
       s.lookX * .21 + .28 * (s.nuzzle || 0) - groomW * .25,
       -(s.nuzzle || 0) * .22 + (s.petted ? .12 : 0) + Math.sin(t * .9) * .02 + sleepW * .25 - groomW * .15 + askW * .28);
     const twitch = !still && t % 6.3 < .18 ? Math.sin(t * 60) * .12 : 0;
+    mane.visible = Boolean(s.leo);
+    if (mane.visible) mane.rotation.z = Math.sin(t * 1.3) * .04;
     ears[0].rotation.z = .38 + (s.petted ? .22 : 0) + twitch + sleepW * .25 - askW * .08;
     ears[1].rotation.z = -.38 - (s.petted ? .22 : 0) - (s.mode === 'play' && s.motion !== 'rest' ? .08 : 0) - sleepW * .25 + askW * .08;
     ears[0].rotation.x = ears[1].rotation.x = s.mode === 'play' && s.motion === 'stalk' ? -.25 : 0;

@@ -199,3 +199,16 @@ test('login dibatasi 10 kali per menit per alamat', async () => {
   assert.deepEqual(codes.slice(0, 10), Array(10).fill(401));
   assert.deepEqual(codes.slice(10), [429, 429]);
 });
+
+test('kolom rutinitas dan minta tolong ikut tersimpan dan divalidasi', async () => {
+  const a = await login(ctx.http, 'cred-a');
+  await sync(ctx.http, a, [
+    note('kos-00001', 'Bayar kos', 5, { kind: 'agenda', time: '2026-12-01T09:00', repeat: 'monthly', repeatDay: 31, helpAskedAt: '2026-11-28T03:00:00.000Z' }),
+    note('aneh-0001', 'Ulang aneh', 5, { kind: 'agenda', time: '2026-12-01T09:00', repeat: 'tiap detik', repeatDay: 99 }),
+  ]);
+  const items = (await sync(ctx.http, a, [], 0)).body.items;
+  const kos = items.find((i: { clientId: string }) => i.clientId === 'kos-00001');
+  assert.equal(kos.repeat, 'monthly'); assert.equal(kos.repeatDay, 31); assert.equal(kos.helpAskedAt, '2026-11-28T03:00:00.000Z');
+  const aneh = items.find((i: { clientId: string }) => i.clientId === 'aneh-0001');
+  assert.equal(aneh.repeat, undefined); assert.equal(aneh.repeatDay, undefined);
+});

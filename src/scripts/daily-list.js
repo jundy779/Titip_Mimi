@@ -1,4 +1,5 @@
 import { mimiSay } from './mimi-bubble.js';
+import { logWin, unlogWin } from './iqlima-ui.js';
 export function mountDailyList(sheet, today) {
   const date = sheet.querySelector('[data-list-date]');
   const priority = sheet.querySelector('select');
@@ -42,7 +43,8 @@ export function mountDailyList(sheet, today) {
           const row = data[name]?.find(row => row.id === item.id);
           if (row) row.done = check.checked;
         })) check.checked = !check.checked;
-        else if (check.checked) mimiSay('task');
+        else if (check.checked) { mimiSay('task'); logWin({ kind: 'task', ref: 'todo-' + item.id, text: item.title }); }
+        else unlogWin('todo-' + item.id);
       };
       line.append(check, document.createTextNode(item.title));
       const remove = document.createElement('button');

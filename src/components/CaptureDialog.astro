@@ -13,6 +13,7 @@
     </fieldset>
     <label id="note-field">Catatan<textarea id="isi" placeholder="Tulis seadanya, yaa" rows="3"></textarea></label>
     <label id="date-field"><span id="date-label">Ingatkan kapan? (boleh kosong)</span><input id="waktu" type="datetime-local"></label>
+    <label id="repeat-field" hidden>Ulangi<select id="ulang"><option value="">Tidak</option><option value="daily">Setiap hari</option><option value="weekly">Setiap minggu</option><option value="monthly">Setiap bulan</option></select></label>
     <div class="chips" id="quick-days" aria-label="Pilih hari"><button type="button">Hari ini</button><button type="button">Besok</button></div>
     <div class="row"><button type="button" id="cancel" class="quiet">Batal</button><button class="primary">Simpan titipan</button></div>
   </form>

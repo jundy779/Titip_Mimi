@@ -180,7 +180,13 @@ function poke(){if(life.poke()==='wake'){say(idleLines.wake);voice.meow('sleepy'
 document.addEventListener('pointerdown',poke,true);
 document.addEventListener('keydown',poke,true);
 life.setFull(full());
+// Musim Leo (23 Juli–22 Agustus) atau ulang tahun Iqlima: Mimi memakai surai singa.
+{const d=new Date(),md=(d.getMonth()+1)*100+d.getDate();let bday='';try{bday=JSON.parse(localStorage.getItem('mimi-iqlima-v1')||'{}').birthday||''}catch{}
+ const mmdd=String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+ s.leo=(md>=723&&md<=822)||bday===mmdd||location.search.includes('leo');s.birthday=bday===mmdd}
 select('play');say(life.greeting());showMood();
+if(s.birthday)say('Selamat ulang tahun, Iqlima! Mimi pakai surai singa khusus buat kamu ♡');
+else if(s.leo)say('Rawr! Musim Leo, Mimi pakai surai singa biar kembaran sama kamu ♡');
 if(life.mood()==='kangen')setTimeout(()=>{react('reveal',1050,life.greeting())},400);
 requestAnimationFrame(tick);
 if(location.search.includes('mimi-debug'))globalThis.__life=life;

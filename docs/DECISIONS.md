@@ -37,3 +37,5 @@
 | Disepakati | Sinkron per titipan dengan last-write-wins berdasarkan `updatedAt`, bukan PATCH + 409 | Satu pemilik dengan beberapa perangkat dan dukungan offline. Edit bersamaan pada titipan yang sama: versi terbaru menang. |
 | Disepakati | `ALLOWED_EMAILS` membatasi pilot ke akun yang diundang | Ruang pribadi Iqlima tidak terbuka untuk semua akun Google. |
 | Perlu keputusan Jundy | Hosting server dan domain | Pilihan memengaruhi biaya dan alamat web. Data demo lama perlu dipindahkan lewat langkah di runbook. |
+
+28 November 2026 · Jundy · Fitur teman harian untuk Iqlima. Minta tolong Jundy dibuat sebagai pesan WhatsApp yang dikirim Iqlima sendiri, bukan akses Jundy ke koleksi. Ruang lega hanya tersimpan di perangkat dan tidak ikut sinkron. Tema Leo bersifat hiasan tanpa ramalan.

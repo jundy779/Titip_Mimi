@@ -9,6 +9,7 @@ export interface ItemData {
   identity?: string; method?: string; history?: { label: string; at: string }[];
   icsId?: string; allDay?: boolean; endDay?: string; startUTC?: string; endUTC?: string;
   reminderId?: string; snoozeUntil?: number; extensionId?: string;
+  repeat?: 'daily' | 'weekly' | 'monthly'; repeatDay?: number; repeated?: string; helpAskedAt?: string;
 }
 export interface Change extends Partial<ItemData> { clientId: string; updatedAt: number; deleted?: boolean }
 export type Status = 'saved' | 'stale' | 'invalid';
@@ -44,6 +45,10 @@ export function clean(raw: Record<string, unknown>): ItemData | string {
   }
   for (const k of ['startUTC', 'endUTC'] as const) if (isIso(raw[k])) item[k] = raw[k] as string;
   if (raw.allDay === true) item.allDay = true;
+  if (item.kind === 'agenda' && ['daily', 'weekly', 'monthly'].includes(raw.repeat as string)) item.repeat = raw.repeat as ItemData['repeat'];
+  if (item.repeat === 'monthly' && Number.isInteger(raw.repeatDay) && (raw.repeatDay as number) >= 1 && (raw.repeatDay as number) <= 31) item.repeatDay = raw.repeatDay as number;
+  if (['daily', 'weekly', 'monthly'].includes(raw.repeated as string)) item.repeated = raw.repeated as string;
+  if (isIso(raw.helpAskedAt)) item.helpAskedAt = raw.helpAskedAt as string;
   if (typeof raw.snoozeUntil === 'number' && Number.isFinite(raw.snoozeUntil) && raw.snoozeUntil > 0) item.snoozeUntil = raw.snoozeUntil;
   return item;
 }
