@@ -10,6 +10,7 @@ import 'device_reminders.dart';
 import 'daily_list.dart';
 import 'editor.dart';
 import 'journal.dart';
+import 'mimi_manja.dart';
 
 final prefsProvider = Provider<SharedPreferences>(
   (ref) => throw StateError('Penyimpanan belum siap'),
@@ -17,6 +18,18 @@ final prefsProvider = Provider<SharedPreferences>(
 final themeProvider = StateProvider<ThemeMode>((ref) {
   final key = ref.watch(prefsProvider).getString('theme');
   return key == 'dark' ? ThemeMode.dark : ThemeMode.light;
+});
+final manjaProvider = StateProvider<bool>(
+  (ref) => ref.watch(prefsProvider).getBool(manjaKey) ?? true,
+);
+// Dihitung sekali per peluncuran: berapa hari sejak kunjungan terakhir,
+// lalu catat hari ini sebagai kunjungan terbaru.
+final daysAwayProvider = Provider<int>((ref) {
+  final prefs = ref.watch(prefsProvider);
+  final now = DateTime.now();
+  final away = mimiDaysAway(prefs.getString(manjaLastVisitKey), now);
+  prefs.setString(manjaLastVisitKey, mimiDayKey(now));
+  return away;
 });
 final entriesProvider = StateNotifierProvider<Entries, List<Entry>>(
   (ref) => Entries(ref.watch(prefsProvider)),
@@ -164,7 +177,8 @@ class Room extends ConsumerStatefulWidget {
 }
 
 class _RoomState extends ConsumerState<Room> {
-  Timer? timer;
+  Timer? timer, bubbleTimer;
+  MimiSaid? bubble;
   final searchField = TextEditingController();
   String query = '', filter = 'Semua';
   @override
@@ -200,7 +214,44 @@ class _RoomState extends ConsumerState<Room> {
   void dispose() {
     searchField.dispose();
     timer?.cancel();
+    bubbleTimer?.cancel();
     super.dispose();
+  }
+
+  // Gelembung Mimi manja. Pemanis saja: kabar penting tetap lewat teks lain.
+  void say(String kind, [int salt = 0]) {
+    if (!mounted || !ref.read(manjaProvider)) return;
+    bubbleTimer?.cancel();
+    setState(() => bubble = mimiReaction(kind, DateTime.now(), salt));
+    bubbleTimer = Timer(const Duration(milliseconds: 3600), () {
+      if (mounted) setState(() => bubble = null);
+    });
+  }
+
+  void cheer(Entry finished) {
+    final now = DateTime.now();
+    final today = ref
+        .read(entriesProvider)
+        .where((e) => e.time != null && DateUtils.isSameDay(e.time, now))
+        .toList();
+    final allDone = DateUtils.isSameDay(finished.time, now) &&
+        today.length > 1 &&
+        today.every((e) => e.done);
+    say(allDone ? 'allDone' : 'done');
+  }
+
+  Future<void> pet() async {
+    final prefs = ref.read(prefsProvider);
+    final pets = (prefs.getInt(manjaPetsKey) ?? 0) + 1;
+    await prefs.setInt(manjaPetsKey, pets);
+    if (!mounted) return;
+    if (ref.read(manjaProvider)) {
+      say('pet', pets);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Mimi senang dielus.')),
+      );
+    }
   }
 
   void edit([Entry? e, String? kind]) {
@@ -210,7 +261,14 @@ class _RoomState extends ConsumerState<Room> {
         builder: (_) => EntryEditor(
           entry: e,
           initialKind: kind ?? (widget.index == 2 ? 'Agenda' : 'Catatan'),
-          save: ref.read(entriesProvider.notifier).put,
+          save: (entry) async {
+            await ref.read(entriesProvider.notifier).put(entry);
+            say(entry.kind == 'Akun'
+                ? 'account'
+                : entry.time != null
+                ? 'agenda'
+                : 'saved');
+          },
         ),
       ),
     );
@@ -223,7 +281,13 @@ class _RoomState extends ConsumerState<Room> {
         ? DateTime.now().add(const Duration(minutes: 10)).toIso8601String()
         : null;
     try {
-      await ref.read(entriesProvider.notifier).put(Entry.fromJson(data));
+      final next = Entry.fromJson(data);
+      await ref.read(entriesProvider.notifier).put(next);
+      if (snooze) {
+        say('snooze');
+      } else if (next.done) {
+        cheer(next);
+      }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -294,6 +358,7 @@ class _RoomState extends ConsumerState<Room> {
       Navigator.pop(sheet);
       if (updated != null) {
         detail(updated);
+        say('password');
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Kartu akun sudah dihapus dari Mimi.')),
@@ -467,6 +532,25 @@ class _RoomState extends ConsumerState<Room> {
           }
         },
       ),
+      SwitchListTile(
+        title: const Text('Mimi manja'),
+        subtitle: const Text(
+          'Mimi nyapa sesuai jam, ikut seneng, dan minta dielus. Kalau dimatikan, kabar simpan dan pengingat tetap ada.',
+        ),
+        value: ref.watch(manjaProvider),
+        onChanged: (enabled) async {
+          if (await ref.read(prefsProvider).setBool(manjaKey, enabled) &&
+              mounted) {
+            ref.read(manjaProvider.notifier).state = enabled;
+            if (enabled) {
+              say('pet');
+            } else {
+              bubbleTimer?.cancel();
+              setState(() => bubble = null);
+            }
+          }
+        },
+      ),
       const ListTile(
         title: Text('Google Kalender'),
         subtitle: Text(
@@ -501,6 +585,8 @@ class _RoomState extends ConsumerState<Room> {
     };
     final width = MediaQuery.sizeOf(context).width;
     final wide = width >= 720;
+    final manja = ref.watch(manjaProvider);
+    final hello = mimiGreeting(now, daysAway: ref.watch(daysAwayProvider));
     return Scaffold(
       appBar: AppBar(title: const Text('Ruang Iqlima')),
       bottomNavigationBar: wide
@@ -532,7 +618,9 @@ class _RoomState extends ConsumerState<Room> {
               icon: const Icon(Icons.add),
               label: const Text('Titip sesuatu'),
             ),
-      body: JournalPaper(
+      body: Stack(
+        children: [
+          Positioned.fill(child: JournalPaper(
         child: SafeArea(
           child: Row(
             children: [
@@ -562,7 +650,7 @@ class _RoomState extends ConsumerState<Room> {
                       children: [
                         JournalHeading(
                           [
-                            'Hai, Iqlima\u00a0♡',
+                            manja ? hello.title : 'Hai, Iqlima\u00a0♡',
                             'Koleksi',
                             'Agenda',
                             'Profil Iqlima',
@@ -574,6 +662,12 @@ class _RoomState extends ConsumerState<Room> {
                             JournalStyle.profile,
                           ][widget.index],
                         ),
+                        if (widget.index == 0)
+                          MimiHello(
+                            line: manja ? hello.line : null,
+                            pose: manja ? hello.pose : 'welcome',
+                            onPet: pet,
+                          ),
                         if (due.isNotEmpty)
                           Card(
                             child: Padding(
@@ -719,6 +813,101 @@ class _RoomState extends ConsumerState<Room> {
                         ],
                       ],
                     ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      )),
+          if (bubble != null)
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: widget.index == 3 ? 16 : 88,
+              child: IgnorePointer(child: MimiBubble(said: bubble!)),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class MimiHello extends StatelessWidget {
+  const MimiHello({required this.line, required this.pose, required this.onPet, super.key});
+  final String? line;
+  final String pose;
+  final VoidCallback onPet;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 16),
+    child: Row(
+      children: [
+        Semantics(
+          button: true,
+          label: 'Elus Mimi',
+          child: InkResponse(
+            onTap: onPet,
+            radius: 40,
+            child: Padding(
+              padding: const EdgeInsets.all(4),
+              child: Image.asset(
+                'assets/mimi/v1/$pose.webp',
+                width: 64,
+                height: 64,
+                excludeFromSemantics: true,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            line ?? 'Ketuk Mimi kalau mau elus.',
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class MimiBubble extends StatelessWidget {
+  const MimiBubble({required this.said, super.key});
+  final MimiSaid said;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Semantics(
+      liveRegion: true,
+      child: Material(
+        color: colors.primaryContainer,
+        elevation: 3,
+        borderRadius: BorderRadius.circular(999),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(6, 6, 16, 6),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircleAvatar(
+                radius: 24,
+                backgroundColor: colors.surface,
+                child: Image.asset(
+                  'assets/mimi/v1/${said.pose}.webp',
+                  width: 44,
+                  height: 44,
+                  excludeFromSemantics: true,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  said.text,
+                  style: TextStyle(
+                    color: colors.onPrimaryContainer,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),

@@ -21,3 +21,5 @@ Urutan ini usulan pelaksanaan, bukan komitmen tanggal. Jika kalender otomatis me
 
 
 **Pembaruan 22 November.** Halaman Hari Ini dan dialog titipan memakai Astro. Build serta uji fungsi lokal tercatat di [QA](QA.md). Berikutnya Codex/ChatGPT memeriksa visual, Claude mengerjakan kontrak login dan penyimpanan tahap 1, lalu Cursor melakukan review lintas komponen.
+
+**Pembaruan 28 November.** Mimi manja hadir di web dan Flutter, dengan sakelar di Profil. Extension Chrome/Edge “Titip ke Mimi” tersedia untuk uji lokal. Berikutnya: jalankan `flutter test` di mesin dengan SDK Flutter, coba extension di laptop Iqlima, lalu lanjut ke tahap 1 (login Google dan sinkron) agar kartu dari extension ikut muncul di HP.

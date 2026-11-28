@@ -98,3 +98,14 @@ Build yang diuji memakai kode aplikasi `b5e7405`. Pengujian tambahan memakai Chr
 | Agenda dan pengingat | File kalender rusak menghasilkan pesan. Impor valid dan impor ulang menghasilkan tepat satu agenda. Draf Google membawa judul yang benar dan tombol alarm tersedia. Tiga tes Node pengingat lulus. | Simpan pada kalender tujuan dan periksa pengiriman pada layar terkunci di Android dan iOS. |
 | Navigasi dan aksesibilitas | Enter membuka formulir catatan, Tab berpindah ke judul, Escape menutup dan mengembalikan fokus ke Tulis catatan. Sakelar tema, ukuran responsif dan pilihan kegiatan game tercakup dalam uji sebelumnya. | Pembaca layar, pembesaran teks sistem, seluruh urutan fokus, Safari dan Firefox. |
 | Kamar Mimi dan aplikasi Flutter | Empat mode game web sudah diuji sebagai pilihan. Tema aplikasi Flutter ada di kode. | Kelancaran gerak, input sentuh dan perangkat grafis; build Android dan iOS serta uji HP fisik. |
+
+### 28 November 2026 · Mimi manja dan extension Titip ke Mimi
+
+| ID | Coba | Lulus bila |
+|---|---|---|
+| MANJA-1 | Buka Hari Ini pada pagi, siang, sore, malam, larut, dan setelah 2 hari tidak membuka. Elus Mimi, titip, selesaikan agenda, matikan sakelar | Sapaan dan pose sesuai jam, sambutan kembali gembira, gelembung muncul setelah aksi berhasil, mati total saat sakelar off, tidak ada kalimat menyalahkan |
+| EXT-1 | Pasang extension, titip akun dari halaman daftar, lalu buka Titip Mimi di browser yang sama | Isian terisi dari halaman tanpa membaca sandi, peringatan bila isian mirip sandi, kartu masuk Koleksi tepat sekali, antrean bersih setelah dikonfirmasi |
+
+**Hasil di lingkungan pengembangan (Chrome 153.0.8010.12 headless, Linux, preview Astro lokal).** Build Astro lulus. `node --test tests/*.test.mjs` lulus 19 tes, termasuk 6 tes Mimi manja, 5 tes penerima kartu extension, dan 5 tes logika extension. Uji browser dengan jam palsu 28 November 08.00 WIB pada 390, 1280 (gelap), dan 320 px lulus untuk sapaan pagi, elus, gelembung saved dan done, sakelar mati dan nyala, penerimaan kartu dari extension tanpa ganda, penolakan kartu tidak valid, dan tanpa gulir horizontal. Extension dimuat di Chrome headless: email terbaca dari halaman daftar fiktif, kolom sandi tidak terbaca, peringatan isian mirip sandi, dua kartu antre dengan lencana 2, kartu sampai di Koleksi, antrean bersih, titip ulang tidak ganda saat web terbuka.
+
+**Belum teruji.** Flutter: kode Mimi manja dan tes `mobile/test/mimi_manja_test.dart` belum dikompilasi karena SDK Flutter tidak tersedia di lingkungan ini. Jalankan `flutter analyze` dan `flutter test` sebelum diterima. Extension belum dicoba di Edge, Chrome versi lama, dan situs login asli dengan iframe atau Shadow DOM. Impor CSV di Flutter belum dibuat karena butuh paket pemilih file. Penerimaan oleh Iqlima masih terbuka.

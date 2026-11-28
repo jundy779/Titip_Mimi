@@ -12,6 +12,10 @@ Titip Mimi bermula dari satu ruang kecil yang Jundy buat untuk Iqlima. Saat seda
 
 Prototipe web menyimpan titipan di browser yang dipakai. Di menu Agenda, kamu bisa mengimpor acara satu kali dari file kalender .ics dan membuka draf acara di Google Kalender. Login Google, penyimpanan lintas perangkat, pengingat lewat Telegram, dan aplikasi Android/iOS masuk dalam rencana pengembangan.
 
+## Mimi manja dan extension
+
+Mimi menyapa sesuai jam, ikut senang tiap titipan tersimpan atau agenda selesai, dan bisa dielus dari Hari Ini. Sakelarnya ada di Profil. Untuk menitipkan akun langsung dari halaman daftar atau masuk, pasang extension Chrome/Edge di folder [extension](extension/README.md).
+
 ## Jalankan di komputer
 
 Frontend memakai Astro + TypeScript. Dari root repo gunakan Node 22.12+ dan npm.

@@ -1,5 +1,7 @@
 # Claude untuk backend, database dan keamanan Titip Mimi
 
+**Perluasan 28 November 2026.** Jundy mengizinkan Claude mengerjakan frontend web (Astro), Flutter, dan extension browser di `extension/`. Untuk pekerjaan antarmuka, ikuti [panduan frontend](docs/ai/FRONTEND.md) dan [desain](docs/DESIGN.md), termasuk aturan suara Mimi manja.
+
 Baca [aturan bersama](AGENTS.md), [cakupan MVP](docs/MVP.md), [kontrak API](docs/api/README.md), [model data](docs/database/README.md), dan [runbook](docs/runbooks/README.md). Mandat Claude mencakup NestJS/TypeScript, SQLite, sesi Google, penautan Telegram, pengiriman pengingat, serta review keamanan lintas komponen.
 
 - Mulai dari kebutuhan data layar yang dikirim Codex/ChatGPT. Tetapkan request, response, pemilik, status gagal dan cara mencoba ulang. Contoh payload memakai dua akun fiktif.

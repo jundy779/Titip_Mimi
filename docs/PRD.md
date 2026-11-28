@@ -15,6 +15,8 @@
 | Identitas | Masuk dengan Google. Telegram ditautkan secara opsional dari Profil. Agenda dasar tetap bisa dipakai sebelum Telegram ditautkan. |
 | Kalender eksternal | Pertahankan impor file dan pengiriman manual. Koneksi langsung dan sinkronisasi otomatis membutuhkan tahap integrasi tersendiri. |
 | Perangkat | Web, Android, dan iOS memakai satu profil dalam versi terhubung. Pilot pribadi mendahului keputusan rilis publik di Google Play. |
+| Extension browser | Dari halaman daftar/masuk di Chrome atau Edge, titip petunjuk akun ke Mimi tanpa kata sandi. Kartu masuk Koleksi saat web dibuka di browser yang sama. |
+| Mimi manja | Mimi menyapa sesuai jam, ikut senang saat titip atau selesai, dan bisa dielus. Tidak pernah membuat Iqlima merasa bersalah. Bisa dimatikan. |
 
 **Pribadi secara bawaan.** Iqlima memilih sendiri apa yang ia bagikan. “Pesan dari Jundy”, rencana berdua, dan “Minta bantuan Jundy” adalah usulan lanjutan. Akses pasangan ke seluruh koleksi tidak termasuk kesepakatan.
 

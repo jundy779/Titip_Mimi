@@ -15,3 +15,12 @@
 
 
 22 November 2026 · Jundy menetapkan Codex/ChatGPT untuk frontend dan UI/UX, Claude untuk backend/database/keamanan, serta Cursor untuk pemeriksaan menyeluruh. Panduan dan format serah terima tersedia di [peta dokumentasi](README.md).
+
+28 November 2026 · Jundy · Iqlima ingin Mimi terasa lebih personal dan akun baru sering lupa dicatat.
+
+| Jenis | Keputusan | Dampak |
+|---|---|---|
+| Disepakati | **Mimi manja**: sapaan sesuai jam, reaksi saat titip/selesai, elus Mimi, sambutan gembira saat kembali. Tanpa kalimat yang membuat Iqlima merasa bersalah. Bisa dimatikan di Profil. | Tidak mengubah data titipan. Preferensi di `titip-mimi-manja-v1` (web) dan `manja*` (Flutter). |
+| Disepakati | **Extension Chrome/Edge “Titip ke Mimi”** untuk menitipkan petunjuk akun dari halaman daftar/masuk. Hanya nama layanan, email/label, dan cara masuk. Tidak pernah membaca kolom sandi. | Kartu menunggu di penyimpanan extension sampai web Titip Mimi dibuka di browser yang sama. Publikasi Chrome Web Store perlu keputusan terpisah. |
+| Disepakati | Claude boleh mengerjakan frontend web, Flutter, dan extension selain backend. | AGENTS.md dan CLAUDE.md diperbarui. |
+| Ditunda | “Mimi kangen” lewat notifikasi, pesan dari Jundy, dan Mimi yang ikut muncul di halaman lain | Butuh keputusan batas akses dan frekuensi notifikasi. |

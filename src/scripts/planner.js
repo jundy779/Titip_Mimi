@@ -5,6 +5,9 @@ import { accountCards } from './account-import.mjs';
 import { calendarButton, readCalendar } from './calendar.js';
 import { nextReminder } from './reminders.mjs';
 import { localDay } from './day.ts';
+import { mimiSay, floatHearts, manjaOn, hideBubble } from './mimi-bubble.js';
+import { greeting, readState, visit, writeState } from './mimi-manja.mjs';
+import { mergeInbox, inboxMessage } from './extension-inbox.mjs';
 function addImport(card){
   const input=document.createElement('input');
   input.type='file';input.accept='.ics,text/calendar';input.hidden=true;
@@ -30,6 +33,8 @@ const el=id=>document.getElementById(id);
 const key='ruang-iqlima-demo-v1';
 let tab='Hari Ini',items=[];
 let today=new Date(), day=localDay(today);
+let visitState={enabled:true,lastVisit:'',pets:0};
+try{visitState=visit(localStorage).state}catch{}
 try{items=JSON.parse(localStorage.getItem(key)||'null')||[{title:'Ambil jahitan',note:'Bawa nota waktu mengambil pesanan.',time:day+'T16:00',done:false},{title:'Undangan syukuran',note:'Contoh undangan di koleksi Iqlima.',time:'',done:false}]}catch{items=[]}
 function make(tag,txt){const n=document.createElement(tag);n.textContent=txt;return n}
 function identifyReminders(entries) {
@@ -110,7 +115,7 @@ function agendaList(target,rows){
       const time=at.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'})+' · '+(item.allDay?'Seharian':at.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}));
       const open=make('button',item.title);open.className='agenda-title';open.onclick=()=>detail(item);
       const toggle=make('button',item.done?'Batalkan selesai':'Tandai selesai');
-      toggle.onclick=()=>{if(save(items.map(x=>x===item?{...x,done:!x.done}:x)))render()};
+      toggle.onclick=()=>{if(setDone(item,!item.done))render()};
       const actions=make('div','');actions.className='agenda-actions';
       actions.append(toggle,calendarButton(item));
       article.append(make('small',time),open,actions);
@@ -136,6 +141,13 @@ const p=el('page');p.replaceChildren();if(tab==='Profil'){
     el('due-close').focus();
   };
   p.querySelector('[data-open-agenda]').onclick=()=>{tab='Agenda';render()};
+  const manja=p.querySelector('[data-manja-switch]');
+  manja.checked=readState(localStorage).enabled;
+  manja.onchange=()=>{
+    if(!writeState(localStorage,{...readState(localStorage),enabled:manja.checked})){manja.checked=!manja.checked;el('notice').textContent='Pilihan belum tersimpan. Coba lagi, ya.';return}
+    el('notice').textContent=manja.checked?'Mimi manja nyala lagi ♡':'Mimi manja dimatikan. Mimi tetap ngabarin dengan kalimat biasa.';
+    if(manja.checked)mimiSay('pet');else hideBubble();
+  };
   return;
 }
 if(tab==='Hari Ini'){home(p);return}
@@ -247,6 +259,17 @@ function art(x){
 function recordEvent(card, label){
   return {...card,history:[...(card.history || []),{label,at:new Date().toISOString()}]};
 }
+function cheer(next, item){
+  const scheduled=next.filter(entry=>entry.time?.startsWith(day));
+  const finishedToday=item.time?.startsWith(day) && scheduled.length>1 && scheduled.every(entry=>entry.done);
+  mimiSay(finishedToday?'allDone':'done');
+}
+function setDone(item, done, patch={}){
+  const next=items.map(x=>x===item?{...x,done,...patch}:x);
+  if(!save(next))return false;
+  if(done)cheer(next,item);
+  return true;
+}
 function ask(title, description, action){
   return new Promise(resolve=>{
     const box=document.createElement('dialog');
@@ -277,7 +300,7 @@ function accountActions(dlg,card){
   changed.onclick=async()=>{
     if(!await ask('Catat perubahan sandi?',identity,'Catat'))return;
     const updated=recordEvent(card,'Ganti sandi dicatat');
-    if(save(items.map(item=>item===card?updated:item))){dlg.close();render();detail(updated)}
+    if(save(items.map(item=>item===card?updated:item))){dlg.close();render();detail(updated);mimiSay('password')}
   };
   const remove=make('button','Hapus kartu akun');
   remove.onclick=async()=>{
@@ -299,14 +322,14 @@ function detail(x){
  if(!x.icsId){const edit=make('button','Ubah');edit.onclick=()=>{dlg.close();capture(kindOf(x),x)};dlg.append(edit)}
  if(x.time){dlg.append(make('p',new Date(x.time).toLocaleString('id-ID')));
  const toggle=make('button',x.done?'Batalkan selesai':'Tandai selesai');
- toggle.onclick=()=>{if(save(items.map(i=>i===x?{...i,done:!i.done}:i))){dlg.close();render()}};dlg.append(toggle,calendarButton(x));
+ toggle.onclick=()=>{if(setDone(x,!x.done)){dlg.close();render()}};dlg.append(toggle,calendarButton(x));
  if(!x.done && x.reminderId && (x.snoozeUntil || Date.parse(x.time))>Date.now()){
    const alarm=make('button','Ingatkan lewat kalender HP');
    alarm.onclick=()=>downloadAlarm(x);
    dlg.append(alarm,make('p','Buka file .ics di kalender HP, cek pengingatnya, lalu simpan. Kalau jadwal berubah, ubah juga di kalendermu.'));
  }
  if(!x.done && nextReminder([x])){const later=make('button','Tunda 10 menit');later.onclick=()=>{
-   if(save(items.map(i=>i===x?{...i,snoozeUntil:Date.now()+600000}:i))){dlg.close();render();el('notice').textContent='Mimi ingetin lagi 10 menit dari sekarang.'}
+   if(save(items.map(i=>i===x?{...i,snoozeUntil:Date.now()+600000}:i))){dlg.close();render();el('notice').textContent='Mimi ingetin lagi 10 menit dari sekarang.';mimiSay('snooze')}
  };dlg.append(later)}}
  const close=make('button','Tutup');close.className='quiet';close.onclick=()=>dlg.close();dlg.append(close);document.body.append(dlg);dlg.onclose=()=>dlg.remove();dlg.showModal()
 }
@@ -315,10 +338,29 @@ function gallery(node,rows){
  if(!rows.length)node.append(make('p','Belum ada titipan yang cocok.'));
  for(const x of rows){const tile=make('button','');tile.className='tile';if(art(x)){const im=new Image();im.src=art(x);im.alt='';tile.append(im)}else{tile.append(make('span',kinds[kindOf(x)]))}tile.append(make('b',x.title));if(x.identity)tile.append(make('small',x.identity));tile.onclick=()=>detail(x);node.append(tile)}
 }
+function mountGreeting(p){
+  const title=p.querySelector('.greeting h1'), line=p.querySelector('.mimi-line');
+  const pet=p.querySelector('.welcome-pet'), status=p.querySelector('#pet-status');
+  if(manjaOn()){
+    const hello=greeting(new Date(),visitState);
+    title.textContent=hello.title;
+    line.textContent=hello.line;line.hidden=false;
+  }
+  pet.onclick=()=>{
+    const state=readState(localStorage);
+    const pets=state.pets+1;
+    writeState(localStorage,{...state,pets});
+    if(!state.enabled){status.textContent='Mimi senang dielus.';return}
+    pet.classList.remove('petted');void pet.offsetWidth;pet.classList.add('petted');
+    floatHearts(pet);
+    status.textContent=mimiSay('pet',pets)?.text||'';
+  };
+}
 function home(p){
  p.replaceChildren(document.querySelector('#today-template').content.cloneNode(true));
  mountDailyList(p.querySelector('.mimi-list'), day);
  p.querySelector('.date').textContent=today.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long'});
+ mountGreeting(p);
  p.querySelector('.quick').onclick=()=>capture(tab==='Agenda'?'agenda':tab==='Koleksi'&&selectedKind?selectedKind:'note');
  for(const shortcut of p.querySelectorAll('[data-capture-kind]')){
    shortcut.onclick=()=>capture(shortcut.dataset.captureKind);
@@ -361,6 +403,7 @@ el('form').onsubmit = event => {
   el('box').close();
   tab=kind==='agenda'?'Agenda':'Koleksi';selectedKind=kind;search='';render();
   el('notice').textContent=entry.time?'Udah Mimi catat buat '+new Date(entry.time).toLocaleString('id-ID',{dateStyle:'full',timeStyle:'short'})+' ♡':'Udah Mimi simpan di Koleksi ♡';
+  mimiSay(account?'account':entry.time?'agenda':'saved');
 };
 let shown;
 let previewReminder=false;
@@ -381,9 +424,12 @@ function refreshReminder(){
   el('due-close').hidden=!floating;
 }
 function respond(patch){
-  if(shown && save(items.map(item=>item===shown?{...item,...patch}:item))){
+  if(!shown)return;
+  const ok=patch.done?setDone(shown,true,patch):save(items.map(item=>item===shown?{...item,...patch}:item));
+  if(ok){
     render();
     el('notice').textContent=patch.done?'Agenda ditandai selesai.':'Mimi ingetin lagi 10 menit dari sekarang.';
+    if(!patch.done)mimiSay('snooze');
   }
 }
 el('due-close').onclick=()=>{
@@ -426,3 +472,18 @@ if(fromAlert.searchParams.has('agenda')){
   openReminder(fromAlert.searchParams.get('agenda'));
   fromAlert.searchParams.delete('agenda');history.replaceState(null,'',fromAlert);
 }
+
+// Akun yang Iqlima titipkan lewat extension browser masuk ke sini.
+window.addEventListener('message', event=>{
+  if(event.source!==window || event.origin!==location.origin)return;
+  const cards=inboxMessage(event.data);
+  if(!cards)return;
+  const {added,accepted,next}=mergeInbox(cards,items);
+  if(added.length && !save(next))return;
+  window.postMessage({type:'titip-mimi-inbox-ack',ids:accepted},location.origin);
+  if(!added.length)return;
+  render();
+  el('notice').textContent=added.length+' kartu akun dari browser sudah Mimi simpan di Koleksi ♡';
+  mimiSay('inbox');
+});
+window.postMessage({type:'titip-mimi-inbox-ready'},location.origin);

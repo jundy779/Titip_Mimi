@@ -26,4 +26,5 @@ Panduan untuk kontributor dan asisten coding tersedia di [AGENTS.md](../AGENTS.m
 Gunakan [format handoff](ai/HANDOFF.md) untuk meneruskan pekerjaan antaralat.
 
 - [Rencana Flutter Android/iOS](mobile/PLAN.md)
+- [Extension Chrome/Edge “Titip ke Mimi”](../extension/README.md)
 - [Paket maskot Mimi v1.0](../assets/mimi/v1/README.md)

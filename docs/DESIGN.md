@@ -118,3 +118,26 @@ Di web, Atur pengingat dan Selesai berbagi satu panel Agenda. Gunakan tinggi min
 Gunakan kertas krem hangat, teks plum, tombol utama rose, dan aksen mint untuk Agenda serta lilac untuk akun dan Profil. Palet di `design/tokens.json` dipakai juga oleh Kamar Mimi. Sakelar di Profil menentukan kedua tampilan. Pertahankan ilustrasi dan pita Mimi yang sudah dikenali Iqlima.
 
 Pada desktop, letakkan To-Do List di samping ringkasan Agenda, Kamar Mimi, dan Koleksi. Pada ponsel, susun kartu satu kolom dengan lebar yang sama. Judul halaman utama berukuran 18 piksel di ponsel. Pengingat memuat judul agenda dan tiga tindakan dalam panel ringkas. Formulir ponsel terbuka dari bawah dengan tombol Simpan di akhir. Kamar Mimi menampilkan pilihan kegiatan sebelum instruksi dan tindakan utamanya.
+
+### Mimi manja v1.4
+
+Mimi nempel dan sayang, tapi tidak menuntut. Ia senang ditemani, memuji usaha kecil, dan menyambut gembira kapan pun Iqlima kembali. Hindari kalimat yang menyalahkan, misalnya “kok lama”, “ke mana aja”, “ditinggal”, atau “kecewa”. Tes otomatis memeriksa daftar kata ini.
+
+| Saat | Pose | Contoh suara |
+|---|---|---|
+| Pagi 04.00–10.59 | welcome | Selamat pagi, Iqlima ♡ · Sarapan dulu, ya. Titipanmu aman sama Mimi. |
+| Siang 11.00–14.59 | peek | Siang, Iqlima ♡ · Jangan lupa makan siang, ya. |
+| Sore 15.00–17.59 | planner | Sore, Iqlima ♡ · Sini duduk bentar sama Mimi. |
+| Malam 18.00–21.59 | letter | Malam, Iqlima ♡ · Hari ini kamu udah hebat. |
+| Larut 22.00–03.59 | sleep | Udah larut, Iqlima ♡ · Mimi temenin, tapi istirahat juga, ya. |
+| Kembali setelah 2 hari atau lebih | celebrate | Yeay, kamu mampir lagi. Mimi seneng banget ♡ |
+
+Kalimat sapaan tetap sepanjang hari yang sama agar tidak berganti tiap muat ulang. Web dan Flutter memakai urutan kalimat yang sama.
+
+**Reaksi.** Setelah aksi berhasil, gelembung kecil berisi pose dan satu kalimat muncul di bawah selama sekitar 3,6 detik: titip catatan (saved), akun (privacy), agenda (planner), tandai selesai (done), semua agenda hari ini selesai (celebrate), tunda (snooze), catat ganti sandi (privacy), centang To-Do (done), kartu dari extension (linked). Gelembung tidak menangkap ketukan dan tidak menggantikan teks status. Pada ponsel web gelembung berada di atas kapsul menu. Animasi muncul mengikuti preferensi kurangi gerakan.
+
+**Elus Mimi.** Ilustrasi Mimi di kartu Hari Ini adalah tombol “Elus Mimi”. Ketukan memunculkan hati kecil, Mimi bergoyang, dan kalimat sayang. Pembaca layar mendapat kalimat yang sama lewat status tersembunyi.
+
+**Sakelar.** Profil memiliki sakelar Mimi manja, nyala secara bawaan. Saat dimatikan, sapaan kembali “Hai, Iqlima ♡”, gelembung berhenti, dan kabar simpan serta pengingat tetap tampil seperti biasa.
+
+**Extension “Titip ke Mimi”.** Popup selebar 340 px dengan pose privacy, palet token v1.3, mengikuti mode gelap sistem. Urutan isian: Nama layanan, Email atau label akun, Cara masuk, lalu tombol utama Titip ke Mimi. Antrean tampil sebagai kartu rose dengan tombol batal per kartu dan tombol tonal Buka Titip Mimi. Teks selalu mengingatkan bahwa kata sandi tetap di pengelola sandi.

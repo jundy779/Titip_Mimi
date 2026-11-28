@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Titip ke Mimi",
+  "version": "0.1.0",
+  "description": "Titip petunjuk akun ke Mimi dari halaman daftar atau masuk. Mimi tidak pernah meminta kata sandi.",
+  "minimum_chrome_version": "110",
+  "action": {
+    "default_title": "Titip akun ke Mimi",
+    "default_popup": "popup.html",
+    "default_icon": { "16": "icons/mimi-16.png", "32": "icons/mimi-32.png", "48": "icons/mimi-48.png", "128": "icons/mimi-128.png" }
+  },
+  "icons": { "16": "icons/mimi-16.png", "32": "icons/mimi-32.png", "48": "icons/mimi-48.png", "128": "icons/mimi-128.png" },
+  "background": { "service_worker": "background.js", "type": "module" },
+  "permissions": ["activeTab", "scripting", "storage"],
+  "content_scripts": [
+    {
+      "matches": ["https://ruang-iqlima-mimi.oakrose8.chatgpt.site/*", "http://localhost:4321/*", "http://127.0.0.1:4321/*"],
+      "js": ["deliver.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

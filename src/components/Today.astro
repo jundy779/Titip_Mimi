@@ -14,8 +14,11 @@ const shortcuts = [
 <div class="spread journal">
   <section class="intro">
     <div class="garden-scene" aria-hidden="true"><i class="garden-sun"></i><i class="garden-cloud"></i></div>
-    <div class="greeting"><p class="date"></p><h1>Hai, Iqlima&nbsp;♡</h1></div>
-    <Image class="welcome-art" src={welcome} width={260} height={260} alt="Mimi menyapa Iqlima" fetchpriority="high" />
+    <div class="greeting"><p class="date"></p><h1>Hai, Iqlima&nbsp;♡</h1><p class="mimi-line" hidden></p></div>
+    <button type="button" class="welcome-art welcome-pet" aria-label="Elus Mimi" aria-describedby="pet-status">
+      <Image src={welcome} width={260} height={260} alt="" fetchpriority="high" />
+    </button>
+    <p id="pet-status" class="visually-hidden" role="status"></p>
     <button class="primary quick">Titip sesuatu</button>
   </section>
   <div class="journal-actions" role="group" aria-label="Pintasan titipan">

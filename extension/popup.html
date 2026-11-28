@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <title>Titip ke Mimi</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <img id="pose" src="img/privacy.webp" width="64" height="64" alt="">
+    <div>
+      <h1>Titip akun ke Mimi ♡</h1>
+      <p id="hello">Mimi bantu inget akun ini. Kata sandinya tetap di pengelola sandimu, ya.</p>
+    </div>
+  </header>
+  <form id="form" novalidate>
+    <label>Nama layanan<input id="title" maxlength="100" required autocomplete="off" placeholder="Misalnya, Canva"></label>
+    <label>Email atau label akun<input id="identity" maxlength="160" required autocomplete="off" placeholder="Misalnya, akun kampus"></label>
+    <label>Cara masuk
+      <select id="method">
+        <option>Google</option><option>Email dan kata sandi</option><option>Apple</option>
+        <option>Nomor HP</option><option>Lainnya</option><option>Belum diisi</option>
+      </select>
+    </label>
+    <p id="site" class="muted"></p>
+    <p id="message" role="status" aria-live="polite"></p>
+    <button class="primary" id="save">Titip ke Mimi</button>
+  </form>
+  <section id="queue" hidden aria-labelledby="queue-title">
+    <h2 id="queue-title"></h2>
+    <ul id="queue-list"></ul>
+    <button id="open" class="tonal" type="button">Buka Titip Mimi</button>
+    <p class="muted">Mimi bawa kartunya ke Koleksi waktu Titip Mimi dibuka di browser ini.</p>
+  </section>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

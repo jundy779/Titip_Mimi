@@ -1,0 +1,36 @@
+:root {
+  color-scheme: light;
+  --primary:#96395F; --on-primary:#fff; --container:#F8DFE8; --on-container:#58213A;
+  --surface:#FFFCF8; --ink:#402E39; --muted:#705965; --line:#E9D5DA; --error:#A52D38;
+}
+@media (prefers-color-scheme: dark) {
+  :root { color-scheme: dark; --primary:#FFA9C8; --on-primary:#50112D; --container:#593348; --on-container:#FFDAE5;
+    --surface:#302730; --ink:#FAECF2; --muted:#D7C2CE; --line:#574650; --error:#FFB4AB; }
+}
+* { box-sizing: border-box; }
+body { width: 340px; margin: 0; padding: 16px; font: 15px/1.45 system-ui, sans-serif; color: var(--ink);
+  background: var(--surface); }
+header { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
+header img { flex: none; border-radius: 50%; background: var(--container); }
+h1 { margin: 0; font: bold 18px/1.2 Georgia, serif; }
+h2 { margin: 0 0 8px; font-size: 14px; }
+header p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+form { display: grid; gap: 10px; padding: 12px; border: 1px dashed var(--line); border-radius: 18px; }
+label { display: grid; gap: 4px; font-size: 14px; font-weight: 600; }
+input, select { font: inherit; min-height: 44px; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--muted);
+  background: var(--surface); color: var(--ink); }
+input:focus-visible, select:focus-visible, button:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+button { font: inherit; font-weight: 650; min-height: 44px; border-radius: 999px; border: 0; cursor: pointer; padding: 0 18px; }
+.primary { background: var(--primary); color: var(--on-primary); }
+.tonal { background: var(--container); color: var(--on-container); width: 100%; }
+.muted { margin: 0; color: var(--muted); font-size: 13px; }
+#message:empty { display: none; }
+#message { margin: 0; font-size: 14px; }
+#message.error { color: var(--error); font-weight: 600; }
+#message.ok { color: var(--on-container); background: var(--container); padding: 8px 12px; border-radius: 12px; }
+#queue { margin-top: 14px; }
+#queue ul { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 6px; }
+#queue li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 6px 6px 12px;
+  border-radius: 12px; background: var(--container); color: var(--on-container); font-size: 14px; }
+#queue li span { overflow-wrap: anywhere; }
+#queue li button { min-height: 36px; min-width: 36px; padding: 0 10px; background: transparent; color: inherit; }
