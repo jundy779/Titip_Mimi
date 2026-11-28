@@ -141,3 +141,17 @@ Kalimat sapaan tetap sepanjang hari yang sama agar tidak berganti tiap muat ulan
 **Sakelar.** Profil memiliki sakelar Mimi manja, nyala secara bawaan. Saat dimatikan, sapaan kembali “Hai, Iqlima ♡”, gelembung berhenti, dan kabar simpan serta pengingat tetap tampil seperti biasa.
 
 **Extension “Titip ke Mimi”.** Popup selebar 340 px dengan pose privacy, palet token v1.3, mengikuti mode gelap sistem. Urutan isian: Nama layanan, Email atau label akun, Cara masuk, lalu tombol utama Titip ke Mimi. Antrean tampil sebagai kartu rose dengan tombol batal per kartu dan tombol tonal Buka Titip Mimi. Teks selalu mengingatkan bahwa kata sandi tetap di pengelola sandi.
+
+### Kamar Mimi v2 · 3D anime cel-shaded
+
+Atas permintaan Jundy, Kamar Mimi memakai gaya 3D anime cel-shaded seperti game petualangan anime modern. Semua model, tekstur, dan efek dibuat sendiri untuk Mimi; tidak ada karakter, aset, logo, atau antarmuka dari game lain.
+
+| Unsur | Aturan |
+|---|---|
+| Mimi | Model 3D prosedural: kepala besar, pipi berbulu, telinga dengan bagian dalam merah muda, dada putih, kaki berbantalan, ekor meruncing dengan ujung mengembang. Shading toon tiga tingkat, outline plum tipis, rim light hangat dari kiri. |
+| Wajah | Digambar di kanvas: mata anime besar beriris plum dengan dua kilau dan bintang kecil, tanda hati di mata kiri dan pita stroberi di telinga kanan dari sudut pandang pemain, pipi merah muda bergaris, mulut “ω”. Saat dielus, cilukba, tos, atau memeluk benang, mata menjadi lengkung bahagia. |
+| Suasana | Lukisan teras sebagai latar yang sedikit diburamkan, bayangan lembut di lantai, kelopak 3D, kilau, berkas cahaya, bloom lembut, gradasi warna, dan vinyet. Kamera bergeser pelan mengikuti pointer. |
+| Reaksi | Hati beterbangan saat dielus, menangkap benang, makan, tos, dan cilukba. |
+| Aksesibilitas dan performa | Kurangi gerakan mematikan kelopak, kilau, hati, dan gerak kamera. Resolusi turun otomatis dan bloom dimatikan bila frame lambat. Tanpa WebGL2, halaman memakai mode ilustrasi yang sudah ada. |
+
+Sumber ada di `src/game/mimi-scene3d.js` (Three.js). `npm run build:game` menghasilkan `public/mimi-scene.js` (sekitar 614 KB, 155 KB gzip). Jangan menyunting hasil bundel secara langsung.

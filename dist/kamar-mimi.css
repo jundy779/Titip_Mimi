@@ -40,3 +40,4 @@ nav button[aria-pressed=true] { color:var(--mimi-on-primary-container); border-c
   .gestures button { flex:1; }
   main { padding-bottom:max(.75rem,env(safe-area-inset-bottom)); }
 }
+.room.has-3d .petals { display:none; }

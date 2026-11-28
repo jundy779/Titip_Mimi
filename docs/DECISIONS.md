@@ -24,3 +24,5 @@
 | Disepakati | **Extension Chrome/Edge “Titip ke Mimi”** untuk menitipkan petunjuk akun dari halaman daftar/masuk. Hanya nama layanan, email/label, dan cara masuk. Tidak pernah membaca kolom sandi. | Kartu menunggu di penyimpanan extension sampai web Titip Mimi dibuka di browser yang sama. Publikasi Chrome Web Store perlu keputusan terpisah. |
 | Disepakati | Claude boleh mengerjakan frontend web, Flutter, dan extension selain backend. | AGENTS.md dan CLAUDE.md diperbarui. |
 | Ditunda | “Mimi kangen” lewat notifikasi, pesan dari Jundy, dan Mimi yang ikut muncul di halaman lain | Butuh keputusan batas akses dan frekuensi notifikasi. |
+
+28 November 2026 · Jundy · Game Kamar Mimi terasa jelek; diminta grafis seperti Genshin Impact. Keputusan: gaya 3D anime cel-shaded yang terinspirasi game anime modern, dengan model dan efek orisinal Mimi. Tidak memakai aset, karakter, atau UI dari game lain. Mesin render Three.js dibundel ke `public/mimi-scene.js`.
