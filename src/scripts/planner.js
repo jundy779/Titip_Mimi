@@ -8,6 +8,7 @@ import { localDay } from './day.ts';
 import { mimiSay, floatHearts, manjaOn, hideBubble } from './mimi-bubble.js';
 import { greeting, readState, visit, writeState } from './mimi-manja.mjs';
 import { mergeInbox, inboxMessage } from './extension-inbox.mjs';
+import { createSync } from './mimi-sync.js';
 function addImport(card){
   const input=document.createElement('input');
   input.type='file';input.accept='.ics,text/calendar';input.hidden=true;
@@ -35,14 +36,22 @@ let tab='Hari Ini',items=[];
 let today=new Date(), day=localDay(today);
 let visitState={enabled:true,lastVisit:'',pets:0};
 try{visitState=visit(localStorage).state}catch{}
-try{items=JSON.parse(localStorage.getItem(key)||'null')||[{title:'Ambil jahitan',note:'Bawa nota waktu mengambil pesanan.',time:day+'T16:00',done:false},{title:'Undangan syukuran',note:'Contoh undangan di koleksi Iqlima.',time:'',done:false}]}catch{items=[]}
+try{items=JSON.parse(localStorage.getItem(key)||'null')||[{title:'Ambil jahitan',note:'Bawa nota waktu mengambil pesanan.',time:day+'T16:00',done:false,demo:true},{title:'Undangan syukuran',note:'Contoh undangan di koleksi Iqlima.',time:'',done:false,demo:true}]}catch{items=[]}
 function make(tag,txt){const n=document.createElement(tag);n.textContent=txt;return n}
 function identifyReminders(entries) {
   return entries.map(entry => entry.time && !entry.reminderId ?
     {...entry, reminderId: globalThis.crypto?.randomUUID?.() || Date.now().toString(36) + Math.random().toString(36).slice(2)} : entry);
 }
-function save(next){try{next=identifyReminders(next);localStorage.setItem(key,JSON.stringify(next));items=next;return true}catch{alert('Titipannya belum tersimpan. Penyimpanan browser mungkin penuh atau dibatasi.');return false}}
+let sync=null;
+function save(next){try{next=identifyReminders(next);if(sync)next=sync.stamp(items,next);localStorage.setItem(key,JSON.stringify(next));items=next;sync?.schedule();return true}catch{alert('Titipannya belum tersimpan. Penyimpanan browser mungkin penuh atau dibatasi.');return false}}
 if(items.some(item=>item.time && !item.reminderId))save(items);
+let ready=false;
+// Data dari server ditulis langsung tanpa ditandai sebagai perubahan lokal.
+sync=createSync({
+  getItems:()=>items,
+  setItems:(next,quiet)=>{try{localStorage.setItem(key,JSON.stringify(next));items=next}catch{return}if(!quiet&&ready&&!document.querySelector('dialog[open]'))render()},
+  notify:text=>{el('notice').textContent=text},
+});
 const kinds = {note:'Catatan',account:'Akun',agenda:'Agenda'};
 const kindOf = item => item.kind || (item.time ? 'agenda' : 'note');
 let selectedKind = '', search = '', editing = null;
@@ -141,6 +150,7 @@ const p=el('page');p.replaceChildren();if(tab==='Profil'){
     el('due-close').focus();
   };
   p.querySelector('[data-open-agenda]').onclick=()=>{tab='Agenda';render()};
+  sync.mountProfile(p.querySelector('[data-account]'));
   const manja=p.querySelector('[data-manja-switch]');
   manja.checked=readState(localStorage).enabled;
   manja.onchange=()=>{
@@ -453,7 +463,7 @@ function updateClock(){
 }
 setInterval(updateClock,5000);
 document.addEventListener('visibilitychange',updateClock);
-render();
+render();ready=true;
 
 function openReminder(id) {
   el('box').open && el('box').close();

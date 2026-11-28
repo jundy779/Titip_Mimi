@@ -1,16 +1,16 @@
-# Model data awal
+# Model data (migrasi 1)
 
-Skema konseptual untuk pilot. Nama tabel dapat diselaraskan dengan migrasi pertama.
+SQLite dengan WAL, foreign key aktif, dan `busy_timeout` 5 detik. Migrasi berurutan di `server/src/db.ts`, masing-masing dalam transaksi, versinya di `schema_version`.
 
 | Tabel | Isi dan aturan |
 |---|---|
-| users | ID internal, identitas Google unik, nama panggilan, zona waktu dan jam tenang |
-| items | Pemilik, ID klien, jenis, judul, isi/caption, versi, waktu perubahan. Pasangan pemilik dan ID klien unik. |
-| account_hints | ID titipan, nama layanan, label email, cara masuk. Beberapa entri boleh merujuk layanan yang sama. |
-| telegram_links | Relasi profil dengan pengguna dan chat Telegram yang sudah dikonfirmasi. |
-| attachments | ID titipan, jenis media, file_id dan identitas kiriman untuk deduplikasi. |
-| reminders | ID titipan, waktu target, status, percobaan kirim, dan waktu tunda berikutnya. |
+| users | `id` UUID, `google_sub` unik, email, nama, zona waktu (bawaan Asia/Jakarta), waktu dibuat |
+| sessions | `token_hash` (SHA-256, kunci utama), `user_id` → users, dibuat, kedaluwarsa. Sesi lama dibersihkan saat sesi baru dibuat. |
+| items | Kunci `(owner_id, client_id)`. `kind` note/account/agenda, `search` (teks kecil untuk pencarian), `data` (JSON titipan yang sudah divalidasi), `deleted` (tombstone), `updated_at`, `seq` |
+| counters | `seq` global yang naik setiap penulisan; dipakai sebagai cursor sinkron |
 
-Gunakan foreign key, transaksi untuk perubahan item dan pengingat terkait, serta indeks pada pemilik dan waktu kirim. Pertahankan tanggal lokal untuk acara seharian. Simpan waktu absolut dan zona asal untuk agenda yang memiliki jam.
+Satu perubahan sinkron diproses dalam satu transaksi. Tombstone dipertahankan agar perangkat lain tahu titipan sudah dihapus.
 
-Saat migrasi dari localStorage, pertahankan judul, catatan, waktu, status selesai, UID kalender dan tanggal akhir acara seharian. Uji salinan data lama di lingkungan terpisah dan simpan penanda impor yang tahan retry.
+**Dari localStorage.** Web memberi setiap titipan `clientId` dan `updatedAt` (titipan lama diberi `updatedAt: 1` sehingga salinan server yang lebih baru menang). Contoh bawaan prototipe ditandai `demo: true` dan tidak dipindahkan. Pemindahan hanya berjalan setelah Iqlima menekan **Pindahkan titipan**, dan aman diulang karena `clientId` unik per pemilik.
+
+**Backup.** `npm run backup -- <database> <folder>` membuat salinan konsisten lewat API backup SQLite, lalu membuka salinannya, menjalankan `integrity_check`, dan membandingkan jumlah pengguna serta titipan. Tes `backup.test.ts` memulihkan salinan dan memeriksa kepemilikan tetap sama.

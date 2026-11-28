@@ -28,3 +28,12 @@
 28 November 2026 · Jundy · Game Kamar Mimi terasa jelek; diminta grafis seperti Genshin Impact. Keputusan: gaya 3D anime cel-shaded yang terinspirasi game anime modern, dengan model dan efek orisinal Mimi. Tidak memakai aset, karakter, atau UI dari game lain. Mesin render Three.js dibundel ke `public/mimi-scene.js`.
 
 28 November 2026 · Jundy · Mimi diberi sifat: mood, kebiasaan saat dibiarkan, tidur mengikuti jam, ingatan favorit, dan suara sintetis yang bisa dimatikan (nyala secara bawaan setelah sentuhan pertama). Model 3D buatan artis dan kamera bebas ditunda.
+
+28 November 2026 · Jundy memilih tahap 1 (login Google + sinkron). Keputusan teknis Claude:
+
+| Jenis | Keputusan | Alasan dan dampak |
+|---|---|---|
+| Disepakati | Satu layanan menyajikan web dan API di domain yang sama, sesi lewat cookie HttpOnly | Cookie di domain berbeda dianggap pihak ketiga dan sering diblokir browser. Aplikasi HP dan demo lama memakai token Bearer. |
+| Disepakati | Sinkron per titipan dengan last-write-wins berdasarkan `updatedAt`, bukan PATCH + 409 | Satu pemilik dengan beberapa perangkat dan dukungan offline. Edit bersamaan pada titipan yang sama: versi terbaru menang. |
+| Disepakati | `ALLOWED_EMAILS` membatasi pilot ke akun yang diundang | Ruang pribadi Iqlima tidak terbuka untuk semua akun Google. |
+| Perlu keputusan Jundy | Hosting server dan domain | Pilihan memengaruhi biaya dan alamat web. Data demo lama perlu dipindahkan lewat langkah di runbook. |

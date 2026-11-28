@@ -117,3 +117,11 @@ Chrome 153 headless dengan SwiftShader (render CPU), 390 × 844 dan 1280 × 860.
 ### 28 November 2026 · Sifat Mimi
 
 `node --test tests/*.test.mjs` lulus 27 tes, termasuk 8 tes sifat Mimi: mood per jam, sambutan setelah lama pergi, ingatan favorit, pemilihan kebiasaan, larangan kalimat menyalahkan, tidur lalu dibangunkan, dan jalan-jalan. Uji browser (Chrome 153 headless, SwiftShader, 390 px) lulus untuk label mood, sapaan, lima kebiasaan, bangun saat disentuh, kebiasaan muncul sendiri setelah dibiarkan, sakelar suara, dan ingatan favorit tanpa error konsol. Uji mode main dan seret diulang dan tetap lulus. Kualitas suara sintetis hanya diperiksa lewat tidak adanya error; dengarkan langsung di HP sebelum diterima. Parameter `?mimi-debug` hanya untuk uji.
+
+### 28 November 2026 · AUTH-1 dan MIG-1 (lingkungan uji)
+
+Server: `cd server && npm test` lulus 16 tes dengan verifier Google palsu dan akun fiktif iqlima.uji@contoh.id / jundy.uji@contoh.id. Tercakup: cookie HttpOnly dan token hanya atas permintaan, hash token, akun tidak diundang, email belum terverifikasi, Google tidak terjangkau, login dimatikan tanpa Client ID, CSRF, isolasi dua pemilik (baca, cari, tulis), migrasi diulang tanpa ganda, konflik terbaru-menang dan urutan seri yang konsisten, delapan sinkron paralel, tombstone, validasi dan pembuangan kolom kata sandi, logout dan sesi kedaluwarsa, pencarian dengan karakter khusus, batas 10 login per menit, backup yang dipulihkan.
+
+Web (Chrome 153 headless, dua profil browser sebagai dua perangkat, server uji dengan web hasil build): 16 pemeriksaan lulus. Titipan lama diberi ID, tawaran pindah muncul dan tidak ada yang dikirim sebelum disetujui, dua titipan pindah, sesi lewat cookie tanpa token di localStorage, perangkat kedua menerima titipan tanpa ditanya, catatan baru dari perangkat dua muncul di perangkat satu, kartu akun tersinkron, hapus dengan dua konfirmasi menyebar, akun kedua terisolasi, keluar tetap menyimpan titipan lokal. Uji web lama (Mimi manja, extension) tetap lulus 22 cek.
+
+**Belum teruji:** login Google sungguhan (butuh Client ID dari Jundy dan akses ke accounts.google.com), Dockerfile (daemon Docker tidak tersedia di lingkungan ini), deploy HTTPS, Safari, pemindahan dari demo lama lewat `PUBLIC_MIMI_API`, Flutter. Status AUTH-1 dan MIG-1: lulus dengan data uji, belum diterima Iqlima.

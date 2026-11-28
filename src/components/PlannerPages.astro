@@ -46,6 +46,17 @@ import ThemeChoice from './ThemeChoice.astro';
         </div>
       </section>
       <section class="sheet connections"><h2>Koneksi Mimi</h2>
+        <div data-account>
+          <h3>Akun Titip Mimi</h3>
+          <p data-account-status role="status"></p>
+          <div data-google-button></div>
+          <div data-migrate hidden>
+            <p data-migrate-text></p>
+            <button type="button" class="primary" data-migrate-yes>Pindahkan titipan</button>
+            <button type="button" class="quiet" data-migrate-later>Nanti saja</button>
+          </div>
+          <button type="button" class="quiet" data-logout hidden>Keluar</button>
+        </div>
         <div><h3>Google Kalender</h3><p>Ambil agenda dari file kalender, atau kirim satu agenda ke Google Kalender.</p><button data-open-agenda>Buka Agenda</button></div>
         <div><h3>Telegram</h3><p>Belum terhubung. Kiriman foto lewat Telegram akan tersedia setelah layanan akun aktif.</p></div>
       </section>
