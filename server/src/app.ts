@@ -13,6 +13,7 @@ import { Sessions } from './sessions';
 import { AuthController, AuthGuard } from './auth';
 import { Items, ItemsController } from './items';
 import { Partner, PartnerController } from './partner';
+import { Push, PushController, PushSender, PUSH_SENDER, webPushSender } from './push';
 import { TELEGRAM_API, TelegramApi } from './telegram/api';
 import { ApiFactory, TELEGRAM_FACTORY, TelegramRuntime } from './telegram/runtime';
 import { TelegramService } from './telegram/service';
@@ -34,27 +35,28 @@ class CsrfMiddleware implements NestMiddleware {
   }
 }
 
-export function appModule(config: Config, db: Db, google: GoogleVerifier, telegram: TelegramApi | null = null, factory: ApiFactory | null = null): DynamicModule {
+export function appModule(config: Config, db: Db, google: GoogleVerifier, telegram: TelegramApi | null = null, factory: ApiFactory | null = null, push: PushSender = webPushSender): DynamicModule {
   @Module({})
   class Root {
     configure(consumer: MiddlewareConsumer) { consumer.apply(CsrfMiddleware).forRoutes('*'); }
   }
   return {
     module: Root,
-    controllers: [AuthController, ItemsController, TelegramController, MediaController, PartnerController],
+    controllers: [AuthController, ItemsController, TelegramController, MediaController, PartnerController, PushController],
     providers: [
       { provide: CONFIG, useValue: config },
       { provide: DB, useValue: db },
       { provide: GOOGLE_VERIFIER, useValue: google },
       { provide: TELEGRAM_API, useValue: telegram },
       { provide: TELEGRAM_FACTORY, useValue: factory },
-      Sessions, Items, AuthGuard, TelegramRuntime, TelegramBot, Reminders, TelegramService, Partner,
+      { provide: PUSH_SENDER, useValue: push },
+      Sessions, Items, AuthGuard, TelegramRuntime, TelegramBot, Reminders, TelegramService, Partner, Push,
     ],
   };
 }
 
-export async function createApp(config: Config, db: Db, google: GoogleVerifier, log = true, telegram: TelegramApi | null = null, factory: ApiFactory | null = null): Promise<INestApplication> {
-  const app = await NestFactory.create(appModule(config, db, google, telegram, factory), { logger: log ? ['error', 'warn'] : false, bodyParser: false });
+export async function createApp(config: Config, db: Db, google: GoogleVerifier, log = true, telegram: TelegramApi | null = null, factory: ApiFactory | null = null, push: PushSender = webPushSender): Promise<INestApplication> {
+  const app = await NestFactory.create(appModule(config, db, google, telegram, factory, push), { logger: log ? ['error', 'warn'] : false, bodyParser: false });
   const server = app.getHttpAdapter().getInstance() as express.Express;
   server.set('trust proxy', 1);
   server.disable('x-powered-by');

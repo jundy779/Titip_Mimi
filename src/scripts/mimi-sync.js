@@ -154,7 +154,10 @@ export function createSync({ getItems, setItems, notify = () => {} }) {
     setStatus(message);
   }
 
+  // Fitur lain bisa membereskan diri sebelum sesi berakhir (misalnya mencabut notifikasi perangkat ini).
+  const logoutHooks = [];
   async function logout() {
+    for (const fn of logoutHooks) { try { await fn(); } catch {} }
     try { await api('/v1/auth/logout', {}); } catch {}
     signedOut('Sudah keluar. Titipan di browser ini tetap ada.');
   }
@@ -359,5 +362,5 @@ export function createSync({ getItems, setItems, notify = () => {} }) {
     catch (error) { if (error.status === 401) signedOut('Sesi berakhir. Masuk lagi, ya.'); throw error; }
   }
 
-  return { stamp, schedule, sync, call, mountProfile, mountTelegram, media, get state() { return state; }, enabled };
+  return { stamp, schedule, sync, call, apiBase, onLogout: fn => logoutHooks.push(fn), mountProfile, mountTelegram, media, get state() { return state; }, enabled };
 }

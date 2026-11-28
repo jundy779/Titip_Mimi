@@ -126,6 +126,36 @@ const migrations: string[] = [
      updated_by TEXT NOT NULL
    );
    CREATE INDEX plans_pair ON plans(pair_id, updated_at);`,
+  // 5: notifikasi walau web ditutup (Web Push) dan pengaturan jaga diri di server.
+  `CREATE TABLE push_subscriptions (
+     id TEXT PRIMARY KEY,
+     owner_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+     endpoint TEXT NOT NULL,
+     p256dh TEXT NOT NULL,
+     auth TEXT NOT NULL,
+     label TEXT NOT NULL DEFAULT '',
+     created_at INTEGER NOT NULL,
+     last_ok INTEGER,
+     failures INTEGER NOT NULL DEFAULT 0
+   );
+   CREATE INDEX push_subscriptions_owner ON push_subscriptions(owner_id);
+   CREATE TABLE care_settings (
+     owner_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+     data TEXT NOT NULL,
+     updated_at INTEGER NOT NULL
+   );
+   CREATE TABLE push_deliveries (
+     owner_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+     key TEXT NOT NULL,
+     status TEXT NOT NULL,
+     attempts INTEGER NOT NULL DEFAULT 0,
+     next_try INTEGER NOT NULL,
+     lease_until INTEGER,
+     sent_at INTEGER,
+     error TEXT NOT NULL DEFAULT '',
+     PRIMARY KEY (owner_id, key)
+   );
+   CREATE INDEX push_deliveries_due ON push_deliveries(status, next_try);`,
 ];
 
 export type Db = Database.Database;

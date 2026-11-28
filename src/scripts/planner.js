@@ -1,5 +1,6 @@
 import { downloadAlarm } from './calendar-alarm.mjs';
-import { mountSystemSettings, notifyDue } from './system-reminders.js';
+import { mountSystemSettings, notifyDue, setWorkerApi } from './system-reminders.js';
+import { createPush } from './mimi-push.js';
 import { mountDailyList } from './daily-list.js';
 import { accountCards } from './account-import.mjs';
 import { calendarButton, readCalendar } from './calendar.js';
@@ -59,6 +60,9 @@ sync=createSync({
   setItems:(next,quiet)=>{try{localStorage.setItem(key,JSON.stringify(next));items=next}catch{return}if(!quiet&&ready&&!document.querySelector('dialog[open]'))render()},
   notify:text=>{el('notice').textContent=text},
 });
+setWorkerApi(sync.apiBase);
+// Notifikasi walau web ditutup (Web Push lewat server).
+const push=createPush({sync,notify:text=>{el('notice').textContent=text}});
 const kinds = {note:'Catatan',account:'Akun',agenda:'Agenda'};
 const kindOf = item => item.kind || (item.time ? 'agenda' : 'note');
 let selectedKind = '', search = '', editing = null;
@@ -200,6 +204,7 @@ const p=el('page');p.replaceChildren();if(tab==='Profil'){
   sync.mountProfile(p.querySelector('[data-account]'));
   sync.mountTelegram(p.querySelector('[data-telegram]'));
   partner.mountProfile(p.querySelector('[data-partner]'));
+  push.mount(p.querySelector('[data-push]'));
   mountCare(p.querySelector('[data-care-section]'),iqlimaApi);
   const manja=p.querySelector('[data-manja-switch]');
   manja.checked=readState(localStorage).enabled;
@@ -214,6 +219,7 @@ if(tab==='Hari Ini'){home(p);return}
 if(tab==='Koleksi'){collection(p);return}
 p.append(el('agenda-template').content.cloneNode(true));
 mountSystemSettings(p.querySelector('[data-system-settings]'));
+push.mount(p.querySelector('[data-system-settings] [data-push]'));
 addImport(p.querySelector('[data-calendar-import]'));
 partner.mountAgenda(p.querySelector('[data-together]'));
 p.querySelector('[data-add]').onclick=()=>capture('agenda');

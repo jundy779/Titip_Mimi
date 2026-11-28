@@ -278,7 +278,7 @@ export function mountProfile(section, api) {
   for (const [kind, def] of Object.entries(careKinds)) {
     const label = make('label', '', 'theme-row');
     const input = document.createElement('input'); input.type = 'checkbox'; input.setAttribute('role', 'switch'); input.dataset.careSwitch = ''; input.checked = care[kind];
-    input.onchange = () => { const all = read(keys.care, {}); write(keys.care, { ...all, settings: { ...defaultCare, ...all.settings, [kind]: input.checked } }); api.notice(def.label + (input.checked ? ' dinyalakan ♡' : ' dimatikan.')); };
+    input.onchange = () => { const all = read(keys.care, {}); write(keys.care, { ...all, settings: { ...defaultCare, ...all.settings, [kind]: input.checked } }); api.notice(def.label + (input.checked ? ' dinyalakan ♡' : ' dimatikan.')); document.dispatchEvent(new CustomEvent('mimi-care-changed')); };
     label.append(document.createTextNode(def.label + ' · ' + def.slots.join(', ')), input);
     box.append(label);
   }

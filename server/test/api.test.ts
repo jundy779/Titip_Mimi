@@ -194,7 +194,7 @@ test('pencarian aman dari karakter khusus LIKE', async () => {
 test('migrasi database tercatat dan bisa dibuka ulang', () => {
   const v = ctx.db.prepare('SELECT version FROM schema_version').get() as { version: number };
   assert.equal(v.version, SCHEMA_VERSION);
-  assert.equal(SCHEMA_VERSION, 4);
+  assert.equal(SCHEMA_VERSION, 5);
 });
 
 test('database versi 1 berisi data naik ke versi terbaru tanpa kehilangan apa pun', () => {
@@ -205,14 +205,14 @@ test('database versi 1 berisi data naik ke versi terbaru tanpa kehilangan apa pu
   old.prepare("INSERT INTO items (owner_id, client_id, kind, search, data, updated_at, seq) VALUES ('u1', 'lama-0001', 'note', 'nota', '{\"title\":\"nota\"}', 5, 1)").run();
   old.close();
   const upgraded = openDatabase(path);
-  assert.equal((upgraded.prepare('SELECT version FROM schema_version').get() as any).version, 4);
+  assert.equal((upgraded.prepare('SELECT version FROM schema_version').get() as any).version, SCHEMA_VERSION);
   assert.equal((upgraded.prepare("SELECT COUNT(*) n FROM sqlite_master WHERE name = 'settings'").get() as any).n, 1);
   assert.deepEqual(upgraded.prepare('SELECT quiet_start, quiet_end FROM users').get(), { quiet_start: 1320, quiet_end: 360 });
   assert.equal((upgraded.prepare("SELECT data FROM items WHERE client_id = 'lama-0001'").get() as any).data, '{"title":"nota"}');
   assert.equal((upgraded.prepare("SELECT COUNT(*) n FROM sqlite_master WHERE name LIKE 'telegram_%' AND type = 'table'").get() as any).n, 5);
   upgraded.close();
   // Dibuka lagi: tidak menjalankan migrasi dua kali.
-  assert.equal((openDatabase(path).prepare('SELECT version FROM schema_version').get() as any).version, 4);
+  assert.equal((openDatabase(path).prepare('SELECT version FROM schema_version').get() as any).version, SCHEMA_VERSION);
   rmSync(dir, { recursive: true, force: true });
 });
 

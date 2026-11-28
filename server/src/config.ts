@@ -18,6 +18,12 @@ export interface Config {
     publicUrl: string;        // alamat HTTPS server, untuk setWebhook
     reminderEveryMs: number;
   };
+  push: {
+    vapidPublicKey: string;   // kosong = dibuat sekali dan disimpan di database
+    vapidPrivateKey: string;  // rahasia
+    subject: string;          // kontak untuk layanan push: mailto: atau https:
+    everyMs: number;
+  };
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -38,6 +44,12 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       mode: env.TELEGRAM_MODE === 'polling' ? 'polling' : env.TELEGRAM_BOT_TOKEN || /^https:/.test(env.PUBLIC_URL || '') ? 'webhook' : 'polling',
       publicUrl: (env.PUBLIC_URL || '').replace(/\/$/, ''),
       reminderEveryMs: Number(env.REMINDER_EVERY_MS) || 30000,
+    },
+    push: {
+      vapidPublicKey: env.VAPID_PUBLIC_KEY || '',
+      vapidPrivateKey: env.VAPID_PRIVATE_KEY || '',
+      subject: env.VAPID_SUBJECT || (/^https:/.test(env.PUBLIC_URL || '') ? (env.PUBLIC_URL || '').replace(/\/$/, '') : 'mailto:mimi@example.com'),
+      everyMs: Number(env.REMINDER_EVERY_MS) || 30000,
     },
   };
 }

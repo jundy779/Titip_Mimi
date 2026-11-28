@@ -2,6 +2,7 @@ import { loadConfig } from './config';
 import { openDatabase } from './db';
 import { OAuthGoogleVerifier } from './google';
 import { createApp } from './app';
+import { Push } from './push';
 import { HttpTelegramApi } from './telegram/api';
 import { TelegramRuntime } from './telegram/runtime';
 import { TelegramService } from './telegram/service';
@@ -19,6 +20,8 @@ async function main() {
   await app.listen(config.port);
   // Bot dari environment atau dari Profil (tersimpan di database). Tanpa keduanya, bot menunggu dipasang dari Profil.
   await app.get(TelegramService).boot();
+  // Notifikasi walau web ditutup: jalan untuk siapa pun yang mendaftarkan perangkat di Profil.
+  app.get(Push).start(config.push.everyMs);
   const rt = app.get(TelegramRuntime);
   console.log(JSON.stringify({ started: true, port: config.port, telegram: rt.source ? { source: rt.source, bot: rt.username, receiving: rt.receiving } : 'menunggu dipasang dari Profil' }));
 }

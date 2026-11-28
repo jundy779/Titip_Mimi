@@ -45,13 +45,48 @@ test('permission, opt in, test alert, due, snooze, done and opt out', async () =
   assert.equal(sent.length,3);
 });
 
+function loadWorker({ windows = [], api = '' } = {}) {
+  const handlers = {}, shown = [], fetched = [], state = { windows, opened: null };
+  const clients = { matchAll: async () => state.windows, openWindow: async url => { state.opened = url; } };
+  const registration = { scope: 'https://example.test/', showNotification: async (title, options) => { shown.push({ title, ...options }); } };
+  const fetchStub = async (url, init) => { fetched.push({ url, init }); return { ok: true, json: async () => ({ message: 'Selesai ♡ Mimi bangga' }) }; };
+  vm.runInNewContext(readFileSync(new URL('../public/mimi-reminders-sw.js', import.meta.url), 'utf8'),
+    { URL, JSON, String, Array, fetch: fetchStub, self: { location: { href: 'https://example.test/mimi-reminders-sw.js' + (api ? '?api=' + encodeURIComponent(api) : '') }, clients, registration, addEventListener: (name, cb) => { handlers[name] = cb; } } });
+  const fire = async (name, event) => { let work; handlers[name]({ ...event, waitUntil: p => { work = p; } }); await work; };
+  return { fire, shown, fetched, state };
+}
+
 test('notification tap focuses an existing planner or opens the original agenda URL', async () => {
-  let handler, windows=[], result;
-  const clients={matchAll:async()=>windows,openWindow:async url=>{result=url}};
-  vm.runInNewContext(readFileSync(new URL('../public/mimi-reminders-sw.js',import.meta.url),'utf8'),
-    {URL,self:{clients,registration:{scope:'https://example.test/'},addEventListener:(_,cb)=>handler=cb}});
-  const tap=async()=>{let work; handler({notification:{close(){},data:{id:'sample'}},waitUntil:p=>{work=p}});await work};
-  await tap(); assert.equal(result,'https://example.test/?agenda=sample');
-  windows=[{url:'https://example.test/',focus:async()=>{},postMessage:message=>{result=message.id}}];
-  await tap(); assert.equal(result,'sample');
+  const w = loadWorker();
+  const tap = () => w.fire('notificationclick', { notification: { close() {}, data: { id: 'sample' } } });
+  await tap(); assert.equal(w.state.opened, 'https://example.test/?agenda=sample');
+  let got;
+  w.state.windows = [{ url: 'https://example.test/', focus: async () => {}, postMessage: message => { got = message.id; } }];
+  await tap(); assert.equal(got, 'sample');
+});
+
+test('push dari server tampil dengan tombol, kecuali saat web sedang dilihat', async () => {
+  const msg = { type: 'agenda', title: 'Mimi mau ingetin ♡', body: 'Ambil jahitan', tag: 'mimi-r1', id: 'r1', t: 'tok', actions: [{ action: 'done', title: 'Selesai' }, { action: 'snooze', title: 'Tunda' }, { action: 'x', title: 'x' }] };
+  const w = loadWorker();
+  await w.fire('push', { data: { json: () => msg } });
+  assert.equal(w.shown.length, 1);
+  assert.equal(w.shown[0].tag, 'mimi-r1');
+  assert.deepEqual(w.shown[0].actions.map(a => a.action), ['done', 'snooze']);
+  assert.deepEqual({ ...w.shown[0].data }, { id: 'r1', type: 'agenda', t: 'tok' });
+  w.state.windows = [{ focused: true, visibilityState: 'visible', url: 'https://example.test/' }];
+  await w.fire('push', { data: { json: () => msg } });
+  assert.equal(w.shown.length, 1, 'tidak digandakan saat web dilihat');
+  await w.fire('push', { data: { json: () => ({ type: 'test', title: 'Tes', body: '', tag: 'mimi-test' }) } });
+  assert.equal(w.shown.length, 2, 'tes tetap tampil');
+});
+
+test('tombol di notifikasi mengirim token ke server tanpa membuka web', async () => {
+  const w = loadWorker({ api: 'https://api.contoh.id' });
+  await w.fire('notificationclick', { action: 'snooze', notification: { close() {}, data: { id: 'r1', t: 'tok' } } });
+  assert.equal(w.fetched.length, 1);
+  assert.equal(w.fetched[0].url, 'https://api.contoh.id/v1/push/action');
+  assert.equal(w.fetched[0].init.headers['X-Mimi'], '1');
+  assert.deepEqual(JSON.parse(w.fetched[0].init.body), { t: 'tok', action: 'snooze' });
+  assert.equal(w.state.opened, null);
+  assert.equal(w.shown[0].title, 'Selesai ♡ Mimi bangga');
 });

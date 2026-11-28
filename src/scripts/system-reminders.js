@@ -4,9 +4,11 @@ function enabled() {
   try { return supported() && Notification.permission === 'granted' && localStorage.getItem(preference) === 'on'; }
   catch { return false; }
 }
-let registration;
-async function worker() {
-  if (!registration) registration = navigator.serviceWorker.register('./mimi-reminders-sw.js')
+let registration, workerApi = '';
+// Alamat API ikut di URL service worker supaya tombol di notifikasi push tahu ke mana mengirim.
+export function setWorkerApi(api) { workerApi = api || ''; }
+export async function worker() {
+  if (!registration) registration = navigator.serviceWorker.register('./mimi-reminders-sw.js' + (workerApi ? '?api=' + encodeURIComponent(workerApi) : ''))
     .then(() => navigator.serviceWorker.ready).catch(error => { registration = null; throw error; });
   return registration;
 }

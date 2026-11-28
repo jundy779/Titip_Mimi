@@ -8,6 +8,7 @@ import { loadConfig } from '../src/config';
 import { openDatabase } from '../src/db';
 import { TelegramApi, TelegramError } from '../src/telegram/api';
 import { Reminders } from '../src/telegram/reminders';
+import { Push, PushSender } from '../src/push';
 
 const people: Record<string, { sub: string; email: string; emailVerified: boolean; name: string }> = {
   'cred-a': { sub: 'g-111', email: 'iqlima.uji@contoh.id', emailVerified: true, name: 'Uji A' },
@@ -24,6 +25,9 @@ const telegram: TelegramApi = {
   },
   async download() { return { body: Readable.toWeb(Readable.from([photo])) as any, type: 'image/jpeg', length: photo.length }; },
 };
+// Layanan push palsu: mencatat pesan (sudah berupa JSON) tanpa mengirim ke internet.
+const pushes: { endpoint: string; msg: unknown }[] = [];
+const pushSender: PushSender = { async send(sub, payload) { pushes.push({ endpoint: sub.endpoint, msg: JSON.parse(payload) }); return 201; } };
 (async () => {
   const withTelegram = process.env.FAKE_TELEGRAM === '1';
   // FAKE_TELEGRAM=profil: tanpa token di server, bot dipasang dari Profil dengan token uji di bawah.
@@ -40,11 +44,16 @@ const telegram: TelegramApi = {
     STATIC_DIR: process.env.STATIC_DIR, ALLOWED_EMAILS: 'iqlima.uji@contoh.id,jundy.uji@contoh.id',
     ...(withTelegram ? { TELEGRAM_BOT_TOKEN: '1:uji', TELEGRAM_BOT_USERNAME: 'TitipMimiUjiBot', TELEGRAM_WEBHOOK_SECRET: 'rahasia-e2e-0123456789' } : {}),
   } as NodeJS.ProcessEnv);
-  const app = await createApp(config, openDatabase(':memory:'), { async verify(c) { if (!people[c]) throw new Error('x'); return people[c]; } }, false, withTelegram ? telegram : null, fromProfile ? factory : null);
+  const app = await createApp(config, openDatabase(':memory:'), { async verify(c) { if (!people[c]) throw new Error('x'); return people[c]; } }, false, withTelegram ? telegram : null, fromProfile ? factory : null, pushSender);
   if (withTelegram || fromProfile) {
     const server = app.getHttpAdapter().getInstance() as Express;
     server.get('/__uji/telegram', (_req, res) => { res.json(calls); });
     server.post('/__uji/tick', async (req, res) => { res.json(await app.get(Reminders).tick(Number(req.query.now) || Date.now())); });
+  }
+  {
+    const server = app.getHttpAdapter().getInstance() as Express;
+    server.get('/__uji/push', (_req, res) => { res.json(pushes); });
+    server.post('/__uji/push-tick', async (req, res) => { res.json(await app.get(Push).tick(Number(req.query.now) || Date.now())); });
   }
   await app.listen(Number(process.env.PORT) || 4400, '127.0.0.1');
   console.log('e2e server siap');

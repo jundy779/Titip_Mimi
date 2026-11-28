@@ -15,7 +15,9 @@ import ThemeChoice from './ThemeChoice.astro';
               <button type="button" data-enable>Aktifkan notifikasi browser</button>
               <button type="button" data-test>Coba notifikasi</button>
             </div>
-            <p>Notifikasi Mimi berjalan selama web terbuka. Untuk pengingat saat web ditutup, buka agenda mendatang dan pilih “Ingatkan lewat kalender HP”.</p>
+            <p>Notifikasi browser di atas berjalan selama web terbuka.</p>
+            <div class="push-box" data-push></div>
+            <p class="muted">Tanpa akun, pengingat saat web ditutup tetap bisa lewat “Ingatkan lewat kalender HP” di agenda mendatang.</p>
           </div>
         </details>
         <div data-schedule></div>
@@ -104,6 +106,7 @@ import ThemeChoice from './ThemeChoice.astro';
           </details>
           <a class="quiet-link guide-link" href="/panduan-telegram">📖 Panduan Telegram dari nol</a>
         </div>
+        <div class="push-box" data-push></div>
         <div class="partner" data-partner>
           <h3>Pasangan</h3>
           <p data-partner-status role="status"></p>

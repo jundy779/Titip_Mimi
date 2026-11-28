@@ -867,3 +867,11 @@ dialog #form > .row:last-child, .iqlima-dialog .row:last-child {
 .plan-list .plan-actions { gap:.25rem .5rem; }
 .plan-list .plan-actions button { min-height:40px; padding:.3rem .6rem; }
 .plan-list .plan-actions button[hidden] { display:none; }
+
+/* ---------- Notifikasi walau web ditutup ---------- */
+.push-box { margin:1rem 0; padding:.8rem .9rem; border-radius:var(--mimi-radius-field); background:var(--mimi-surface); border:1px solid var(--line); }
+.push-box h3 { margin:0 0 .3rem; font-size:1rem; }
+.push-box p { margin:.3rem 0; overflow-wrap:anywhere; }
+.push-actions { display:flex; flex-wrap:wrap; gap:.5rem; margin:.4rem 0; }
+.push-actions button[hidden] { display:none; }
+.push-note:empty { display:none; }
