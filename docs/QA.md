@@ -113,3 +113,7 @@ Build yang diuji memakai kode aplikasi `b5e7405`. Pengujian tambahan memakai Chr
 ### 28 November 2026 · Kamar Mimi v2 (3D anime)
 
 Chrome 153 headless dengan SwiftShader (render CPU), 390 × 844 dan 1280 × 860. Lulus: scene 3D aktif, main benang sampai tertangkap, elus lewat tombol dan usapan di kanvas, cilukba dua tahap, tos, suapi lewat tombol dan seret ikan ke mulut, mandi lewat tombol dan gosok gelembung di kanvas, pegang dan lempar benang, ngobrol sampai akhir, tanpa error maupun peringatan konsol. Tanpa WebGL, mode ilustrasi tampil dan tombol tetap bekerja. Laju frame 7 fps di render CPU tidak mewakili GPU HP. Belum teruji: laju frame dan panas di HP Android/iPhone nyata, Safari iOS, serta penilaian Iqlima.
+
+### 28 November 2026 · Sifat Mimi
+
+`node --test tests/*.test.mjs` lulus 27 tes, termasuk 8 tes sifat Mimi: mood per jam, sambutan setelah lama pergi, ingatan favorit, pemilihan kebiasaan, larangan kalimat menyalahkan, tidur lalu dibangunkan, dan jalan-jalan. Uji browser (Chrome 153 headless, SwiftShader, 390 px) lulus untuk label mood, sapaan, lima kebiasaan, bangun saat disentuh, kebiasaan muncul sendiri setelah dibiarkan, sakelar suara, dan ingatan favorit tanpa error konsol. Uji mode main dan seret diulang dan tetap lulus. Kualitas suara sintetis hanya diperiksa lewat tidak adanya error; dengarkan langsung di HP sebelum diterima. Parameter `?mimi-debug` hanya untuk uji.

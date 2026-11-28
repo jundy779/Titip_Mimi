@@ -155,3 +155,22 @@ Atas permintaan Jundy, Kamar Mimi memakai gaya 3D anime cel-shaded seperti game 
 | Aksesibilitas dan performa | Kurangi gerakan mematikan kelopak, kilau, hati, dan gerak kamera. Resolusi turun otomatis dan bloom dimatikan bila frame lambat. Tanpa WebGL2, halaman memakai mode ilustrasi yang sudah ada. |
 
 Sumber ada di `src/game/mimi-scene3d.js` (Three.js). `npm run build:game` menghasilkan `public/mimi-scene.js` (sekitar 614 KB, 155 KB gzip). Jangan menyunting hasil bundel secara langsung.
+
+### Sifat Mimi v1
+
+Mimi punya mood yang tampil sebagai label kecil di kanan atas Kamar Mimi. Mood dihitung dari jam perangkat, energi, kedekatan, dan status kenyang. Tidak ada mood sedih atau marah.
+
+| Mood | Kapan | Kebiasaan yang sering muncul |
+|---|---|---|
+| ♡ Seneng kamu datang | 20 detik pertama setelah 24 jam lebih tidak dibuka | Melompat menyambut, minta dielus, jalan-jalan |
+| ☾ Ngantuk | Pukul 22.00–04.59 atau energi rendah | Tidur melingkar dengan “zzz” dan dengkur, menguap |
+| 🐟 Kenyang | Setelah tiga suapan dalam 30 menit | Jilat bulu, menguap |
+| ♡ Lagi manja | Kedekatan di bawah 55 (turun pelan saat lama tidak dibuka) | Menatap Iqlima sambil memiringkan kepala dan meong pelan |
+| 🧶 Semangat main | Energi tinggi dan 20 menit tanpa main | Jalan-jalan di teras, menggeliat |
+| ☀ Ceria | Selain itu | Jilat bulu, lihat sekeliling, jalan-jalan |
+
+Kebiasaan mulai setelah 5–9 detik tanpa sentuhan dan berhenti begitu Iqlima menyentuh layar atau tombol. Kalau Mimi sedang tidur, ia bangun dulu dengan kalimat “Mimi bangun, ngucek mata ♡”. Jalan-jalan hanya terjadi di mode Main agar sasaran makan dan mandi tidak bergeser.
+
+Mimi mengingat kegiatan yang paling sering dilakukan (minimal tiga kali) dan menyebutnya saat Kamar Mimi dibuka, misalnya “Mimi inget, kamu suka nyuapin Mimi ♡”.
+
+**Suara.** Meong, dengkur, kriuk makan, letupan busa, dan cicit tos disintesis dengan Web Audio tanpa file rekaman. Suara baru berbunyi setelah sentuhan pertama dan bisa dimatikan lewat tombol Suara. Pilihan disimpan di `mimi-sound-v1`. Data sifat disimpan di `mimi-life-v1`.

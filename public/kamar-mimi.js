@@ -1,5 +1,7 @@
 import {makeScene} from './mimi-scene.js';
 import {yarnGame} from './mimi-yarn.js';
+import {createLife,idleLines,moods} from './mimi-life.js';
+import {makeVoice} from './mimi-sound.js';
 const el=id=>document.getElementById(id),canvas=document.querySelector('canvas');
 let scene;
 try{scene=makeScene(canvas)}catch(error){console.warn('Kamar Mimi',error)}
@@ -14,16 +16,23 @@ const modes={
 let hearts=0;
 try{hearts=Math.max(0,Number(localStorage.getItem('mimi-room-hearts-v2'))||0)}catch{}
 el('score').textContent=hearts;
-function reward(words){el('speech').textContent=words;hearts++;el('score').textContent=hearts;try{localStorage.setItem('mimi-room-hearts-v2',String(hearts))}catch{}}
+const life=createLife(),voice=makeVoice();
+function reward(words,kind){el('speech').textContent=words;hearts++;el('score').textContent=hearts;try{localStorage.setItem('mimi-room-hearts-v2',String(hearts))}catch{}if(kind)life.bond(kind)}
+const soundButton=el('sound');
+function showSound(){soundButton.setAttribute('aria-pressed',String(voice.enabled));soundButton.textContent=voice.enabled?'🔊 Suara nyala':'🔈 Suara mati'}
+soundButton.onclick=()=>{voice.setEnabled(!voice.enabled);showSound();if(voice.enabled)voice.meow('happy')};
+showSound();
+let shownMood='';
+function showMood(){const m=life.mood();if(m===shownMood)return;shownMood=m;el('mood').textContent=moods[m].icon+' '+moods[m].label}
 const stories=[
  ['Hari ini capek','Mimi geser sedikit, sini rebahan bareng.','Mau dielus','Prrr… Mimi temenin di sini.'],
  ['Ada kabar baik','Wah! Mimi sampai tegak kupingnya.','Rayakan bareng','Tos kecil dari Mimi buat kamu!'],
  ['Kangen Mimi','Mimi juga kangen. Mau duduk dekat?','Duduk bareng','Sini, tempat sebelah Mimi hangat.']
 ];
 function options(items){el('choices').replaceChildren();for(const [label,go] of items){const b=document.createElement('button');b.textContent=label;b.onclick=go;el('choices').append(b)}}
-function talk(){options(stories.map(([label,reply,next,end])=>[label,()=>{el('speech').textContent=reply;options([[next,()=>{reward(end);options([]);el('action').hidden=false;el('action').focus()}]]);el('choices').firstChild.focus()}]));el('action').hidden=true}
+function talk(){options(stories.map(([label,reply,next,end])=>[label,()=>{el('speech').textContent=reply;options([[next,()=>{reward(end,'chat');voice.meow('soft');options([]);el('action').hidden=false;el('action').focus()}]]);el('choices').firstChild.focus()}]));el('action').hidden=true}
 const say=words=>el('speech').textContent=words;
-const yarn=yarnGame(s,say,()=>reward('Kena! Mimi mendekap benangnya ♡'));
+const yarn=yarnGame(s,say,()=>{reward('Kena! Mimi mendekap benangnya ♡','play');voice.meow('happy')});
 let biteEnd=0,lastRub=null,activePointer=null,strokeStart=null,petEnd=0;
 let gesture='idle',gestureEnd=0,petSide=0;
 function gestureState(next,duration=0){
@@ -35,18 +44,20 @@ function react(next,duration,words){
  if(s.mode==='play'&&s.motion!=='rest')yarn.reset();
  gestureState(next,duration);say(words);
 }
+let lastBond=0;
 function stroke(side=0){
+ if(performance.now()-lastBond>1500){lastBond=performance.now();life.bond('pet')}
  petSide=side;
  petEnd=performance.now()+1550;
  react('pet',1550,'Prrr… Mimi nyender ke tanganmu.');
 }
 el('pet').onclick=()=>stroke(.5);
 el('peek').onclick=()=>{
- if(gesture==='hide')react('reveal',1050,'Baaa! Ketemu Iqlima ♡');
+ if(gesture==='hide'){react('reveal',1050,'Baaa! Ketemu Iqlima ♡');life.bond('peek');voice.meow('happy')}
  else react('hide',0,'Mimi tutup mata. Kamu sembunyi di mana?');
 };
 el('five').onclick=()=>{
- if(gesture==='offer')react('highfive',850,'Plak! Tos kecil buat kamu.');
+ if(gesture==='offer'){react('highfive',850,'Plak! Tos kecil buat kamu.');life.bond('highfive');voice.chirp()}
  else react('offer',0,'Tos, yuk! Sentuh kaki depan Mimi.');
 };
 let pet={lastMeal:0,bites:0,washed:0};
@@ -67,11 +78,13 @@ function feed(){
  s.drag=null;if(full()){say('Mimi mengendus sebentar. Perutnya masih kenyang ♡');return}
  if(Date.now()-pet.lastMeal>=1800000)pet.bites=0;
  pet.lastMeal=Date.now();pet.bites++;savePet();biteEnd=performance.now()+800;
- reward(full()?'Nyam. Perut Mimi sudah kenyang ♡':'Kriuk! Kumis Mimi ikut bergerak.');
+ reward(full()?'Nyam. Perut Mimi sudah kenyang ♡':'Kriuk! Kumis Mimi ikut bergerak.','feed');
+ voice.crunch();life.setFull(full());if(full())voice.meow('soft');
 }
 function rub(id){
  if(!s.foam.delete(id))return;
- if(!s.foam.size){pet.washed=Date.now();savePet();reward('Bersih! Mimi menggoyangkan telinganya.');el('action').textContent='Main busa lagi'}
+ voice.pop();
+ if(!s.foam.size){pet.washed=Date.now();savePet();reward('Bersih! Mimi menggoyangkan telinganya.','wash');voice.sparkle();voice.meow('happy');el('action').textContent='Main busa lagi'}
  else say('Prrr… sisa '+s.foam.size+' gelembung.');
 }
 function washAt(p){
@@ -146,15 +159,28 @@ function tick(now){
    const steps=Math.ceil(dt*120);
    for(let i=0;i<steps;i++)yarn.step(dt/steps,now-(steps-1-i)*dt/steps*1000);
  }
+ life.update(dt,s,Date.now());
+ if(life.started==='ask'){say(idleLines.ask);voice.meow('ask')}
+ if(life.started==='sleep')say(idleLines.sleep);
+ voice.purr(Boolean(s.petted||(s.habit==='sleep'&&s.habitT>.05)));
+ showMood();
  s.gait+=((s.running?1:0)-s.gait)*(1-Math.exp(-10*dt));
  s.stridePhase+=13*dt;s.tailPhase+=(1.7+2.3*s.gait)*dt;
  if(s.drag)s.face+=(Math.max(-.4,Math.min(.4,s.drag.x*.55))-s.face)*(1-Math.exp(-13*dt));
  const focus=s.drag||(s.mode==='play'?{x:s.ballX,y:s.ballY}:null);
- const aimX=focus?Math.tanh((focus.x-s.catX)*1.5):Math.sin(now*.0007)*.18;
- const aimY=focus?Math.tanh(focus.y-1.35):.05;
+ const aimX=s.lookAt!=null?s.lookAt:focus?Math.tanh((focus.x-s.catX)*1.5):Math.sin(now*.0007)*.18;
+ const aimY=s.habit==='ask'?.25:s.lookAt!=null?.05:focus?Math.tanh(focus.y-1.35):.05;
  const follow=1-Math.exp(-10*dt);
  s.lookX+=(aimX-s.lookX)*follow;s.lookY+=(aimY-s.lookY)*follow;
  s.impact*=Math.exp(-9*dt);
  scene?.render(clock,s);
 }
-select('play');requestAnimationFrame(tick);
+// Sentuhan apa pun menghentikan kebiasaan Mimi; kalau sedang tidur, Mimi bangun dulu.
+function poke(){if(life.poke()==='wake'){say(idleLines.wake);voice.meow('sleepy')}}
+document.addEventListener('pointerdown',poke,true);
+document.addEventListener('keydown',poke,true);
+life.setFull(full());
+select('play');say(life.greeting());showMood();
+if(life.mood()==='kangen')setTimeout(()=>{react('reveal',1050,life.greeting())},400);
+requestAnimationFrame(tick);
+if(location.search.includes('mimi-debug'))globalThis.__life=life;

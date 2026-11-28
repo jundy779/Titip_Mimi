@@ -41,3 +41,6 @@ nav button[aria-pressed=true] { color:var(--mimi-on-primary-container); border-c
   main { padding-bottom:max(.75rem,env(safe-area-inset-bottom)); }
 }
 .room.has-3d .petals { display:none; }
+.mood { position:absolute; z-index:1; top:.75rem; right:.75rem; padding:.3rem .7rem; border-radius:.7rem; background:#fff9f1f5; color:#503348; font-size:.8125rem; font-weight:650; pointer-events:none; }
+.mood:empty { display:none; }
+#sound[aria-pressed=false] { color:var(--mimi-on-surface-variant); }

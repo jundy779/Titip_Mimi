@@ -194,10 +194,13 @@ export function makeScene(canvas) {
   tail.children[0].frustumCulled = false;
   bodyPivot.add(tail);
   const tailCurve = new THREE.CatmullRomCurve3(Array.from({ length: 9 }, () => new THREE.Vector3()));
-  function updateTail(phase, gait) {
+  function updateTail(phase, gait, curl = 0) {
     for (let i = 0; i < 9; i++) {
-      const f = i / 8, swing = Math.sin(phase - f * 1.6) * (1 + gait * .4);
-      tailCurve.points[i].set(-.36 - .46 * Math.sin(f * 1.8) + .13 * f * swing, .3 + .78 * f, -.28 + .18 * f * swing - .05 * f);
+      const f = i / 8, swing = Math.sin(phase - f * 1.6) * (1 + gait * .4) * (1 - curl * .8);
+      const ux = -.36 - .46 * Math.sin(f * 1.8) + .13 * f * swing, uy = .3 + .78 * f, uz = -.28 + .18 * f * swing - .05 * f;
+      // Saat tidur ekor melingkar di lantai, ujungnya ke depan kaki.
+      const a = f * 2.3, cx = -.55 * Math.cos(a) * (1 - .15 * f), cy = .16 + .04 * Math.sin(f * 3), cz = -.1 + .62 * Math.sin(a) * (1 - .1 * f) + .05 * swing;
+      tailCurve.points[i].set(ux + (cx - ux) * curl, uy + (cy - uy) * curl, uz + (cz - uz) * curl);
     }
     const frames = tailCurve.computeFrenetFrames(TS, false);
     const pos = tailGeo.attributes.position.array, nor = tailGeo.attributes.normal.array;
@@ -363,8 +366,8 @@ export function makeScene(canvas) {
     fg.beginPath(); fg.moveTo(side * (rx - 4), -ry * open * .55); fg.lineTo(side * (rx + 22), -ry * open * .78 - 6); fg.stroke();
     fg.restore();
   }
-  function drawFace(open, gx, gy, happy, mouthOpen) {
-    const key = [Math.round(open * 8), Math.round(gx * 6), Math.round(gy * 6), happy, mouthOpen].join();
+  function drawFace(open, gx, gy, happy, mouth) {
+    const key = [Math.round(open * 8), Math.round(gx * 6), Math.round(gy * 6), happy, mouth].join();
     if (key === faceKey) return;
     faceKey = key;
     fg.clearRect(0, 0, 768, 768);
@@ -386,11 +389,20 @@ export function makeScene(canvas) {
     }
     const [mx, my] = P(0, -.17);
     fg.strokeStyle = '#6a3a4e'; fg.lineWidth = 6; fg.lineCap = 'round'; fg.lineJoin = 'round';
-    if (mouthOpen) {
+    if (mouth === 'yawn') {
+      fg.fillStyle = '#a93f5a';
+      fg.beginPath(); fg.ellipse(mx, my + 30, 52, 66, 0, 0, Math.PI * 2); fg.fill(); fg.stroke();
+      fg.fillStyle = '#f39aaa'; fg.beginPath(); fg.ellipse(mx, my + 66, 34, 22, 0, 0, Math.PI * 2); fg.fill();
+      fg.fillStyle = '#ffffff';
+      for (const side of [-1, 1]) { fg.beginPath(); fg.moveTo(mx + side * 34, my - 14); fg.lineTo(mx + side * 22, my + 10); fg.lineTo(mx + side * 12, my - 18); fg.fill(); }
+    } else if (mouth === 'open') {
       fg.fillStyle = '#b9475f';
       fg.beginPath(); fg.moveTo(mx - 24, my); fg.quadraticCurveTo(mx, my + 44, mx + 24, my); fg.closePath(); fg.fill(); fg.stroke();
       fg.fillStyle = '#f39aaa'; fg.beginPath(); fg.ellipse(mx, my + 20, 12, 9, 0, 0, Math.PI * 2); fg.fill();
     } else {
+      if (mouth === 'tongue') {
+        fg.fillStyle = '#f08ca0'; fg.beginPath(); fg.ellipse(mx + 6, my + 14, 11, 14, .2, 0, Math.PI * 2); fg.fill();
+      }
       fg.beginPath(); fg.moveTo(mx - 26, my - 4); fg.quadraticCurveTo(mx - 13, my + 14, mx, my); fg.quadraticCurveTo(mx + 13, my + 14, mx + 26, my - 4); fg.stroke();
     }
     faceTex.needsUpdate = true;
@@ -533,6 +545,23 @@ export function makeScene(canvas) {
     }
   }
 
+  const zTex = canvasTexture(128, (g, n) => {
+    g.font = 'bold 92px Georgia, serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.lineWidth = 10; g.strokeStyle = '#ffffff'; g.strokeText('z', n / 2, n / 2);
+    g.fillStyle = '#8a6fc4'; g.fillText('z', n / 2, n / 2);
+  });
+  let lastZ = -Infinity;
+  function snore(x, y) {
+    if (reduced.matches) return;
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: zTex, transparent: true, depthWrite: false }));
+    sp.scale.setScalar(.2);
+    sp.position.set(x + .3, y, .6);
+    sp.userData = { born: clock, vx: .25, life: 2.2 };
+    scene.add(sp); hearts.push(sp);
+  }
+  const habitW = { sleep: 0, groom: 0, stretch: 0, yawn: 0, ask: 0 };
+  const lerp = (a, b, w) => a + (b - a) * w;
+
   // ---------- Pascaproses: bloom lembut, gradasi warna, vinyet ----------
   const target = new THREE.WebGLRenderTarget(2, 2, { type: THREE.HalfFloatType, samples: 4 });
   const composer = new EffectComposer(renderer, target);
@@ -612,14 +641,19 @@ export function makeScene(canvas) {
       bgTex.offset.x = (1 - rx) / 2 + sway.x * .012;
     }
 
+    // Kebiasaan Mimi dicampur halus: tidur, jilat bulu, menggeliat, menguap, minta dielus.
+    for (const k of Object.keys(habitW)) habitW[k] += ((s.habit === k ? 1 : 0) - habitW[k]) * (1 - Math.exp(-(k === 'sleep' ? 2.5 : 6) * dt));
+    const bell = Math.sin(Math.PI * Math.min(1, (s.habitT || 0) * 1.05));
+    const sleepW = habitW.sleep, groomW = habitW.groom, stretchW = habitW.stretch * bell, yawnW = habitW.yawn * bell, askW = habitW.ask;
     // Mimi: posisi, jongkok, lompat, dan napas.
     const step = Math.sin(s.stridePhase) * s.gait;
-    const breath = Math.sin(t * 2.35) * .019;
-    const compress = (s.crouch || 0) * .11 + (s.impact || 0) * .15;
+    const breath = Math.sin(t * (2.35 - 1.2 * sleepW)) * (.019 + .018 * sleepW);
+    const compress = (s.crouch || 0) * .11 + (s.impact || 0) * .15 + sleepW * .2 + stretchW * .08;
     const base = .11 + (s.lift || 0) + (s.hop || 0) + Math.abs(step) * .036;
     cat.position.set(s.catX, base, 0);
     cat.rotation.y = s.face || 0;
-    bodyPivot.rotation.z = -(s.lookX * .02 + step * .03) - (s.petted ? .05 : 0);
+    bodyPivot.rotation.z = -(s.lookX * .02 + step * .03) - (s.petted ? .05 : 0) + sleepW * .06;
+    bodyPivot.rotation.x = stretchW * .28;
     body.position.set(0, .64 - compress, -.06);
     body.scale.set(1 + compress * .4, 1 - compress * .7 + breath * .4, 1 + breath * .3);
     for (let i = 0; i < 2; i++) {
@@ -630,30 +664,42 @@ export function makeScene(canvas) {
       const pawY = .16 + raise * 1.3 + Math.max(0, -stride) * .12 + (s.reach || 0) * .45;
       const pawX = side * (.245 + (s.reach || 0) * .06 + (side === 1 ? .32 * (s.wave || 0) : 0));
       const pawZ = .43 + (s.reach || 0) * .18 + raise * .22;
-      paws[i].position.set(pawX, pawY, pawZ);
-      paws[i].rotation.x = -raise * 1.1;
+      let px = pawX, py = pawY, pz = pawZ;
+      px = lerp(px, side * .2, sleepW); py = lerp(py, .13, sleepW); pz = lerp(pz, .4, sleepW);
+      py = lerp(py, .13, stretchW); pz = lerp(pz, .9, stretchW);
+      if (side === 1) { px = lerp(px, .16, groomW); py = lerp(py, 1.2 + Math.sin(t * 9) * .05, groomW); pz = lerp(pz, .66, groomW); }
+      paws[i].position.set(px, py, pz);
+      paws[i].rotation.x = -raise * 1.1 - (side === 1 ? groomW * 1.2 : 0);
       v1.set(side * .26, .72 - compress, .3);
-      v2.set(pawX, pawY + .04, pawZ - .03);
+      v2.set(px, py + .04, pz - .03);
       const len = v1.distanceTo(v2);
       legs[i].position.copy(v1).add(v2).multiplyScalar(.5);
       legs[i].scale.set(1, Math.max(.2, len / .75), 1);
       legs[i].quaternion.setFromUnitVectors(up, v2.sub(v1).normalize());
     }
-    updateTail(s.tailPhase || t * 1.7, s.gait || 0);
+    updateTail(s.tailPhase || t * 1.7, s.gait || 0, sleepW);
 
     // Kepala: menoleh, mengangguk, miring manja saat dielus.
     const nod = breath - compress + (s.biting ? -.085 * Math.abs(Math.sin(t * 12)) : 0);
-    head.position.set(.035 * s.lookX + .12 * (s.nuzzle || 0), 1.45 + nod, 0);
-    head.rotation.set(-s.lookY * .14 + (s.biting ? .1 : 0), s.lookX * .21 + .28 * (s.nuzzle || 0), -(s.nuzzle || 0) * .22 + (s.petted ? .12 : 0) + Math.sin(t * .9) * .02);
+    const lick = groomW * Math.sin(t * 9) * .04;
+    head.position.set(.035 * s.lookX + .12 * (s.nuzzle || 0) + groomW * .06, 1.45 + nod - sleepW * .42 - stretchW * .25 + lick + askW * Math.abs(Math.sin(t * 3)) * .03, sleepW * .14 + stretchW * .2);
+    head.rotation.set(
+      -s.lookY * .14 + (s.biting ? .1 : 0) + sleepW * .3 + groomW * .3 - yawnW * .35,
+      s.lookX * .21 + .28 * (s.nuzzle || 0) - groomW * .25,
+      -(s.nuzzle || 0) * .22 + (s.petted ? .12 : 0) + Math.sin(t * .9) * .02 + sleepW * .25 - groomW * .15 + askW * .28);
     const twitch = !still && t % 6.3 < .18 ? Math.sin(t * 60) * .12 : 0;
-    ears[0].rotation.z = .38 + (s.petted ? .22 : 0) + twitch;
-    ears[1].rotation.z = -.38 - (s.petted ? .22 : 0) - (s.mode === 'play' && s.motion !== 'rest' ? .08 : 0);
+    ears[0].rotation.z = .38 + (s.petted ? .22 : 0) + twitch + sleepW * .25 - askW * .08;
+    ears[1].rotation.z = -.38 - (s.petted ? .22 : 0) - (s.mode === 'play' && s.motion !== 'rest' ? .08 : 0) - sleepW * .25 + askW * .08;
     ears[0].rotation.x = ears[1].rotation.x = s.mode === 'play' && s.motion === 'stalk' ? -.25 : 0;
 
     const cycle = t % 4.9;
-    const blink = Math.min(1, Math.abs(cycle - 4.6) / .13);
-    const happy = Boolean(s.petted || (s.cover || 0) > .5 || s.gesture === 'highfive' || s.motion === 'hug');
-    drawFace(blink, s.lookX, s.lookY, happy, Boolean(s.biting || s.mode === 'chat' || s.gesture === 'reveal' || s.motion === 'pounce'));
+    const closed = sleepW > .5 || stretchW > .3 || yawnW > .3;
+    const blink = closed ? 0 : Math.min(1, Math.abs(cycle - 4.6) / .13) * (1 - .35 * habitW.sleep);
+    const happy = !closed && Boolean(s.petted || (s.cover || 0) > .5 || s.gesture === 'highfive' || s.motion === 'hug' || groomW > .5);
+    const mouth = yawnW > .25 ? 'yawn' : groomW > .5 ? 'tongue'
+      : (s.biting || s.mode === 'chat' || s.gesture === 'reveal' || s.motion === 'pounce' || (askW > .5 && Math.sin(t * 3) > .3)) ? 'open' : 'smile';
+    drawFace(blink, s.lookX, s.lookY, happy, mouth);
+    if (sleepW > .8 && clock - lastZ > 1.4) { lastZ = clock; snore(s.catX + head.position.x, 1.45 + .2); }
 
     // Mainan sesuai mode.
     yarn.visible = s.mode === 'play';

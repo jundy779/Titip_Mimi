@@ -26,3 +26,5 @@
 | Ditunda | “Mimi kangen” lewat notifikasi, pesan dari Jundy, dan Mimi yang ikut muncul di halaman lain | Butuh keputusan batas akses dan frekuensi notifikasi. |
 
 28 November 2026 · Jundy · Game Kamar Mimi terasa jelek; diminta grafis seperti Genshin Impact. Keputusan: gaya 3D anime cel-shaded yang terinspirasi game anime modern, dengan model dan efek orisinal Mimi. Tidak memakai aset, karakter, atau UI dari game lain. Mesin render Three.js dibundel ke `public/mimi-scene.js`.
+
+28 November 2026 · Jundy · Mimi diberi sifat: mood, kebiasaan saat dibiarkan, tidur mengikuti jam, ingatan favorit, dan suara sintetis yang bisa dimatikan (nyala secara bawaan setelah sentuhan pertama). Model 3D buatan artis dan kamera bebas ditunda.
