@@ -12,7 +12,7 @@ import { createSync } from './mimi-sync.js';
 import { createPartner } from './mimi-partner.js';
 import { mountToday, mountProfile as mountCare, openHelp, careTick, logWin, unlogWin, applySetupLink } from './iqlima-ui.js';
 import { nextOccurrence, repeats, parseInvitation, vaults, looksSecret } from './iqlima.mjs';
-import { readImageText, mountMic } from './capture-extras.js';
+import { readImageText, mountMic, isOff } from './capture-extras.js';
 function addImport(card){
   const input=document.createElement('input');
   input.type='file';input.accept='.ics,text/calendar';input.hidden=true;
@@ -71,7 +71,7 @@ function configureForm(){
   el('date-field').hidden = account;
   el('quick-days').hidden = account;
   el('place-field').hidden = account;
-  el('ocr-row').hidden = account || Boolean(editing);
+  el('ocr-row').hidden = account || Boolean(editing) || isOff('ocr');
   checkSecret();
   el('repeat-field').hidden = kind !== 'agenda';
   el('waktu').required = kind === 'agenda';

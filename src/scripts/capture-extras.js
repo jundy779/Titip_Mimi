@@ -16,6 +16,9 @@ function ocrPaths() {
   const b = new URL(base, location.href).href.replace(/\/?$/, '/');
   return { script: b + 'tesseract.min.js', worker: b + 'worker.min.js', core: b + 'core', lang: b + 'lang' };
 }
+// Fitur bisa dimatikan per halaman, misalnya di demo yang tidak boleh memuat file luar
+// atau memakai mikrofon: <meta name="mimi-off" content="ocr mic">.
+export const isOff = name => (document.querySelector('meta[name="mimi-off"]')?.content || '').split(/\s+/).includes(name);
 let loading = null;
 function loadTesseract(src) {
   if (globalThis.Tesseract) return Promise.resolve(globalThis.Tesseract);
@@ -62,7 +65,7 @@ export const speechSupported = () => Boolean(globalThis.SpeechRecognition || glo
 // lines: setiap jeda bicara jadi baris baru (untuk Tumpahkan pikiran: satu baris satu titipan).
 export function mountMic(button, field, notify = () => {}, { lines = false } = {}) {
   const Rec = globalThis.SpeechRecognition || globalThis.webkitSpeechRecognition;
-  if (!Rec || !button || !field) { if (button) button.hidden = true; return () => {}; }
+  if (!Rec || !button || !field || isOff('mic')) { if (button) button.hidden = true; return () => {}; }
   button.hidden = false;
   let rec = null, base = '';
   const label = button.getAttribute('aria-label') || 'Dikte suara';
