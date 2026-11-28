@@ -34,7 +34,10 @@ function addImport(card){
 const el=id=>document.getElementById(id);
 
 const key='ruang-iqlima-demo-v1';
-let tab='Hari Ini',items=[];
+// Tautan langsung ke menu, misalnya dari panduan: /#profil, /#koleksi, /#agenda.
+const jump={'#profil':'Profil','#koleksi':'Koleksi','#agenda':'Agenda'}[location.hash.toLowerCase()];
+let tab=jump||'Hari Ini',items=[];
+if(jump)history.replaceState(null,'',location.pathname+location.search);
 let today=new Date(), day=localDay(today);
 let visitState={enabled:true,lastVisit:'',pets:0};
 try{visitState=visit(localStorage).state}catch{}

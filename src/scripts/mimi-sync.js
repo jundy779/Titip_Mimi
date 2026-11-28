@@ -220,7 +220,7 @@ export function createSync({ getItems, setItems, notify = () => {} }) {
 
   // ---------- Telegram di Profil ----------
   // Status diambil dari server. Tautan "Hubungkan" sekali pakai dan berlaku 10 menit.
-  let tg = null, tgBox = null, tgNote = '', tgPoll = 0;
+  let tg = null, tgBox = null, tgNote = '', tgPoll = 0, tgReplacing = false;
   const clock = m => m == null ? '' : String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
   const minutes = v => { const m = /^(\d{2}):(\d{2})$/.exec(v || ''); return m ? +m[1] * 60 + +m[2] : null; };
   async function refreshTelegram() {
@@ -232,10 +232,24 @@ export function createSync({ getItems, setItems, notify = () => {} }) {
     if (!tgBox?.isConnected) return;
     const $ = sel => tgBox.querySelector(sel);
     const text = $('[data-telegram-status]'), linkBtn = $('[data-telegram-link]'), quiet = $('[data-telegram-quiet]'), cut = $('[data-telegram-unlink]');
-    linkBtn.hidden = quiet.hidden = cut.hidden = true;
-    if (!enabled || !state.user) { text.textContent = 'Masuk dengan akun Google dulu. Setelah itu Telegram bisa dihubungkan, dan foto nota yang kamu kirim ke Mimi muncul di sini.'; return; }
+    const form = $('[data-bot-form]'), line = $('[data-bot-line]'), manage = $('[data-bot-manage]');
+    linkBtn.hidden = quiet.hidden = cut.hidden = line.hidden = manage.hidden = true;
+    form.hidden = !tgReplacing;
+    if (!enabled || !state.user) { form.hidden = true; text.textContent = 'Masuk dengan akun Google dulu. Setelah itu Telegram bisa dihubungkan, dan foto nota yang kamu kirim ke Mimi muncul di sini.'; return; }
     if (!tg) { text.textContent = tgNote || 'Memuat status Telegram…'; return; }
-    if (!tg.enabled) { text.textContent = 'Bot Telegram belum diaktifkan di server.'; return; }
+    const bot = tg.bot || {};
+    if (!tg.enabled) {
+      form.hidden = !bot.canInstall;
+      $('[data-bot-save]').textContent = 'Pasang bot';
+      text.textContent = tgNote || (bot.canInstall ? 'Mimi belum punya bot Telegram. Bikin dulu di BotFather (sekitar 5 menit, ada panduannya di bawah), lalu tempel tokennya di sini.' : 'Bot Telegram belum dipasang. Minta yang punya akses server untuk memasangnya.');
+      return;
+    }
+    if (bot.username) {
+      line.hidden = false;
+      line.replaceChildren('Bot Mimi: ', Object.assign(document.createElement('a'), { href: 'https://t.me/' + bot.username, textContent: '@' + bot.username, target: '_blank', rel: 'noopener' }));
+    }
+    manage.hidden = !(bot.mine && bot.source === 'profil');
+    if (tgReplacing) $('[data-bot-save]').textContent = 'Simpan token baru';
     if (!tg.linked) {
       text.textContent = tgNote || 'Belum terhubung. Setelah terhubung, kirim teks, foto nota, video, atau dokumen ke Mimi di Telegram, dan pengingat datang lewat Telegram juga.';
       linkBtn.hidden = false;
@@ -278,8 +292,34 @@ export function createSync({ getItems, setItems, notify = () => {} }) {
     try { await api('/v1/telegram/unlink', {}); notify('Telegram sudah diputus. Titipanmu tetap aman.'); } catch (error) { notify(error.message || 'Belum bisa memutus Telegram.'); }
     await refreshTelegram();
   }
+  async function installBot(event) {
+    event.preventDefault();
+    const input = tgBox.querySelector('[data-bot-token]'), save = tgBox.querySelector('[data-bot-save]');
+    if (!input.value.trim()) { input.focus(); return; }
+    save.disabled = true; tgNote = 'Mimi lagi kenalan sama botnya…'; renderTelegram();
+    try {
+      tg = await api('/v1/telegram/bot', { token: input.value });
+      input.value = ''; tgReplacing = false; tgNote = '';
+      notify('Bot @' + tg.bot.username + ' terpasang ♡ Sekarang tekan Hubungkan Telegram.');
+    } catch (error) { tgNote = error.message || 'Bot belum bisa dipasang. Coba lagi, ya.'; }
+    save.disabled = false;
+    renderTelegram();
+  }
+  async function removeBot() {
+    if (!confirm('Lepas bot @' + (tg?.bot?.username || '') + '? Sambungan Telegram diputus, titipan tetap aman.')) return;
+    try { await api('/v1/telegram/bot/remove', {}); notify('Bot dilepas. Titipanmu tetap aman ♡'); } catch (error) { notify(error.message || 'Bot belum bisa dilepas.'); }
+    tgReplacing = false; tgNote = '';
+    await refreshTelegram();
+  }
   function mountTelegram(el) {
     tgBox = el;
+    el.querySelector('[data-bot-form]').onsubmit = installBot;
+    el.querySelector('[data-bot-peek]').onclick = e => {
+      const input = el.querySelector('[data-bot-token]'), show = input.type === 'password';
+      input.type = show ? 'text' : 'password'; e.target.textContent = show ? 'Tutup' : 'Lihat'; e.target.setAttribute('aria-pressed', String(show));
+    };
+    el.querySelector('[data-bot-replace]').onclick = () => { tgReplacing = true; tgNote = 'Tempel token baru dari BotFather.'; renderTelegram(); el.querySelector('[data-bot-token]').focus(); };
+    el.querySelector('[data-bot-remove]').onclick = () => removeBot();
     el.querySelector('[data-telegram-link]').onclick = () => linkTelegram();
     el.querySelector('[data-telegram-unlink]').onclick = () => unlinkTelegram();
     for (const sel of ['[data-quiet-start]', '[data-quiet-end]', '[data-quiet-off]']) el.querySelector(sel).onchange = () => saveQuiet();

@@ -6,7 +6,7 @@ import type { Express } from 'express';
 import { createApp } from '../src/app';
 import { loadConfig } from '../src/config';
 import { openDatabase } from '../src/db';
-import { TelegramApi } from '../src/telegram/api';
+import { TelegramApi, TelegramError } from '../src/telegram/api';
 import { Reminders } from '../src/telegram/reminders';
 
 const people: Record<string, { sub: string; email: string; emailVerified: boolean; name: string }> = {
@@ -26,12 +26,22 @@ const telegram: TelegramApi = {
 };
 (async () => {
   const withTelegram = process.env.FAKE_TELEGRAM === '1';
+  // FAKE_TELEGRAM=profil: tanpa token di server, bot dipasang dari Profil dengan token uji di bawah.
+  const fromProfile = process.env.FAKE_TELEGRAM === 'profil';
+  const GOOD = '123456789:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw';
+  const factory = (token: string): TelegramApi => ({
+    async call(method, params = {}) {
+      if (method === 'getMe') { if (token !== GOOD) throw new TelegramError(401, 'Unauthorized'); return { id: 1, is_bot: true, username: 'MimiIqlimaUjiBot' } as any; }
+      return telegram.call(method, params);
+    },
+    download: telegram.download,
+  });
   const config = loadConfig({
     STATIC_DIR: process.env.STATIC_DIR, ALLOWED_EMAILS: 'iqlima.uji@contoh.id,jundy.uji@contoh.id',
     ...(withTelegram ? { TELEGRAM_BOT_TOKEN: '1:uji', TELEGRAM_BOT_USERNAME: 'TitipMimiUjiBot', TELEGRAM_WEBHOOK_SECRET: 'rahasia-e2e-0123456789' } : {}),
   } as NodeJS.ProcessEnv);
-  const app = await createApp(config, openDatabase(':memory:'), { async verify(c) { if (!people[c]) throw new Error('x'); return people[c]; } }, false, withTelegram ? telegram : null);
-  if (withTelegram) {
+  const app = await createApp(config, openDatabase(':memory:'), { async verify(c) { if (!people[c]) throw new Error('x'); return people[c]; } }, false, withTelegram ? telegram : null, fromProfile ? factory : null);
+  if (withTelegram || fromProfile) {
     const server = app.getHttpAdapter().getInstance() as Express;
     server.get('/__uji/telegram', (_req, res) => { res.json(calls); });
     server.post('/__uji/tick', async (req, res) => { res.json(await app.get(Reminders).tick(Number(req.query.now) || Date.now())); });

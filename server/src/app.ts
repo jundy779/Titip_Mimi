@@ -13,6 +13,8 @@ import { Sessions } from './sessions';
 import { AuthController, AuthGuard } from './auth';
 import { Items, ItemsController } from './items';
 import { TELEGRAM_API, TelegramApi } from './telegram/api';
+import { ApiFactory, TELEGRAM_FACTORY, TelegramRuntime } from './telegram/runtime';
+import { TelegramService } from './telegram/service';
 import { TelegramBot } from './telegram/bot';
 import { Reminders } from './telegram/reminders';
 import { MediaController, TelegramController } from './telegram/controller';
@@ -31,7 +33,7 @@ class CsrfMiddleware implements NestMiddleware {
   }
 }
 
-export function appModule(config: Config, db: Db, google: GoogleVerifier, telegram: TelegramApi | null = null): DynamicModule {
+export function appModule(config: Config, db: Db, google: GoogleVerifier, telegram: TelegramApi | null = null, factory: ApiFactory | null = null): DynamicModule {
   @Module({})
   class Root {
     configure(consumer: MiddlewareConsumer) { consumer.apply(CsrfMiddleware).forRoutes('*'); }
@@ -44,13 +46,14 @@ export function appModule(config: Config, db: Db, google: GoogleVerifier, telegr
       { provide: DB, useValue: db },
       { provide: GOOGLE_VERIFIER, useValue: google },
       { provide: TELEGRAM_API, useValue: telegram },
-      Sessions, Items, AuthGuard, TelegramBot, Reminders,
+      { provide: TELEGRAM_FACTORY, useValue: factory },
+      Sessions, Items, AuthGuard, TelegramRuntime, TelegramBot, Reminders, TelegramService,
     ],
   };
 }
 
-export async function createApp(config: Config, db: Db, google: GoogleVerifier, log = true, telegram: TelegramApi | null = null): Promise<INestApplication> {
-  const app = await NestFactory.create(appModule(config, db, google, telegram), { logger: log ? ['error', 'warn'] : false, bodyParser: false });
+export async function createApp(config: Config, db: Db, google: GoogleVerifier, log = true, telegram: TelegramApi | null = null, factory: ApiFactory | null = null): Promise<INestApplication> {
+  const app = await NestFactory.create(appModule(config, db, google, telegram, factory), { logger: log ? ['error', 'warn'] : false, bodyParser: false });
   const server = app.getHttpAdapter().getInstance() as express.Express;
   server.set('trust proxy', 1);
   server.disable('x-powered-by');

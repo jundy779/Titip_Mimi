@@ -63,11 +63,13 @@ Untuk Flutter: gunakan `google_sign_in` untuk mendapat ID token dengan Client ID
 
 ## Telegram (TG-1, REM-1)
 
-Bot opsional. Tanpa `TELEGRAM_BOT_TOKEN` semua endpoint di bawah menjawab `503 telegram_disabled` dan pengingat Telegram mati. Token bot hanya ada di server; browser tidak pernah menerima token atau `file_id`.
+Bot opsional. Bot berasal dari `TELEGRAM_BOT_TOKEN` di server (diutamakan) atau dari token yang ditempel di Profil (`POST /v1/telegram/bot`). Tanpa keduanya, endpoint tautan dan lampiran menjawab `503 telegram_disabled`. Token bot hanya ada di server; browser tidak pernah menerima token atau `file_id`.
 
 | Operasi | Permintaan | Respons |
 |---|---|---|
-| Status | `GET /v1/telegram` | `200 { enabled, linked, username, linkedAt, timezone, quietStart, quietEnd }`. Jam tenang dalam menit sejak 00.00 di zona pengguna; `null` berarti mati. Bawaan 1320 (22.00) sampai 360 (06.00). |
+| Status | `GET /v1/telegram` | `200 { enabled, bot: { username, source, mine, receiving, canInstall }, linked, username, linkedAt, timezone, quietStart, quietEnd }`. `bot.source` `env` atau `profil`; `mine` benar bila pengguna ini yang memasang; `receiving` `polling`, `webhook`, atau `null`; `canInstall` benar bila pengguna ini boleh memasang atau mengganti bot. `username` di luar `bot` adalah akun Telegram pengguna yang tersambung. Jam tenang dalam menit sejak 00.00 di zona pengguna; `null` berarti mati. Bawaan 1320 (22.00) sampai 360 (06.00). |
+| Pasang bot | `POST /v1/telegram/bot` body `{ "token": "<token dari BotFather>" }` | `200` status terbaru. Server memanggil `getMe`, menyimpan token, username, secret webhook acak, dan pemasangnya, memasang deskripsi pendek, deskripsi, dan menu perintah, lalu mulai menerima pesan: webhook bila `PUBLIC_URL` https, selain itu polling. Mengganti ke bot lain menghapus semua sambungan Telegram (obrolannya berbeda). |
+| Lepas bot | `POST /v1/telegram/bot/remove` | `204`. Token dihapus, webhook dilepas, semua sambungan dan pengingat yang menunggu dibatalkan. Titipan tetap ada. |
 | Buat tautan | `POST /v1/telegram/link` body `{}` | `200 { url: "https://t.me/<bot>?start=<kode>", expiresAt }`. Kode acak 144 bit, sekali pakai, berlaku 10 menit, hanya hash-nya yang disimpan. Membuat tautan baru membatalkan kode lama milik pengguna yang sama. |
 | Jam tenang | `POST /v1/telegram/settings` body `{ "quietStart": 1320, "quietEnd": 360 }` atau keduanya `null` | `200` status terbaru. `400 bad_quiet` bila di luar 0–1439 atau hanya satu yang `null`. |
 | Putuskan | `POST /v1/telegram/unlink` | `204`. Pengingat yang menunggu dibatalkan (`skipped`). Titipan tetap ada. |
@@ -79,7 +81,11 @@ Bot opsional. Tanpa `TELEGRAM_BOT_TOKEN` semua endpoint di bawah menjawab `503 t
 | 404 | `not_found` | Lampiran tidak ada atau milik orang lain (sengaja tidak dibedakan) |
 | 413 | `too_big` | File lebih dari 20 MB, batas unduh Bot API. Buka dari Telegram; pengingat tetap membawa file lewat `file_id`. |
 | 502 | `telegram_unavailable` | Telegram tidak terjangkau saat mengambil file. Aman dicoba lagi. |
-| 503 | `telegram_disabled` | Bot belum diatur di server |
+| 400 | `bad_token` | Bentuk token salah (harus `angka:huruf`) |
+| 400 | `token_rejected` | Telegram menolak token (sudah diganti atau bukan bot) |
+| 403 | `not_bot_owner` | Bot dipasang dari akun lain; hanya pemasangnya yang boleh mengganti atau melepas |
+| 409 | `managed_by_server` | Bot berasal dari `TELEGRAM_BOT_TOKEN`; diganti lewat server, bukan Profil |
+| 503 | `telegram_disabled` | Belum ada bot |
 
 **Bentuk titipan dari Telegram.** Sama dengan titipan web, ditambah dua kolom opsional yang ikut sinkron dan divalidasi server:
 
@@ -93,6 +99,6 @@ Bot opsional. Tanpa `TELEGRAM_BOT_TOKEN` semua endpoint di bawah menjawab `503 t
 
 Klien boleh mengirim ulang `attachments` lewat `/v1/sync` (misalnya saat mengubah judul), tetapi `/v1/media` hanya melayani `id` yang tercatat dari Telegram milik pemilik itu. Menyalin `id` milik akun lain tidak membuka filenya.
 
-**Alur di Telegram.** Satu kiriman (teks, foto, video, dokumen, atau satu album) menjadi satu titipan tanpa jadwal. Mimi membalas dengan tombol waktu: dari caption atau teks ("jumat jam 4 sore"), atau pilihan cepat "Nanti malam 19.00" dan "Besok pagi 08.00". Membalas pesan Mimi dengan waktu ("besok jam 9 pagi") juga mengonfirmasi. Jadwal baru aktif setelah dikonfirmasi. Perintah: `/cari kata`, `/tenang 22-6` atau `/tenang mati`, `/stop`.
+**Alur di Telegram.** Satu kiriman (teks, foto, video, dokumen, atau satu album) menjadi satu titipan tanpa jadwal. Mimi membalas dengan tombol waktu: dari caption atau teks ("jumat jam 4 sore"), atau pilihan cepat "Nanti malam 19.00" dan "Besok pagi 08.00". Membalas pesan Mimi dengan waktu ("besok jam 9 pagi") juga mengonfirmasi. Jadwal baru aktif setelah dikonfirmasi. Perintah: `/hariini`, `/besok`, `/cari kata`, `/tenang 22-6` atau `/tenang mati`, `/id` (menampilkan ID dan username Telegram, juga sebelum tersambung; ID tidak perlu diisi di mana pun karena tercatat otomatis saat menautkan), `/bantuan`, `/stop`.
 
 **Pengingat.** Saat jatuh tempo, Mimi mengirim judul, waktu dalam zona pengguna, catatan, dan lampiran pertama, dengan tombol **Sudah selesai**, **Tunda 10 menit**, **Tunda 1 jam**. Selesai dari Telegram sama dengan di web: rutinitas berulang menjadi riwayat dan jadwal berikutnya dibuat. Tunda mengisi `snoozeUntil`, sama dengan web.

@@ -1,7 +1,8 @@
-import { Inject, Injectable, OnModuleDestroy, Optional } from '@nestjs/common';
+import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common';
 import { DB, Db } from '../db';
 import { ItemData, Items } from '../items';
-import { TELEGRAM_API, TelegramApi, TelegramError } from './api';
+import { TelegramError } from './api';
+import { TelegramRuntime } from './runtime';
 import { TelegramBot } from './bot';
 import { humanTime, inQuiet, quietEnds, toEpoch } from './time';
 
@@ -31,11 +32,13 @@ export class Reminders implements OnModuleDestroy {
     @Inject(DB) private db: Db,
     private items: Items,
     private bot: TelegramBot,
-    @Optional() @Inject(TELEGRAM_API) private api: TelegramApi | null,
+    private rt: TelegramRuntime,
   ) {}
+  private get api() { return this.rt.api; }
 
+  // Pengatur waktu selalu jalan; putaran tanpa bot aktif langsung selesai.
   start(everyMs: number) {
-    if (!this.api || this.timer) return;
+    if (this.timer) return;
     this.timer = setInterval(() => { this.tick().catch(e => console.error('pengingat gagal', e instanceof Error ? e.message : e)); }, everyMs);
     this.timer.unref?.();
   }

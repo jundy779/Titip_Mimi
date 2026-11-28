@@ -35,7 +35,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       token: env.TELEGRAM_BOT_TOKEN || '',
       username: (env.TELEGRAM_BOT_USERNAME || '').replace(/^@/, ''),
       webhookSecret: env.TELEGRAM_WEBHOOK_SECRET || '',
-      mode: !env.TELEGRAM_BOT_TOKEN ? 'off' : env.TELEGRAM_MODE === 'polling' ? 'polling' : 'webhook',
+      mode: env.TELEGRAM_MODE === 'polling' ? 'polling' : env.TELEGRAM_BOT_TOKEN || /^https:/.test(env.PUBLIC_URL || '') ? 'webhook' : 'polling',
       publicUrl: (env.PUBLIC_URL || '').replace(/\/$/, ''),
       reminderEveryMs: Number(env.REMINDER_EVERY_MS) || 30000,
     },

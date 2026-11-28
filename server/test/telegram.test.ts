@@ -12,6 +12,11 @@ import { TelegramApi, TelegramError, TgUpdate } from '../src/telegram/api';
 import { TelegramBot } from '../src/telegram/bot';
 import { Reminders } from '../src/telegram/reminders';
 import { TelegramPoller } from '../src/telegram/poller';
+import { TelegramRuntime } from '../src/telegram/runtime';
+import { TelegramService } from '../src/telegram/service';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { nextOccurrence, parseDump, toEpoch } from '../src/telegram/time';
 
 // Dua akun fiktif dan dua pengguna Telegram fiktif. Tidak ada panggilan ke internet.
@@ -323,7 +328,7 @@ test('bot diblokir: sambungan diputus otomatis dan tidak ada kiriman lagi', asyn
 test('dua proses pengingat bersamaan tetap mengirim satu kali', async () => {
   await linkBoth();
   await scheduled('Rapat RT', '2026-11-28T09:00');
-  const twin = new Reminders(ctx.db, ctx.items, ctx.bot, ctx.tg);
+  const twin = new Reminders(ctx.db, ctx.items, ctx.bot, ctx.app.get(TelegramRuntime));
   const [x, y] = await Promise.all([ctx.reminders.tick(NOW), twin.tick(NOW)]);
   assert.equal(x.sent + y.sent, 1);
   assert.equal(ctx.tg.sent().length, 1);
@@ -393,4 +398,134 @@ test('pengurai waktu server sama dengan web (iqlima.mjs)', async () => {
   }
   assert.equal(toEpoch('2026-11-28T09:05', 'Asia/Jakarta'), NOW);
   assert.equal(toEpoch('2026-03-08T03:30', 'America/New_York'), Date.UTC(2026, 2, 8, 7, 30));
+});
+
+test('/id menunjukkan ID Telegram, bahkan sebelum tersambung', async () => {
+  await ctx.bot.handle(text(9999, '/id'), NOW);
+  assert.match(ctx.tg.last().text, /^ID Telegram kamu: 9999\nUsername: @uji9999/);
+  assert.match(ctx.tg.last().text, /Hubungkan Telegram di Profil/);
+  await linkBoth();
+  await ctx.bot.handle(text(TG_A, '/id'), NOW);
+  assert.match(ctx.tg.last().text, /Mimi sudah kenal kamu/);
+});
+
+test('/hariini dan /besok merangkum agenda pemilik saja', async () => {
+  await linkBoth();
+  await scheduled('Ambil jahitan', '2026-11-28T16:00');
+  await scheduled('Telepon ibu', '2026-11-28T09:00', { done: true });
+  ctx.items.put(ctx.ownerB, { clientId: 'agenda-b-0001', kind: 'agenda', title: 'Rahasia B', note: '', time: '2026-11-28T10:00', done: false }, NOW);
+  await ctx.bot.handle(text(TG_A, '/hariini'), NOW);
+  const t = ctx.tg.last().text;
+  assert.match(t, /^Agenda hari ini, Sabtu, 28 Nov:/);
+  assert.match(t, /✓ 09\.00  Telepon ibu\n• 16\.00  Ambil jahitan/);
+  assert.match(t, /1 dari 2 selesai/);
+  assert.doesNotMatch(t, /Rahasia/);
+  await ctx.bot.handle(text(TG_A, '/besok'), NOW);
+  assert.match(ctx.tg.last().text, /Besok belum ada agenda/);
+});
+
+// ---------- Pasang bot dari Profil ----------
+const GOOD = '123456789:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw';
+const GOOD2 = '987654321:BBHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw';
+function fakes() {
+  const bots: Record<string, FakeTelegram> = {};
+  const factory = (token: string) => {
+    if (!bots[token]) {
+      const f = new FakeTelegram();
+      const base = f.call.bind(f);
+      f.call = async (method: string, params: any = {}) => {
+        if (method === 'getMe') {
+          f.calls.push({ method, params });
+          if (token === GOOD) return { id: 1, is_bot: true, username: 'MimiIqlimaBot' };
+          if (token === GOOD2) return { id: 2, is_bot: true, username: 'MimiKeduaBot' };
+          throw new TelegramError(401, 'Unauthorized');
+        }
+        return base(method, params);
+      };
+      bots[token] = f;
+    }
+    return bots[token];
+  };
+  return { bots, factory };
+}
+async function profilApp(path: string, factory: (t: string) => any, env: Record<string, string> = {}) {
+  const config = loadConfig({ ALLOWED_EMAILS: 'iqlima.uji@contoh.id,jundy.uji@contoh.id', STATIC_DIR: '', ...env } as NodeJS.ProcessEnv);
+  const db = openDatabase(path);
+  const app = await createApp(config, db, google, false, null, factory);
+  await app.init();
+  const http = request(app.getHttpServer());
+  const login = async (cred: string) => (await http.post('/v1/auth/google').set('X-Mimi', '1').set('X-Mimi-Client', 'token').send({ credential: cred })).body.token as string;
+  return { app, db, http, a: await login('cred-a'), b: await login('cred-b') };
+}
+
+test('pasang bot dari Profil: token dicek ke Telegram, disimpan di server, tidak pernah dikirim balik', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'mimi-bot-'));
+  const { bots, factory } = fakes();
+  const s = await profilApp(join(dir, 'm.sqlite'), factory);
+  try {
+    let st = (await s.http.get('/v1/telegram').set(auth(s.a))).body;
+    assert.equal(st.enabled, false);
+    assert.equal(st.bot.canInstall, true);
+    assert.equal((await s.http.post('/v1/telegram/link').set(auth(s.a))).status, 503);
+    const bad = await s.http.post('/v1/telegram/bot').set(auth(s.a)).send({ token: 'token saya' });
+    assert.equal(bad.status, 400); assert.equal(bad.body.code, 'bad_token');
+    const wrong = await s.http.post('/v1/telegram/bot').set(auth(s.a)).send({ token: '111111111:ZZHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw' });
+    assert.equal(wrong.body.code, 'token_rejected');
+    // Lewat cookie tanpa X-Mimi ditolak (CSRF), seperti endpoint lain.
+    assert.equal((await s.http.post('/v1/telegram/bot').send({ token: GOOD })).status, 403);
+    const ok = await s.http.post('/v1/telegram/bot').set(auth(s.a)).send({ token: '  ' + GOOD + '\n' });
+    assert.equal(ok.status, 200, JSON.stringify(ok.body));
+    assert.equal(ok.body.enabled, true);
+    assert.deepEqual({ ...ok.body.bot }, { username: 'MimiIqlimaBot', source: 'profil', mine: true, receiving: null, canInstall: true });
+    assert.ok(!JSON.stringify(ok.body).includes('AAHdq'), 'token tidak ada di respons');
+    assert.deepEqual(bots[GOOD].calls.map(c => c.method), ['getMe', 'setMyShortDescription', 'setMyDescription', 'setMyCommands']);
+    assert.ok(bots[GOOD].calls[3].params.commands.some((c: any) => c.command === 'id'));
+    const link = await s.http.post('/v1/telegram/link').set(auth(s.a));
+    assert.match(link.body.url, /^https:\/\/t\.me\/MimiIqlimaBot\?start=/);
+    // Akun lain tidak bisa mengganti atau melepas bot.
+    const other = await s.http.post('/v1/telegram/bot').set(auth(s.b)).send({ token: GOOD2 });
+    assert.equal(other.status, 403); assert.equal(other.body.code, 'not_bot_owner');
+    assert.equal((await s.http.post('/v1/telegram/bot/remove').set(auth(s.b))).status, 403);
+    st = (await s.http.get('/v1/telegram').set(auth(s.b))).body;
+    assert.equal(st.bot.mine, false); assert.equal(st.bot.canInstall, false); assert.equal(st.enabled, true);
+    // Tersambung, lalu ganti bot: sambungan lama dihapus karena obrolannya beda.
+    await s.app.get(TelegramBot).handle(text(TG_A, '/start ' + new URL(link.body.url).searchParams.get('start')), Date.now());
+    assert.equal((await s.http.get('/v1/telegram').set(auth(s.a))).body.linked, true);
+    await s.http.post('/v1/telegram/bot').set(auth(s.a)).send({ token: GOOD2 });
+    st = (await s.http.get('/v1/telegram').set(auth(s.a))).body;
+    assert.equal(st.bot.username, 'MimiKeduaBot'); assert.equal(st.linked, false);
+  } finally { await s.app.close(); }
+  // Server dinyalakan ulang: bot dari Profil tetap aktif.
+  const again = await profilApp(join(dir, 'm.sqlite'), factory);
+  try {
+    assert.equal((await again.http.get('/v1/telegram').set(auth(again.a))).body.bot.username, 'MimiKeduaBot');
+    assert.equal((await again.http.post('/v1/telegram/bot/remove').set(auth(again.a))).status, 204);
+    assert.ok(bots[GOOD2].calls.some(c => c.method === 'deleteWebhook'));
+    const st = (await again.http.get('/v1/telegram').set(auth(again.a))).body;
+    assert.equal(st.enabled, false); assert.equal(st.bot.username, '');
+    assert.equal((again.db.prepare("SELECT COUNT(*) n FROM settings WHERE key LIKE 'telegram.%'").get() as any).n, 0);
+  } finally { await again.app.close(); rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('bot dari Profil di server HTTPS memasang webhook dengan secret acak sendiri', async () => {
+  const { bots, factory } = fakes();
+  const s = await profilApp(':memory:', factory, { PUBLIC_URL: 'https://mimi.contoh.id' });
+  try {
+    await s.app.get(TelegramService).boot();
+    await s.http.post('/v1/telegram/bot').set(auth(s.a)).send({ token: GOOD });
+    const hook = bots[GOOD].calls.find(c => c.method === 'setWebhook')!.params;
+    assert.equal(hook.url, 'https://mimi.contoh.id/v1/telegram/webhook');
+    assert.match(hook.secret_token, /^[\w-]{32}$/);
+    assert.equal((await s.http.get('/v1/telegram').set(auth(s.a))).body.bot.receiving, 'webhook');
+    const update = text(9999, '/id');
+    assert.equal((await s.http.post('/v1/telegram/webhook').set('X-Telegram-Bot-Api-Secret-Token', 'tebakan-tebakan-123').send(update)).status, 404);
+    assert.equal((await s.http.post('/v1/telegram/webhook').set('X-Telegram-Bot-Api-Secret-Token', hook.secret_token).send(update)).status, 200);
+    assert.match(bots[GOOD].last().text, /ID Telegram kamu: 9999/);
+  } finally { await s.app.close(); }
+});
+
+test('bot dari pengaturan server tidak bisa diganti dari Profil', async () => {
+  const res = await ctx.http.post('/v1/telegram/bot').set(auth(ctx.a)).send({ token: GOOD });
+  assert.equal(res.status, 409); assert.equal(res.body.code, 'managed_by_server');
+  assert.equal((await ctx.http.get('/v1/telegram').set(auth(ctx.a))).body.bot.canInstall, false);
 });

@@ -1,9 +1,10 @@
-import { Inject, Injectable, Optional } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { createHash, randomBytes } from 'node:crypto';
 import { CONFIG, Config } from '../config';
 import { DB, Db } from '../db';
 import { Attachment, ItemData, Items } from '../items';
-import { TELEGRAM_API, TelegramApi, TelegramError, TgCallback, TgMessage, TgUpdate } from './api';
+import { TelegramError, TgCallback, TgMessage, TgUpdate } from './api';
+import { TelegramRuntime } from './runtime';
 import { hhmm, humanTime, minuteOfDay, nextOccurrence, parseDump, parseLocal, parseWhen, stamp, toEpoch, wallNow } from './time';
 
 // Pesan keluar dikumpulkan dulu, lalu dikirim setelah transaksi database selesai.
@@ -16,14 +17,27 @@ const hash = (s: string) => createHash('sha256').update(s).digest('hex');
 const newId = () => 'tg-' + randomBytes(9).toString('base64url');
 const CODE_MS = 10 * 60000;
 const SNOOZE = [10, 60];
-export const LINK_HELP = 'Hai, aku Mimi ♡ Supaya kirimanmu masuk ke Ruang Iqlima, buka Profil > Koneksi Mimi > Hubungkan Telegram, lalu ketuk tautannya.';
-const HELP = [
-  'Kirim apa saja ke Mimi: teks, foto nota, video, atau dokumen. Satu kiriman jadi satu titipan ♡',
-  'Tulis waktunya biar Mimi bisa ingetin, misalnya "ambil jahitan jumat jam 4 sore".',
+export const LINK_HELP = [
+  'Hai, aku Mimi ♡ Aku belum kenal kamu.',
   '',
-  '/cari kata  cari titipan',
-  '/tenang 22-6  atur jam tenang (atau /tenang mati)',
-  '/stop  putuskan Telegram dari Ruang Iqlima',
+  'Biar kirimanmu masuk ke Ruang Iqlima:',
+  '1. Buka Ruang Iqlima, lalu Profil',
+  '2. Di bagian Koneksi Mimi, tekan Hubungkan Telegram',
+  '3. Telegram terbuka lagi di sini, tekan Mulai',
+].join('\n');
+const HELP = [
+  'Hai, ini Mimi ♡ Begini cara titip ke aku:',
+  '',
+  '📝 Tulis aja, misalnya "ambil jahitan jumat jam 4 sore"',
+  '📸 Kirim foto nota, video, atau dokumen. Tulis waktunya di keterangan foto kalau mau diingetin',
+  '⏰ Pilih kapan diingetin lewat tombol, atau balas pesan Mimi dengan waktunya',
+  '',
+  '/hariini  agenda hari ini',
+  '/besok  agenda besok',
+  '/cari nota  cari titipan',
+  '/tenang 22-6  jam tenang (atau /tenang mati)',
+  '/id  lihat ID Telegram kamu',
+  '/stop  putuskan sambungan',
 ].join('\n');
 
 @Injectable()
@@ -32,10 +46,11 @@ export class TelegramBot {
     @Inject(DB) private db: Db,
     @Inject(CONFIG) private config: Config,
     private items: Items,
-    @Optional() @Inject(TELEGRAM_API) private api: TelegramApi | null,
+    private rt: TelegramRuntime,
   ) {}
 
-  get enabled() { return Boolean(this.api && this.config.telegram.username); }
+  private get api() { return this.rt.api; }
+  get enabled() { return Boolean(this.rt.api && this.rt.username); }
 
   // ---------- Dari web (pemilik sudah diverifikasi lewat sesi) ----------
   createLink(ownerId: string, now = Date.now()) {
@@ -44,12 +59,13 @@ export class TelegramBot {
       this.db.prepare('DELETE FROM telegram_link_codes WHERE owner_id = ? OR expires_at < ?').run(ownerId, now);
       this.db.prepare('INSERT INTO telegram_link_codes (code_hash, owner_id, expires_at) VALUES (?, ?, ?)').run(hash(code), ownerId, now + CODE_MS);
     })();
-    return { url: `https://t.me/${this.config.telegram.username}?start=${code}`, expiresAt: now + CODE_MS };
+    return { url: `https://t.me/${this.rt.username}?start=${code}`, expiresAt: now + CODE_MS };
   }
   status(ownerId: string) {
     const link = this.db.prepare('SELECT username, linked_at FROM telegram_links WHERE owner_id = ?').get(ownerId) as { username: string; linked_at: number } | undefined;
     const user = this.db.prepare('SELECT timezone, quiet_start, quiet_end FROM users WHERE id = ?').get(ownerId) as { timezone: string; quiet_start: number | null; quiet_end: number | null };
-    return { enabled: this.enabled, linked: Boolean(link), username: link?.username || '', linkedAt: link?.linked_at || null, timezone: user.timezone, quietStart: user.quiet_start, quietEnd: user.quiet_end };
+    const bot = { username: this.rt.username, source: this.rt.source, mine: this.rt.owner === ownerId, receiving: this.rt.receiving, canInstall: this.rt.source !== 'env' && (!this.rt.owner || this.rt.owner === ownerId) };
+    return { enabled: this.enabled, bot, linked: Boolean(link), username: link?.username || '', linkedAt: link?.linked_at || null, timezone: user.timezone, quietStart: user.quiet_start, quietEnd: user.quiet_end };
   }
   setQuiet(ownerId: string, start: number | null, end: number | null) {
     this.db.prepare('UPDATE users SET quiet_start = ?, quiet_end = ? WHERE id = ?').run(start, end, ownerId);
@@ -115,6 +131,12 @@ export class TelegramBot {
       if (code) return [this.link(code, msg, now)];
       return [this.say(chat, link ? 'Kita udah nyambung kok ♡\n\n' + HELP : LINK_HELP)];
     }
+    if (command?.[1].toLowerCase() === 'id') {
+      const who = msg.from.username ? `\nUsername: @${msg.from.username}` : '';
+      return [this.say(chat, `ID Telegram kamu: ${msg.from.id}${who}\n\n` + (link
+        ? 'ID ini nggak perlu kamu isi di mana-mana. Mimi sudah kenal kamu sejak kamu tekan Hubungkan Telegram ♡'
+        : 'ID ini nggak perlu diketik di mana-mana. Cukup tekan Hubungkan Telegram di Profil Ruang Iqlima, nanti Mimi kenal kamu otomatis ♡'))];
+    }
     if (!link) return [this.say(chat, LINK_HELP)];
     const owner = link.owner_id;
     if (link.chat_id !== chat) this.db.prepare('UPDATE telegram_links SET chat_id = ? WHERE owner_id = ?').run(chat, owner);
@@ -124,6 +146,7 @@ export class TelegramBot {
       if (name === 'stop') { this.unlink(owner); return [this.say(chat, 'Sambungan Telegram sudah Mimi putus. Titipanmu tetap aman di Ruang Iqlima. Kapan pun mau nyambung lagi, buka Profil ya ♡')]; }
       if (name === 'cari') return [this.search(owner, chat, arg)];
       if (name === 'tenang') return [this.quiet(owner, chat, arg)];
+      if (name === 'hariini' || name === 'besok') return [this.agenda(owner, chat, name === 'besok' ? 1 : 0, now)];
       return [this.say(chat, HELP, {}, owner)];
     }
 
@@ -231,6 +254,20 @@ export class TelegramBot {
     const lines = found.map(i => '• ' + i.title + (i.time ? ` (${humanTime(i.time)})` : '') + (i.attachments?.length ? ' 📎' : ''));
     const buttons = found.filter(i => i.attachments?.length).map(i => [{ text: '📎 ' + i.title.slice(0, 40), callback_data: 'f:' + i.clientId }]);
     return this.say(chat, 'Ini yang Mimi temukan:\n' + lines.join('\n'), buttons.length ? this.keyboard(buttons) : {}, owner);
+  }
+
+  private agenda(owner: string, chat: number, offset: number, now: number): Outgoing {
+    const wall = wallNow(now, this.zone(owner));
+    const day = new Date(wall.getFullYear(), wall.getMonth(), wall.getDate() + offset, 12);
+    const key = stamp(day).slice(0, 10);
+    const label = (offset ? 'besok, ' : 'hari ini, ') + humanTime(key + 'T00:00').replace(/, 00\.00$/, '');
+    const rows = (this.db.prepare("SELECT data FROM items WHERE owner_id = ? AND deleted = 0 AND kind = 'agenda'").all(owner) as { data: string }[])
+      .map(r => JSON.parse(r.data) as ItemData).filter(i => i.time?.startsWith(key)).sort((a, b) => a.time.localeCompare(b.time));
+    if (!rows.length) return this.say(chat, offset ? `Besok belum ada agenda. Mau titip sesuatu buat besok? ♡` : `Hari ini belum ada agenda. Santai dulu, atau titip sesuatu ke Mimi ♡`, {}, owner);
+    const done = rows.filter(i => i.done).length;
+    const lines = rows.map(i => `${i.done ? '✓' : '•'} ${i.time.slice(11).replace(':', '.')}  ${i.title}${i.attachments?.length ? ' 📎' : ''}`);
+    const footer = offset ? '' : done === rows.length ? '\n\nSemua sudah selesai. Mimi bangga banget ♡' : `\n\n${done} dari ${rows.length} selesai. Pelan-pelan aja ♡`;
+    return this.say(chat, `Agenda ${label}:\n\n${lines.join('\n')}${footer}`, {}, owner);
   }
 
   private quiet(owner: string, chat: number, arg: string): Outgoing {

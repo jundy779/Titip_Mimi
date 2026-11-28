@@ -1,12 +1,13 @@
-import { BadRequestException, Body, Controller, Get, HttpCode, HttpException, Inject, NotFoundException, Optional, Param, Post, Req, Res, ServiceUnavailableException, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, HttpCode, HttpException, Inject, NotFoundException, Param, Post, Req, Res, ServiceUnavailableException, UseGuards } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { timingSafeEqual } from 'node:crypto';
 import { Readable } from 'node:stream';
 import { AuthGuard, AuthedRequest } from '../auth';
-import { CONFIG, Config } from '../config';
 import { DB, Db } from '../db';
-import { TELEGRAM_API, TelegramApi, TgUpdate } from './api';
+import { TgUpdate } from './api';
 import { TelegramBot } from './bot';
+import { TelegramRuntime } from './runtime';
+import { TelegramService } from './service';
 
 const same = (a: string, b: string) => {
   const x = Buffer.from(a), y = Buffer.from(b);
@@ -16,15 +17,15 @@ const minute = (v: unknown) => v === null ? null : Number.isInteger(v) && (v as 
 
 @Controller('v1/telegram')
 export class TelegramController {
-  constructor(private bot: TelegramBot, @Inject(CONFIG) private config: Config) {}
+  constructor(private bot: TelegramBot, private rt: TelegramRuntime, private service: TelegramService) {}
 
   // Hanya Telegram yang tahu secret_token dari setWebhook. Selain itu dijawab 404 seolah tidak ada.
   @Post('webhook')
   @HttpCode(200)
   async webhook(@Req() req: Request, @Body() body: TgUpdate) {
-    const secret = this.config.telegram.webhookSecret;
+    const secret = this.rt.secret;
     const given = req.headers['x-telegram-bot-api-secret-token'];
-    if (this.config.telegram.mode !== 'webhook' || !secret || typeof given !== 'string' || !same(given, secret)) throw new NotFoundException();
+    if (this.rt.mode !== 'webhook' || !secret || typeof given !== 'string' || !same(given, secret)) throw new NotFoundException();
     // Error di sini menjadi 500 sehingga Telegram mengirim ulang; update_id mencegah dobel.
     await this.bot.handle(body);
     return {};
@@ -54,6 +55,21 @@ export class TelegramController {
     return this.bot.status(req.user.id);
   }
 
+  // Pasang bot dari Profil: tempel token dari BotFather. Server memeriksa ke Telegram (getMe),
+  // menyimpan token di server saja, memasang deskripsi dan menu, lalu mulai menerima pesan.
+  @Post('bot')
+  @HttpCode(200)
+  @UseGuards(AuthGuard)
+  async install(@Req() req: AuthedRequest, @Body() body: { token?: unknown }) {
+    await this.service.install(req.user.id, body?.token);
+    return this.bot.status(req.user.id);
+  }
+
+  @Post('bot/remove')
+  @HttpCode(204)
+  @UseGuards(AuthGuard)
+  async remove(@Req() req: AuthedRequest) { await this.service.remove(req.user.id); }
+
   @Post('unlink')
   @HttpCode(204)
   @UseGuards(AuthGuard)
@@ -66,7 +82,8 @@ const MAX_DOWNLOAD = 20 * 1024 * 1024;
 
 @Controller('v1/media')
 export class MediaController {
-  constructor(@Inject(DB) private db: Db, @Optional() @Inject(TELEGRAM_API) private api: TelegramApi | null) {}
+  constructor(@Inject(DB) private db: Db, private rt: TelegramRuntime) {}
+  private get api() { return this.rt.api; }
 
   @Get(':id')
   @UseGuards(AuthGuard)

@@ -184,3 +184,40 @@ Ukuran iPhone Fold masih perkiraan dari bocoran resolusi (dibagi skala 3), belum
 - Video dan dokumen besar belum diuji di HP.
 - Pengurai waktu memakai jam lokal proses Node. Jalankan server dengan `TZ=UTC` (bawaan image Docker) agar tidak ada lompatan musim panas.
 - Satu lampiran pertama ikut di pengingat; lampiran lain lewat tombol "Semua lampiran".
+
+## Pasang bot dari Profil, perintah baru, dan panduan Telegram (28 Nov 2026, malam)
+
+**Lulus dengan data uji, belum diterima Iqlima.** Bot Telegram masih tiruan.
+
+- `cd server && npm test`: 42 lulus, 0 gagal. Yang baru:
+  - Token dengan bentuk salah ditolak (`bad_token`), dan token yang ditolak Telegram dijelaskan (`token_rejected`).
+  - Lewat cookie tanpa `X-Mimi` dijawab 403.
+  - Token tidak ada di respons.
+  - Deskripsi pendek, deskripsi, dan menu dipasang otomatis.
+  - Akun lain tidak bisa mengganti atau melepas bot (`not_bot_owner`).
+  - Ganti ke bot lain menghapus sambungan.
+  - Bot dari Profil tetap aktif setelah server dinyalakan ulang, dan lepas bot memanggil `deleteWebhook` serta mengosongkan `settings`.
+  - Dengan `PUBLIC_URL` https, webhook terpasang dengan secret acak 32 karakter, dan tebakan secret dijawab 404.
+  - Bot dari environment tidak bisa diganti dari Profil (`managed_by_server`).
+  - `/id` jalan sebelum dan sesudah tersambung.
+  - `/hariini` hanya merangkum agenda pemilik, dan `/besok` kosong dijawab ramah.
+  - Upgrade database 1→3.
+- Uji browser pasang bot (Chrome 153 headless, 390 dan 320 px, `FAKE_TELEGRAM=profil`): 17 pemeriksaan lulus di tiap ukuran.
+  - Form token tampil sebagai kata sandi, dan tombol Lihat bisa menampilkannya.
+  - Pesan untuk token kurang lengkap dan token ditolak tampil dengan jelas.
+  - Setelah pasang, muncul "Bot Mimi: @…" dan tombol Hubungkan Telegram.
+  - Token tidak ada di halaman maupun respons.
+  - Ganti token dan Lepas bot berjalan.
+  - Akun kedua langsung bisa Hubungkan, tetapi tidak bisa mengganti bot.
+  - Tanpa error JavaScript.
+- Uji ujung ke ujung Telegram sebelumnya diulang: 17 lulus.
+- Halaman `/panduan-telegram` (390 dan 320 px):
+  - Tanpa gulir samping, 11 langkah, dan semua gambar termuat.
+  - Centang langkah tersimpan setelah muat ulang, dan kartu selamat muncul saat 11 dari 11 selesai.
+  - `/#profil` membuka Profil, dan Profil menautkan ke panduan.
+  - Satu catatan: tautan "langkah 8" di tengah kalimat tingginya 20 px (tautan sebaris).
+
+**Risiko tersisa:**
+- Teks balasan BotFather di panduan berupa terjemahan bebas; tampilan asli Telegram belum dicocokkan di HP.
+- Token dari Profil disimpan apa adanya di database dan ikut ke backup.
+- Pindah ke bot lain bisa membuat lampiran lama tidak terbuka dari web, karena `file_id` terikat ke bot penerimanya (belum diuji).

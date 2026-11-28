@@ -1,0 +1,364 @@
+---
+import MimiTheme from '../components/MimiTheme.astro';
+import welcome from '../../assets/mimi/v1/welcome.webp?url';
+import write from '../../assets/mimi/v1/write.webp?url';
+import privacy from '../../assets/mimi/v1/privacy.webp?url';
+import linked from '../../assets/mimi/v1/linked.webp?url';
+import photo from '../../assets/mimi/v1/photo.webp?url';
+import remind from '../../assets/mimi/v1/remind.webp?url';
+import search from '../../assets/mimi/v1/search.webp?url';
+import celebrate from '../../assets/mimi/v1/celebrate.webp?url';
+import retry from '../../assets/mimi/v1/retry.webp?url';
+
+const steps = [
+  ['cari', 'Cari BotFather'], ['newbot', 'Ketik /newbot'], ['nama', 'Kasih nama'], ['username', 'Kasih username'],
+  ['token', 'Salin token'], ['pasang', 'Tempel di Profil'], ['foto', 'Pasang foto Mimi'], ['hubung', 'Hubungkan'],
+  ['coba', 'Titip pertama'], ['ingat', 'Saat diingetin'], ['id', 'Lihat ID'],
+] as const;
+const commands = [
+  ['/hariini', 'Lihat agenda hari ini, mana yang sudah dan belum'],
+  ['/besok', 'Lihat agenda besok'],
+  ['/cari nota', 'Cari titipan. Ganti "nota" dengan kata yang kamu ingat'],
+  ['/tenang 22-6', 'Atur jam tenang. Pengingat di jam itu ditahan sampai pagi. /tenang mati untuk mematikan'],
+  ['/id', 'Lihat ID Telegram kamu'],
+  ['/bantuan', 'Cara pakai Mimi'],
+  ['/stop', 'Putuskan Telegram dari Ruang Iqlima. Titipan tetap aman'],
+] as const;
+---
+<!doctype html>
+<html lang="id"><head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Bikin bot Mimi di Telegram · Ruang Iqlima</title>
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <link rel="stylesheet" href="/base.css" /><link rel="stylesheet" href="/planner.css" />
+  <MimiTheme />
+</head><body class="tg-guide">
+<main>
+  <a class="back" href="/">‹ Kembali ke Ruang Iqlima</a>
+
+  <header class="hello">
+    <img src={welcome} width="140" height="140" alt="Mimi melambai" />
+    <div>
+      <p class="kicker">Panduan dari nol ♡</p>
+      <h1>Bikin bot Mimi di Telegram</h1>
+      <p>Setelah ini kamu bisa kirim foto nota atau catatan ke Mimi lewat Telegram, lalu Mimi ingetin kamu tepat waktu, lengkap dengan fotonya. Santai aja, sekitar 10 menit, nggak perlu ngerti coding sama sekali.</p>
+    </div>
+  </header>
+
+  <section class="sheet ready">
+    <h2>Siapkan dulu</h2>
+    <ul>
+      <li>📱 HP dengan aplikasi <b>Telegram</b> yang sudah bisa dipakai chat.</li>
+      <li>🌸 <b>Ruang Iqlima</b> sudah dibuka dan kamu sudah <b>masuk dengan Google</b> di Profil.</li>
+      <li>☕ Sekitar 10 menit. Kalau berhenti di tengah, centang di tiap langkah tersimpan, jadi bisa lanjut kapan saja.</li>
+    </ul>
+    <div class="progress" aria-live="polite"><progress max={steps.length} value="0" data-progress></progress><span data-progress-text>0 dari {steps.length} langkah</span></div>
+    <div class="chips" role="navigation" aria-label="Daftar langkah">
+      {steps.map(([id, label], i) => <a href={'#' + id} data-chip={id}><b>{i + 1}</b> {label}</a>)}
+    </div>
+  </section>
+
+  <h2 class="part">Bagian 1 · Bikin botnya</h2>
+
+  <section class="step sheet" id="cari">
+    <span class="num">1</span>
+    <h3>Cari BotFather</h3>
+    <p>BotFather adalah akun resmi Telegram untuk membuat bot. Semua bot di Telegram dibuat lewat dia.</p>
+    <ol>
+      <li>Buka Telegram, ketuk ikon <b>kaca pembesar</b> (cari).</li>
+      <li>Ketik <b>BotFather</b>.</li>
+      <li>Pilih yang username-nya <b>persis @BotFather</b>, lalu ketuk <b>Mulai</b> atau <b>Start</b> di bawah.</li>
+    </ol>
+    <p class="warn">⚠️ Ada akun tiruan yang namanya mirip. Pastikan tulisannya persis <b>@BotFather</b>, tanpa tambahan huruf atau angka.</p>
+    <label class="done"><input type="checkbox" data-step="cari" /> Sudah ♡</label>
+  </section>
+
+  <section class="step sheet" id="newbot">
+    <span class="num">2</span>
+    <h3>Ketik /newbot</h3>
+    <p>Di obrolan BotFather, ketik lalu kirim:</p>
+    <p class="copy"><code>/newbot</code><button type="button" data-copy="/newbot">Salin</button></p>
+    <div class="chat" aria-label="Contoh percakapan">
+      <p class="me">/newbot</p>
+      <p class="them"><small>BotFather, kira-kira artinya:</small>Oke, bot baru. Mau dikasih nama apa?</p>
+    </div>
+    <p class="tip">💡 BotFather membalas dalam bahasa Inggris. Di panduan ini balasannya Mimi terjemahkan, jadi tulisan aslinya mungkin sedikit beda. Yang penting urutannya: nama dulu, lalu username.</p>
+    <label class="done"><input type="checkbox" data-step="newbot" /> Sudah ♡</label>
+  </section>
+
+  <section class="step sheet" id="nama">
+    <span class="num">3</span>
+    <h3>Kasih nama</h3>
+    <p>Ini nama yang tampil di daftar chat. Boleh pakai spasi dan emoji, dan bisa diganti kapan saja.</p>
+    <p class="copy"><code>Mimi ♡</code><button type="button" data-copy="Mimi ♡">Salin</button></p>
+    <div class="chat">
+      <p class="me">Mimi ♡</p>
+      <p class="them"><small>BotFather, kira-kira artinya:</small>Bagus. Sekarang pilih username untuk botmu. Harus diakhiri "bot".</p>
+    </div>
+    <label class="done"><input type="checkbox" data-step="nama" /> Sudah ♡</label>
+  </section>
+
+  <section class="step sheet" id="username">
+    <span class="num">4</span>
+    <h3>Kasih username</h3>
+    <p>Username itu alamat bot, seperti <b>@mimi_iqlima_bot</b>. Aturannya:</p>
+    <ul>
+      <li>Panjang <b>5 sampai 32</b> karakter.</li>
+      <li>Hanya <b>huruf, angka, dan garis bawah</b> ( _ ). Tanpa spasi.</li>
+      <li>Harus diakhiri <b>bot</b>.</li>
+      <li><b>Tidak bisa diganti</b> nanti, jadi pilih yang kamu suka.</li>
+    </ul>
+    <p class="copy"><code>mimi_iqlima_bot</code><button type="button" data-copy="mimi_iqlima_bot">Salin</button></p>
+    <p class="tip">💡 Kalau BotFather bilang username itu sudah dipakai (biasanya ada kata <i>taken</i> atau <i>already</i>), tambahkan angka, misalnya <b>mimi_iqlima28_bot</b>, lalu kirim lagi.</p>
+    <label class="done"><input type="checkbox" data-step="username" /> Sudah ♡</label>
+  </section>
+
+  <section class="step sheet" id="token">
+    <span class="num">5</span>
+    <h3>Salin token</h3>
+    <p>Kalau berhasil, BotFather mengirim pesan panjang berisi ucapan selamat. Di dalamnya ada <b>token</b>, bentuknya angka, titik dua, lalu deretan huruf acak, seperti contoh dari Telegram ini:</p>
+    <p class="sample-token"><code>110201543:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw</code></p>
+    <ol>
+      <li>Tekan lama pesan dari BotFather, pilih <b>Salin</b>.</li>
+      <li>Atau ketuk tokennya. Di banyak HP, teks yang diberi kotak seperti itu langsung tersalin.</li>
+      <li>Tidak apa-apa kalau ikut tersalin seluruh pesan: tempel di catatan dulu, lalu salin bagian tokennya saja.</li>
+    </ol>
+    <div class="secret">
+      <img src={privacy} width="72" height="72" alt="" />
+      <p><b>Token itu seperti kunci rumah bot.</b> Siapa pun yang memegangnya bisa mengendalikan botmu. Jangan dikirim ke chat siapa pun, jangan di-screenshot, jangan ditaruh di status. Cukup ditempel di Profil Ruang Iqlima.</p>
+    </div>
+    <label class="done"><input type="checkbox" data-step="token" /> Sudah ♡</label>
+  </section>
+
+  <h2 class="part">Bagian 2 · Pasang di Ruang Iqlima</h2>
+
+  <section class="step sheet" id="pasang">
+    <span class="num">6</span>
+    <h3>Tempel token di Profil</h3>
+    <img class="art" src={write} width="96" height="96" alt="" />
+    <ol>
+      <li>Buka Ruang Iqlima, pilih menu <b>Profil</b>.</li>
+      <li>Gulir ke <b>Koneksi Mimi</b>, bagian <b>Telegram</b>.</li>
+      <li>Tempel token di kolom <b>Token bot dari BotFather</b>. Mau mengecek? Ketuk <b>Lihat</b>.</li>
+      <li>Ketuk <b>Pasang bot</b>.</li>
+    </ol>
+    <p>Mimi mengecek tokennya ke Telegram, lalu otomatis memasang deskripsi dan menu perintah bot. Kalau berhasil, muncul tulisan <b>Bot Mimi: @nama_bot_kamu</b>.</p>
+    <p class="tip">💡 Kolom token tidak muncul? Berarti botnya sudah dipasang Jundy dari server. Langsung lompat ke <a href="#hubung">langkah 8</a>.</p>
+    <a class="go" href="/#profil">Buka Profil ›</a>
+    <label class="done"><input type="checkbox" data-step="pasang" /> Sudah ♡</label>
+  </section>
+
+  <section class="step sheet" id="foto">
+    <span class="num">7</span>
+    <h3>Pasang foto Mimi di bot <small>(boleh dilewati)</small></h3>
+    <p>Biar botnya imut. Pilih satu, ketuk untuk menyimpan ke HP:</p>
+    <div class="avatars">
+      <a href="/bot/mimi-avatar-1.jpg" download="mimi-pink.jpg"><img src="/bot/mimi-avatar-1.jpg" width="112" height="112" alt="Mimi melambai, latar pink" /><span>Pink</span></a>
+      <a href="/bot/mimi-avatar-2.jpg" download="mimi-mint.jpg"><img src="/bot/mimi-avatar-2.jpg" width="112" height="112" alt="Mimi bersorak, latar mint" /><span>Mint</span></a>
+      <a href="/bot/mimi-avatar-3.jpg" download="mimi-lilac.jpg"><img src="/bot/mimi-avatar-3.jpg" width="112" height="112" alt="Mimi membawa surat, latar ungu" /><span>Lilac</span></a>
+    </div>
+    <ol>
+      <li>Di obrolan BotFather, kirim <code>/setuserpic</code> <button type="button" data-copy="/setuserpic">Salin</button></li>
+      <li>BotFather menampilkan daftar bot. Ketuk bot Mimi kamu.</li>
+      <li>Kirim foto Mimi tadi lewat ikon 📎, pilih dari <b>Galeri</b> sebagai foto biasa.</li>
+    </ol>
+    <label class="done"><input type="checkbox" data-step="foto" /> Sudah ♡</label>
+  </section>
+
+  <section class="step sheet" id="hubung">
+    <span class="num">8</span>
+    <h3>Hubungkan Telegram ke Ruang Iqlima</h3>
+    <img class="art" src={linked} width="96" height="96" alt="" />
+    <ol>
+      <li>Di <b>Profil</b>, ketuk <b>Hubungkan Telegram</b>.</li>
+      <li>Telegram terbuka di obrolan bot Mimi. Ketuk <b>Mulai</b> atau <b>Start</b>.</li>
+      <li>Mimi menyapa: <i>"Yeay, nyambung ♡"</i>.</li>
+      <li>Kembali ke Ruang Iqlima. Profil sekarang bertuliskan <b>Tersambung</b>.</li>
+    </ol>
+    <p class="tip">💡 Tautan Hubungkan hanya berlaku 10 menit dan sekali pakai. Kalau Mimi bilang tautannya kedaluwarsa, ketuk Hubungkan Telegram sekali lagi.</p>
+    <label class="done"><input type="checkbox" data-step="hubung" /> Sudah ♡</label>
+  </section>
+
+  <h2 class="part">Bagian 3 · Mulai titip</h2>
+
+  <section class="step sheet" id="coba">
+    <span class="num">9</span>
+    <h3>Titip pertama</h3>
+    <img class="art" src={photo} width="96" height="96" alt="" />
+    <p>Coba kirim foto apa saja ke bot Mimi, misalnya foto nota. Di kolom keterangan foto, tulis kapan mau diingetin:</p>
+    <p class="copy"><code>ambil jahitan jumat jam 4 sore</code><button type="button" data-copy="ambil jahitan jumat jam 4 sore">Salin</button></p>
+    <div class="chat">
+      <p class="me">📷 ambil jahitan jumat jam 4 sore</p>
+      <p class="them">Mimi simpan ♡ Ambil jahitan<br />Mau Mimi ingetin Jumat, 4 Des, 16.00?</p>
+      <p class="buttons"><span>Iya, ingetin ♡</span><span>Simpan aja, tanpa jadwal</span></p>
+    </div>
+    <p>Ketuk <b>Iya, ingetin ♡</b>. Selesai! Fotonya juga muncul di <b>Koleksi</b> Ruang Iqlima.</p>
+    <p class="tip">💡 Lupa tulis waktunya? Mimi menawarkan <b>Nanti malam 19.00</b> atau <b>Besok pagi 08.00</b>. Atau <b>balas pesan Mimi</b> dengan waktunya, misalnya "besok jam 9 pagi".</p>
+    <p>Mimi paham tulisan seperti: <i>besok jam 9</i>, <i>lusa jam 7 pagi</i>, <i>senin jam 16.30</i>, <i>tgl 5 jam 10</i>, <i>12 des jam 19:00</i>, <i>nanti jam 9 malam</i>.</p>
+    <label class="done"><input type="checkbox" data-step="coba" /> Sudah ♡</label>
+  </section>
+
+  <section class="step sheet" id="ingat">
+    <span class="num">10</span>
+    <h3>Saat waktunya tiba</h3>
+    <img class="art" src={remind} width="96" height="96" alt="" />
+    <p>Mimi mengirim foto yang sama dengan tiga tombol:</p>
+    <div class="chat">
+      <p class="them">📷 Mimi mau ingetin ♡<br />Ambil jahitan<br />🗓 Jumat, 4 Des, 16.00</p>
+      <p class="buttons"><span>✓ Sudah selesai</span><span>Tunda 10 menit</span><span>Tunda 1 jam</span></p>
+    </div>
+    <p>Jam <b>22.00 sampai 06.00</b> adalah jam tenang: pengingat di jam itu ditahan sampai pagi, biar tidurmu nggak terganggu. Bisa diubah di Profil atau lewat <code>/tenang</code>.</p>
+    <label class="done"><input type="checkbox" data-step="ingat" /> Sudah ♡</label>
+  </section>
+
+  <section class="step sheet" id="id">
+    <span class="num">11</span>
+    <h3>Lihat ID Telegram kamu</h3>
+    <p>Kirim ke bot Mimi:</p>
+    <p class="copy"><code>/id</code><button type="button" data-copy="/id">Salin</button></p>
+    <div class="chat"><p class="them">ID Telegram kamu: 123456789<br />Username: @namakamu</p></div>
+    <p class="tip">💡 ID ini <b>nggak perlu diisi di mana-mana</b>. Mimi sudah kenal kamu otomatis sejak kamu ketuk Hubungkan Telegram. Simpan saja kalau suatu saat ditanya.</p>
+    <label class="done"><input type="checkbox" data-step="id" /> Sudah ♡</label>
+  </section>
+
+  <section class="sheet finish" data-finish hidden>
+    <img src={celebrate} width="120" height="120" alt="Mimi bersorak" />
+    <div><h2>Yeay, semua langkah selesai ♡</h2><p>Mulai sekarang, apa pun yang mau kamu ingat, titip aja ke Mimi. Kamu nggak harus nanggung semuanya sendirian.</p></div>
+  </section>
+
+  <section class="sheet">
+    <h2>Perintah yang bisa dipakai</h2>
+    <p>Ketik <b>/</b> di obrolan bot Mimi, daftar ini muncul sendiri.</p>
+    <dl class="commands">{commands.map(([c, d]) => <div><dt><code>{c}</code></dt><dd>{d}</dd></div>)}</dl>
+  </section>
+
+  <section class="sheet faq">
+    <img class="art" src={retry} width="88" height="88" alt="" />
+    <h2>Kalau ada yang nggak jalan</h2>
+    <details><summary>BotFather bilang username sudah dipakai</summary><p>Tambahkan angka atau kata lain, misalnya <b>mimi_iqlima28_bot</b>. Ingat, harus diakhiri <b>bot</b>.</p></details>
+    <details><summary>Profil bilang "Token kelihatannya belum lengkap"</summary><p>Salin ulang dari BotFather. Pastikan semuanya ikut, dari angka di depan sampai huruf terakhir. Ketuk <b>Lihat</b> untuk mengecek.</p></details>
+    <details><summary>Profil bilang "Telegram tidak mengenali token ini"</summary><p>Token mungkin sudah diganti. Di BotFather kirim <code>/token</code>, pilih bot Mimi, lalu salin token terbaru yang dikirim.</p></details>
+    <details><summary>Mimi bilang tautannya kedaluwarsa</summary><p>Tautan Hubungkan berlaku 10 menit. Kembali ke Profil, ketuk <b>Hubungkan Telegram</b> lagi.</p></details>
+    <details><summary>Bot Mimi diam saja</summary><p>Biasanya server Ruang Iqlima sedang mati atau belum dinyalakan. Kabari Jundy. Kirimanmu tidak hilang: begitu server menyala, Telegram mengirimkannya lagi.</p></details>
+    <details><summary>Pengingat malam nggak datang</summary><p>Itu jam tenang (22.00 sampai 06.00). Pengingatnya datang jam 06.00. Mau dimatikan? Kirim <code>/tenang mati</code> atau ubah di Profil.</p></details>
+    <details><summary>Token nggak sengaja terkirim ke orang lain</summary><p>Tenang. Di BotFather kirim <code>/token</code>, pilih bot Mimi, salin token baru. Lalu di Profil buka <b>Ganti atau lepas bot</b>, ketuk <b>Ganti token</b>, tempel token baru. Dari sekarang yang dipakai token baru itu. Kalau Mimi minta, ketuk Hubungkan Telegram sekali lagi.</p></details>
+    <details><summary>Mau berhenti pakai Telegram</summary><p>Kirim <code>/stop</code> ke bot, atau ketuk <b>Putuskan Telegram</b> di Profil. Semua titipan tetap aman di Ruang Iqlima.</p></details>
+  </section>
+
+  <section class="sheet privacy-note">
+    <img class="art" src={search} width="88" height="88" alt="" />
+    <h2>Soal privasi</h2>
+    <p>Pesan dan foto yang kamu kirim ke bot lewat server Telegram dulu, baru sampai ke Ruang Iqlima. Jadi untuk <b>kata sandi, PIN, atau kode OTP</b>, jangan dikirim ke Mimi. Simpan di pengelola kata sandi, ya. Untuk nota, catatan, dan jadwal, aman dititipkan ♡</p>
+  </section>
+
+  <a class="back" href="/">‹ Kembali ke Ruang Iqlima</a>
+</main>
+
+<script>
+  const key = 'mimi-panduan-telegram-v1';
+  let done: Record<string, boolean> = {};
+  try { done = JSON.parse(localStorage.getItem(key) || '{}'); } catch {}
+  const boxes = [...document.querySelectorAll<HTMLInputElement>('[data-step]')];
+  const bar = document.querySelector<HTMLProgressElement>('[data-progress]')!;
+  const label = document.querySelector<HTMLElement>('[data-progress-text]')!;
+  function paint() {
+    const n = boxes.filter(b => b.checked).length;
+    bar.value = n;
+    label.textContent = `${n} dari ${boxes.length} langkah`;
+    for (const b of boxes) document.querySelector(`[data-chip="${b.dataset.step}"]`)?.classList.toggle('is-done', b.checked);
+    document.querySelector<HTMLElement>('[data-finish]')!.hidden = n !== boxes.length;
+  }
+  for (const b of boxes) {
+    b.checked = Boolean(done[b.dataset.step!]);
+    b.addEventListener('change', () => {
+      done[b.dataset.step!] = b.checked;
+      try { localStorage.setItem(key, JSON.stringify(done)); } catch {}
+      paint();
+      if (b.checked) {
+        const next = boxes.find(x => !x.checked);
+        if (next) setTimeout(() => next.closest('section')?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }), 250);
+      }
+    });
+  }
+  paint();
+  for (const btn of document.querySelectorAll<HTMLButtonElement>('[data-copy]')) {
+    btn.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(btn.dataset.copy!); btn.textContent = 'Tersalin ♡'; }
+      catch { btn.textContent = 'Tekan lama teksnya'; }
+      setTimeout(() => { btn.textContent = 'Salin'; }, 1600);
+    });
+  }
+</script>
+<style>
+  .tg-guide main { width:min(46rem,100%); margin:auto; padding:clamp(1rem,4vw,2.5rem) max(1rem,env(safe-area-inset-right)) 3rem max(1rem,env(safe-area-inset-left)); color:var(--mimi-on-surface); }
+  .tg-guide a { color:var(--mimi-primary); }
+  .back { display:inline-flex; align-items:center; min-height:44px; text-decoration:none; font-weight:600; }
+  .hello { display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-areas:'text art'; gap:1rem; align-items:center; margin:.5rem 0 1.25rem; padding:clamp(1rem,3vw,1.75rem); border-radius:var(--mimi-radius-card); background:var(--mimi-journal-rose, #ffe3ea); }
+  .hello h1 { font:700 clamp(1.8rem,6vw,2.6rem)/1.1 Georgia,serif; letter-spacing:-.03em; margin:.2rem 0 .6rem; }
+  .hello p { margin:0; line-height:1.55; }
+  .hello img { grid-area:art; width:clamp(5rem,22vw,8.75rem); height:auto; }
+  .hello > div { grid-area:text; }
+  .kicker { color:var(--mimi-primary); font-weight:700; font-size:.9rem; }
+  .part { font:700 1.05rem/1.3 system-ui,sans-serif; color:var(--mimi-primary); margin:2rem 0 .75rem; letter-spacing:.01em; }
+  .sheet { margin:0 0 1rem; }
+  .sheet h2 { margin-top:0; }
+  .ready ul, .step ul, .step ol { padding-left:1.25rem; line-height:1.6; }
+  .ready li, .step li { margin:.3rem 0; }
+  .progress { display:flex; align-items:center; gap:.75rem; margin:1rem 0 .75rem; font-size:.9rem; font-weight:600; }
+  .progress progress { flex:1; height:.6rem; accent-color:var(--mimi-primary); }
+  .chips { display:flex; flex-wrap:wrap; gap:.4rem; }
+  .chips a { display:inline-flex; align-items:center; gap:.35rem; min-height:40px; padding:.2rem .75rem; border-radius:var(--mimi-radius-pill); border:1px solid var(--mimi-outline-variant); text-decoration:none; color:var(--mimi-on-surface); background:var(--mimi-surface); font-size:.875rem; }
+  .chips a b { display:inline-grid; place-items:center; width:1.4rem; height:1.4rem; border-radius:50%; background:var(--mimi-primary-container); color:var(--mimi-on-primary-container); font-size:.75rem; }
+  .chips a.is-done b { background:var(--mimi-primary); color:var(--mimi-on-primary); }
+  .chips a.is-done { text-decoration:line-through; text-decoration-color:color-mix(in srgb,currentColor 40%,transparent); }
+  .step { position:relative; scroll-margin-top:1rem; padding-top:clamp(1.25rem,3vw,2rem); }
+  .step h3 { font:700 1.3rem/1.25 Georgia,serif; margin:0 0 .6rem; padding-right:3rem; }
+  .step h3 small { font:500 .85rem system-ui,sans-serif; color:var(--mimi-on-surface-variant); }
+  .num { position:absolute; top:-.7rem; left:1rem; display:grid; place-items:center; width:2.2rem; height:2.2rem; border-radius:50%; background:var(--mimi-primary); color:var(--mimi-on-primary); font-weight:700; box-shadow:0 3px 8px #6e2a4733; }
+  .art { float:right; width:clamp(4rem,18vw,6rem); height:auto; margin:0 0 .5rem .75rem; }
+  .copy { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; }
+  code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; background:var(--mimi-surface); border:1px solid var(--mimi-outline-variant); border-radius:.5rem; padding:.15rem .45rem; font-size:.95em; overflow-wrap:anywhere; }
+  .copy code { font-size:1.05rem; padding:.45rem .7rem; }
+  [data-copy] { min-height:40px; padding:.3rem .9rem; font-size:.875rem; margin:0; }
+  .chat { display:grid; gap:.45rem; margin:.75rem 0; padding:.85rem; border-radius:1.1rem; background:color-mix(in srgb,var(--mimi-journal-mint, #e0ece5) 70%,var(--mimi-surface)); clear:both; }
+  .chat p { margin:0; max-width:85%; padding:.55rem .8rem; border-radius:1rem; line-height:1.4; font-size:.95rem; }
+  .chat .me { justify-self:end; background:var(--mimi-primary); color:var(--mimi-on-primary); border-bottom-right-radius:.3rem; }
+  .chat .them small { display:block; font-size:.72rem; font-weight:700; color:var(--mimi-on-surface-variant); margin-bottom:.15rem; }
+  .chat .them { justify-self:start; background:var(--mimi-surface-container); border-bottom-left-radius:.3rem; box-shadow:0 1px 2px #0000000f; }
+  .chat .buttons { display:flex; flex-wrap:wrap; gap:.35rem; padding:0; background:none; max-width:100%; }
+  .chat .buttons span { padding:.4rem .7rem; border-radius:.7rem; background:color-mix(in srgb,var(--mimi-surface-container) 80%,transparent); border:1px solid var(--mimi-outline-variant); font-size:.85rem; font-weight:600; }
+  .tip, .warn { padding:.7rem .85rem; border-radius:.9rem; line-height:1.5; clear:both; }
+  .tip { background:color-mix(in srgb,var(--mimi-journal-lilac, #e9e2f4) 70%,var(--mimi-surface)); }
+  .warn { background:color-mix(in srgb,#ffd9a8 45%,var(--mimi-surface)); }
+  .sample-token code { display:block; padding:.6rem .75rem; font-size:.9rem; word-break:break-all; }
+  .secret { display:grid; grid-template-columns:auto minmax(0,1fr); gap:.75rem; align-items:center; padding:.85rem; border-radius:1rem; border:2px dashed color-mix(in srgb,var(--mimi-primary) 55%,transparent); background:color-mix(in srgb,var(--mimi-primary) 7%,var(--mimi-surface)); }
+  .secret p { margin:0; line-height:1.5; }
+  .secret img { width:3.5rem; height:auto; }
+  .go { display:inline-flex; align-items:center; min-height:44px; padding:0 1.2rem; border-radius:var(--mimi-radius-pill); background:var(--mimi-primary); color:var(--mimi-on-primary) !important; text-decoration:none; font-weight:650; margin:.25rem 0 .5rem; }
+  .avatars { display:flex; gap:.75rem; flex-wrap:wrap; margin:.5rem 0 1rem; }
+  .avatars a { display:grid; justify-items:center; gap:.3rem; text-decoration:none; font-weight:600; font-size:.875rem; }
+  .avatars img { width:clamp(4.5rem,22vw,7rem); height:auto; border-radius:50%; box-shadow:0 3px 10px #6e2a4726; }
+  .done { display:flex; align-items:center; gap:.6rem; width:max-content; min-height:44px; margin:.75rem 0 0; padding:0 1rem 0 .7rem; border-radius:var(--mimi-radius-pill); background:var(--mimi-primary-container); color:var(--mimi-on-primary-container); font-weight:650; cursor:pointer; clear:both; }
+  .done input { width:1.3rem; height:1.3rem; min-height:0; margin:0; accent-color:var(--mimi-primary); }
+  .finish { display:grid; grid-template-columns:auto minmax(0,1fr); gap:1rem; align-items:center; background:color-mix(in srgb,var(--mimi-journal-mint, #e0ece5) 80%,var(--mimi-surface)); }
+  .finish img { width:clamp(4.5rem,20vw,7.5rem); height:auto; }
+  .commands { display:grid; gap:.1rem; margin:0; }
+  .commands div { display:grid; grid-template-columns:8.5rem minmax(0,1fr); gap:.75rem; padding:.55rem 0; border-top:1px solid var(--mimi-outline-variant); }
+  .commands dt, .commands dd { margin:0; }
+  .faq details { border-top:1px solid var(--mimi-outline-variant); clear:both; }
+  .faq summary { min-height:48px; display:flex; align-items:center; cursor:pointer; font-weight:600; padding-right:.5rem; }
+  .faq details p { margin:0 0 .9rem; line-height:1.55; }
+  .faq summary { list-style:none; gap:.75rem; }
+  .faq summary::-webkit-details-marker { display:none; }
+  .faq summary::after { content:'+'; margin-left:auto; flex:none; display:grid; place-items:center; width:1.6rem; height:1.6rem; border-radius:50%; background:var(--mimi-primary-container); color:var(--mimi-on-primary-container); font-weight:700; }
+  .faq details[open] summary::after { content:'\2212'; }
+  @media (max-width:420px) {
+    .hello { display:flow-root; }
+    .hello > div { display:contents; }
+    .hello img { float:right; width:4.75rem; margin:0 0 .25rem .5rem; }
+    .commands div { grid-template-columns:1fr; gap:.15rem; }
+    .finish { grid-template-columns:1fr; justify-items:center; text-align:center; }
+  }
+  @media (prefers-reduced-motion:no-preference) { html { scroll-behavior:smooth; } }
+</style>
+</body></html>

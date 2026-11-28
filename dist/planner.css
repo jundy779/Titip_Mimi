@@ -767,3 +767,15 @@ dialog #form > .row:last-child, .iqlima-dialog .row:last-child {
 .attachment img, .attachment video { display:block; width:100%; max-height:60vh; object-fit:contain; border-radius:14px; background:var(--mimi-surface-container); }
 .attachment a.button { display:inline-flex; align-items:center; min-height:44px; padding:0 1rem; border-radius:var(--mimi-radius-pill); text-decoration:none; background:var(--mimi-primary-container); color:var(--mimi-on-primary-container); overflow-wrap:anywhere; }
 @media (max-width:359px) { .telegram-quiet .quiet-times { gap:.5rem; } .telegram-quiet .quiet-times input { padding-inline:.4rem; font-size:.9rem; } }
+
+.bot-form label { display:grid; gap:.35rem; font-weight:600; margin:.5rem 0 0; }
+.token-field { display:flex; gap:.4rem; }
+.token-field input { flex:1; min-width:0; min-height:44px; font-family:ui-monospace,monospace; letter-spacing:.02em; }
+.token-field button { flex:none; margin:0; min-width:4.5rem; }
+.bot-hint { margin:.4rem 0 .6rem; color:var(--mimi-on-surface-variant); font-size:.9rem; }
+.bot-line { margin:.25rem 0 .75rem; font-weight:600; }
+.bot-line a { color:var(--mimi-primary); }
+.bot-manage { margin-top:1rem; }
+.bot-manage summary { min-height:44px; display:flex; align-items:center; cursor:pointer; color:var(--mimi-primary); font-weight:600; }
+.bot-manage p { color:var(--mimi-on-surface-variant); font-size:.9rem; }
+.guide-link { display:inline-flex; align-items:center; min-height:44px; margin-top:.75rem; color:var(--mimi-primary); font-weight:600; }

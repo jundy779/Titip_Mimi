@@ -23,17 +23,21 @@ Tanpa Docker: `PUBLIC_GOOGLE_CLIENT_ID=... npm run build` di root, lalu di `serv
 
 **Wajib di produksi:** `GOOGLE_CLIENT_ID`, `ALLOWED_EMAILS` (pilot pribadi), HTTPS, volume persisten untuk `/data`. Server mencetak peringatan bila dua variabel pertama kosong. Log hanya berisi metode, jalur, status, dan durasi.
 
-## Menyiapkan bot Telegram (sekali, oleh Jundy)
+## Menyiapkan bot Telegram
 
-1. Di Telegram, buka **@BotFather**, kirim `/newbot`, beri nama (misalnya *Mimi*) dan username yang berakhiran `bot`. Simpan token yang diberikan. Token ini rahasia: jangan ditulis di repo, chat, atau screenshot.
-2. Pilih cara bot menerima pesan:
-   - **Webhook** (server online dengan HTTPS): isi `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`, `TELEGRAM_WEBHOOK_SECRET` (acak 32+ karakter huruf, angka, `_` atau `-`, misalnya hasil `openssl rand -hex 24`), dan `PUBLIC_URL=https://alamat-server`. Setelah server jalan: `cd server && npm run telegram:setup`. Perintah ini memasang webhook dengan secret, mendaftarkan perintah bot, lalu mencetak status webhook.
-   - **Polling** (laptop atau server tanpa domain): isi `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`, dan `TELEGRAM_MODE=polling`. Server menarik pesan sendiri tiap beberapa detik. Webhook lama otomatis dilepas; pesan yang menunggu tidak hilang. Bot hanya bekerja selama laptop menyala.
-3. Iqlima masuk di web, buka **Profil > Koneksi Mimi > Hubungkan Telegram**, lalu ketuk **Mulai** di Telegram. Profil berubah menjadi "Tersambung ke @…".
+Cara termudah, tanpa menyentuh server: ikuti halaman **/panduan-telegram** di Ruang Iqlima. Ringkasnya: buat bot di **@BotFather** (`/newbot`), salin tokennya, lalu tempel di **Profil > Koneksi Mimi > Token bot dari BotFather > Pasang bot**. Server mengecek token ke Telegram, menyimpannya, memasang deskripsi dan menu perintah, lalu mulai menerima pesan. Hanya akun yang memasang yang bisa mengganti atau melepas bot.
+
+Cara bot menerima pesan dipilih otomatis:
+- **Webhook** bila `PUBLIC_URL` berisi alamat `https://` server. Secret webhook dibuat acak oleh server.
+- **Polling** bila `PUBLIC_URL` kosong (laptop atau server tanpa domain). Bot hanya bekerja selama server menyala.
+
+Alternatif lewat environment (untuk admin): isi `TELEGRAM_BOT_TOKEN`, opsional `TELEGRAM_BOT_USERNAME` (bila kosong diambil dari Telegram), lalu `TELEGRAM_MODE=polling`, atau webhook dengan `TELEGRAM_WEBHOOK_SECRET` (acak 32+ karakter, misalnya `openssl rand -hex 24`) dan `PUBLIC_URL`. Saat menyala, server memasang webhook, deskripsi, dan menu sendiri. `npm run telegram:setup` tetap tersedia untuk memasang ulang secara manual. Bot dari environment tidak bisa diganti dari Profil.
+
+Setelah bot terpasang, Iqlima menekan **Hubungkan Telegram** di Profil lalu **Mulai** di Telegram. ID Telegram tercatat otomatis; tidak ada yang perlu diketik. `/id` di bot menampilkannya bila dibutuhkan.
 
 Pengingat dicek tiap 30 detik (`REMINDER_EVERY_MS`). Pengingat yang terlambat lebih dari 6 jam (misalnya server mati semalaman) tidak dikirim, supaya tidak menyerbu.
 
-**Mengganti token atau secret.** Token bocor: `/revoke` di @BotFather, ganti `TELEGRAM_BOT_TOKEN`, restart, jalankan `npm run telegram:setup` lagi. Secret webhook: ganti `TELEGRAM_WEBHOOK_SECRET`, restart, `npm run telegram:setup`. Tautan Iqlima tetap berlaku karena terikat ke akun Telegram, bukan ke token.
+**Mengganti token.** Token bocor: di @BotFather kirim `/token`, pilih bot, salin token baru, lalu pakai token baru itu di mana pun. Bot dari Profil: **Ganti atau lepas bot > Ganti token**, tempel token baru. Bot dari environment: ganti `TELEGRAM_BOT_TOKEN` lalu restart. Bila username bot sama, sambungan Iqlima tetap berlaku. Bila pindah ke bot lain, semua harus menekan Hubungkan Telegram lagi, dan lampiran lama mungkin tidak bisa dibuka dari web karena `file_id` terikat ke bot penerimanya {belum diuji}.
 
 **Memeriksa pengiriman** (di server, tanpa membuka isi titipan):
 
@@ -67,7 +71,8 @@ Data prototipe tersimpan di browser pada alamat demo lama (`*.chatgpt.site`). Br
 | Titipan tidak muncul di perangkat lain | Status di Profil, sudah memilih Pindahkan, koneksi; sinkron berjalan tiap 60 detik dan saat aplikasi dibuka |
 | Server tidak bisa menulis | Izin volume `/data`, ruang disk |
 | Bot tidak membalas sama sekali | Log server: `telegram` di baris `started`. Webhook: `npm run telegram:setup` menampilkan `lastError`. Polling: hanya satu proses yang boleh menarik pesan. |
-| "Bot Telegram belum diaktifkan di server" | `TELEGRAM_BOT_TOKEN` dan `TELEGRAM_BOT_USERNAME` |
+| Profil meminta token bot | Belum ada bot. Pasang dari Profil atau isi `TELEGRAM_BOT_TOKEN` |
+| "Bot ini dipasang dari akun lain" | Hanya akun pemasang yang bisa mengganti atau melepas bot |
 | Bot menjawab "Tautan ini sudah kedaluwarsa" | Kode berlaku 10 menit dan sekali pakai. Tekan Hubungkan Telegram lagi. |
 | Pengingat tidak datang | Sudah dikonfirmasi waktunya (titipan berjenis Agenda), bukan jam tenang, status di `reminder_deliveries` |
 | Foto tidak terbuka di web | Lebih dari 20 MB (buka dari Telegram), atau Telegram sedang tidak terjangkau (coba lagi) |

@@ -84,6 +84,8 @@ const migrations: string[] = [
      PRIMARY KEY (owner_id, client_id, occurrence)
    );
    CREATE INDEX reminder_due ON reminder_deliveries(status, next_try);`,
+  // 3: pengaturan server yang bisa diubah dari Profil (token bot Telegram). Tidak pernah dikirim ke browser.
+  `CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at INTEGER NOT NULL);`,
 ];
 
 export type Db = Database.Database;
