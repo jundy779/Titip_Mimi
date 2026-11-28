@@ -184,8 +184,10 @@ Iqlima gampang lupa, anak pertama, berzodiak Leo, dan terbiasa menanggung semuan
 | Tumpahkan pikiran | Pintasan keempat di Hari Ini | Satu baris satu hal. Mimi mengenali “besok”, “lusa”, “hari ini”, nama hari, “tgl 5”, “12 des”, “jam 4 sore”, “13.30”. Pratinjau bercentang sebelum disimpan. Tanpa waktu menjadi catatan. |
 | Cek sebelum keluar | Kartu di Hari Ini | Dompet, HP, Kunci, Charger bisa ditambah atau dihapus. Centang kembali kosong setiap hari. |
 | Rutinitas | Pilihan Ulangi di form agenda | Setiap hari, minggu, atau bulan. Saat ditandai selesai, jadwal berikutnya dibuat otomatis; tanggal 31 tetap mengikuti akhir bulan. |
-| Minta tolong Jundy | Tombol di detail catatan dan agenda | Pesan bisa disunting lalu dikirim lewat WhatsApp atau disalin. Tidak ada yang terkirim otomatis. Kartu akun tidak bisa dibagikan dari sini. |
+| Minta tolong Jundy | Tombol di detail catatan dan agenda | Pesan bisa disunting lalu dikirim lewat WhatsApp, disalin, atau disalin otomatis lalu membuka DM Instagram (ig.me tidak mendukung isi pesan). Tidak ada yang terkirim otomatis. Kartu akun tidak bisa dibagikan dari sini. |
 | Ruang lega | Kartu di Hari Ini | Pilih perasaan, tulis, Mimi menanggapi tanpa menilai. Hanya tersimpan di perangkat dan tidak ikut sinkron. Kalimat yang mengkhawatirkan memunculkan bantuan Healing119 Kemenkes (telepon 119 ekstensi 8, chat healing119.id). |
 | Dinding bangga | Kartu di Hari Ini | Agenda selesai, To-Do dicentang, jaga diri, dan kemenangan kecil yang ditulis sendiri dihitung per minggu mulai Senin. |
 | Jaga diri | Profil | Minum air, makan, istirahat sebentar, waktunya tidur. Muncul sekali per jadwal selama 45 menit saat web terbuka, bisa dimatikan satu per satu. |
 | Leo dan ulang tahun | Hari Ini dan Kamar Mimi | 23 Juli–22 Agustus: lencana “Musim Leo” dan Mimi memakai surai singa. Ulang tahun (diisi di Profil): lencana, perayaan Mimi, dan surai singa. |
+
+**Kontak Jundy hanya di perangkat.** Nomor WhatsApp dan username Instagram Jundy tidak boleh ditulis di repo atau hasil build karena repo dan web bersifat publik. Isi di Profil, atau buka tautan atur sekali `https://<alamat-web>/#atur?wa=62xxxxxxxxxx&ig=username` di HP Iqlima. Bagian setelah `#` tidak dikirim ke server web; Titip Mimi menyimpannya di perangkat lalu menghapusnya dari alamat. Bagikan tautan ini secara pribadi.

@@ -1,5 +1,5 @@
 // Antarmuka fitur Iqlima di Hari Ini dan Profil. Logika murni ada di iqlima.mjs.
-import { parseDump, weekStats, praise, helpMessage, waLink, needsSupport, support, feelings, firstbornLine, careKinds, defaultCare, dueCare, isLeoSeason, birthdayInfo, dayKey } from './iqlima.mjs';
+import { cleanIg, igLink, cleanPhone, parseSetupHash, parseDump, weekStats, praise, helpMessage, waLink, needsSupport, support, feelings, firstbornLine, careKinds, defaultCare, dueCare, isLeoSeason, birthdayInfo, dayKey } from './iqlima.mjs';
 
 const keys = { wins: 'mimi-wins-v1', out: 'mimi-out-v1', lega: 'mimi-lega-v1', care: 'mimi-selfcare-v1', me: 'mimi-iqlima-v1' };
 const read = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v ?? d; } catch { return d; } };
@@ -175,6 +175,8 @@ function openLega(api) {
     share.href = waLink(read(keys.me, {}).waPhone, 'Jundy, aku lagi pengen cerita' + (text ? ':\n' + text : '.'));
     share.target = '_blank'; share.rel = 'noopener';
     reply.append(share);
+    const ig = igLink(read(keys.me, {}).igUser);
+    if (ig) { const dm = make('a', 'Atau lewat DM Instagram', 'share-link'); dm.href = ig; dm.target = '_blank'; dm.rel = 'noopener'; dm.onclick = () => { navigator.clipboard?.writeText(text).catch(() => {}); }; reply.append(dm); }
     area.value = ''; renderPast();
     api.say(feeling === 'senang' || feeling === 'lega' ? 'done' : 'pet');
   };
@@ -197,9 +199,17 @@ export function openHelp(item, onSent) {
   const copy = button('Salin pesan', 'quiet');
   copy.onclick = async () => { try { await navigator.clipboard.writeText(area.value); copy.textContent = 'Tersalin ♡'; onSent?.(); } catch { area.select(); } };
   const close = button('Tutup', 'quiet'); close.onclick = () => box.close();
-  const actions = make('div', '', 'row'); actions.append(close, copy, send);
+  const actions = make('div', '', 'row'); actions.append(close, copy);
+  const ig = igLink(read(keys.me, {}).igUser);
+  const hint = make('p', '', 'muted'); hint.setAttribute('role', 'status');
+  if (ig) {
+    const dm = make('a', 'Kirim lewat Instagram', 'button quiet-link'); dm.href = ig; dm.target = '_blank'; dm.rel = 'noopener';
+    dm.onclick = async () => { try { await navigator.clipboard.writeText(area.value); hint.textContent = 'Pesan sudah disalin. Tinggal tempel di DM Instagram Jundy ♡'; } catch { hint.textContent = 'Salin pesannya dulu, lalu tempel di DM Instagram.'; } onSent?.(); };
+    actions.append(dm);
+  }
+  actions.append(send);
   if (!read(keys.me, {}).waPhone) box.append(make('p', 'Tip: isi nomor WhatsApp Jundy di Profil supaya langsung terbuka ke chatnya.', 'muted'));
-  box.append(area, actions);
+  box.append(area, actions, hint);
   box.showModal();
 }
 
@@ -255,9 +265,21 @@ export function mountProfile(section, api) {
     box.append(label);
   }
   const me = read(keys.me, {});
-  const phone = section.querySelector('[data-wa]'), birthday = section.querySelector('[data-birthday]');
+  const phone = section.querySelector('[data-wa]'), birthday = section.querySelector('[data-birthday]'), ig = section.querySelector('[data-ig]');
   phone.value = me.waPhone || '';
+  ig.value = me.igUser ? '@' + me.igUser : '';
+  ig.onchange = () => { const user = cleanIg(ig.value); write(keys.me, { ...read(keys.me, {}), igUser: user }); ig.value = user ? '@' + user : ''; api.notice(user ? 'Instagram Jundy tersimpan di perangkat ini.' : 'Username Instagram belum valid.'); };
   birthday.value = me.birthday ? '2000-' + me.birthday : '';
-  phone.onchange = () => { write(keys.me, { ...read(keys.me, {}), waPhone: phone.value.replace(/[^\d+ -]/g, '').slice(0, 20) }); api.notice('Nomor WhatsApp Jundy tersimpan di perangkat ini.'); };
+  phone.onchange = () => { const wa = cleanPhone(phone.value); write(keys.me, { ...read(keys.me, {}), waPhone: wa }); phone.value = wa; api.notice(wa ? 'Nomor WhatsApp Jundy tersimpan di perangkat ini.' : 'Nomor belum valid. Contoh: 0812 3456 7890'); };
   birthday.onchange = () => { write(keys.me, { ...read(keys.me, {}), birthday: birthday.value ? birthday.value.slice(5) : '' }); api.notice('Tanggal ulang tahun tersimpan. Mimi bakal inget ♡'); };
+}
+
+// Tautan atur sekali dari Jundy: simpan kontak di perangkat ini lalu hapus dari alamat.
+export function applySetupLink(api) {
+  const setup = parseSetupHash(location.hash);
+  if (!setup) return false;
+  write(keys.me, { ...read(keys.me, {}), ...setup });
+  history.replaceState(null, '', location.pathname + location.search);
+  api.notice('Kontak Jundy sudah tersimpan di perangkat ini ♡ Tombol Minta tolong Jundy siap dipakai.');
+  return true;
 }

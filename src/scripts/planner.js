@@ -9,7 +9,7 @@ import { mimiSay, floatHearts, manjaOn, hideBubble } from './mimi-bubble.js';
 import { greeting, readState, visit, writeState } from './mimi-manja.mjs';
 import { mergeInbox, inboxMessage } from './extension-inbox.mjs';
 import { createSync } from './mimi-sync.js';
-import { mountToday, mountProfile as mountCare, openHelp, careTick, logWin, unlogWin } from './iqlima-ui.js';
+import { mountToday, mountProfile as mountCare, openHelp, careTick, logWin, unlogWin, applySetupLink } from './iqlima-ui.js';
 import { nextOccurrence, repeats } from './iqlima.mjs';
 function addImport(card){
   const input=document.createElement('input');
@@ -486,6 +486,7 @@ function updateClock(){
 setInterval(updateClock,5000);
 document.addEventListener('visibilitychange',updateClock);
 render();ready=true;
+applySetupLink(iqlimaApi);
 
 function openReminder(id) {
   el('box').open && el('box').close();

@@ -200,3 +200,26 @@ export function birthdayInfo(mmdd, now = new Date()) {
   const daysLeft = Math.round((next - at(now, 0, 0, 0)) / 86400000);
   return { today: daysLeft === 0, daysLeft };
 }
+
+// ---------- Kontak Jundy (disimpan hanya di perangkat Iqlima) ----------
+export function cleanIg(value) {
+  const user = String(value || '').trim().replace(/^@/, '').replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/\/.*$/, '');
+  return /^[A-Za-z0-9._]{1,30}$/.test(user) ? user : '';
+}
+export function igLink(user) { const u = cleanIg(user); return u ? 'https://ig.me/m/' + u : ''; }
+export function cleanPhone(value) {
+  let d = String(value || '').replace(/\D/g, '');
+  if (d.startsWith('0')) d = '62' + d.slice(1);
+  return d.length >= 9 && d.length <= 15 ? d : '';
+}
+// Tautan atur sekali: #atur?wa=62...&ig=nama. Bagian # tidak dikirim ke server web.
+export function parseSetupHash(hash) {
+  const m = /^#atur\?(.*)$/.exec(hash || '');
+  if (!m) return null;
+  const q = new URLSearchParams(m[1]);
+  const out = {};
+  const wa = cleanPhone(q.get('wa')), ig = cleanIg(q.get('ig'));
+  if (wa) out.waPhone = wa;
+  if (ig) out.igUser = ig;
+  return Object.keys(out).length ? out : null;
+}

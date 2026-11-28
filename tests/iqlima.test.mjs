@@ -94,3 +94,16 @@ test('musim Leo dan ulang tahun', () => {
   assert.equal(birthdayInfo('08-05', now).daysLeft > 200, true);
   assert.equal(birthdayInfo('bukan', now), null);
 });
+
+test('kontak Jundy (data fiktif): nomor dan username dibersihkan, tautan atur sekali', async () => {
+  const { cleanIg, igLink, cleanPhone, parseSetupHash } = await import('../src/scripts/iqlima.mjs');
+  assert.equal(cleanIg('@contoh_pacar'), 'contoh_pacar');
+  assert.equal(cleanIg('https://instagram.com/contoh_pacar/'), 'contoh_pacar');
+  assert.equal(cleanIg('<script>'), '');
+  assert.equal(igLink('contoh_pacar'), 'https://ig.me/m/contoh_pacar');
+  assert.equal(cleanPhone('0812-0000-0000'), '6281200000000');
+  assert.equal(cleanPhone('12'), '');
+  assert.deepEqual(parseSetupHash('#atur?wa=6281200000000&ig=contoh_pacar'), { waPhone: '6281200000000', igUser: 'contoh_pacar' });
+  assert.equal(parseSetupHash('#atur?wa=abc'), null);
+  assert.equal(parseSetupHash('#lain'), null);
+});
