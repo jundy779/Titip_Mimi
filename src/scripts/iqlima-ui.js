@@ -1,4 +1,5 @@
 // Antarmuka fitur Iqlima di Hari Ini dan Profil. Logika murni ada di iqlima.mjs.
+import { mountMic } from './capture-extras.js';
 import { cleanIg, igLink, cleanPhone, parseSetupHash, parseDump, weekStats, praise, helpMessage, waLink, needsSupport, support, feelings, firstbornLine, careKinds, defaultCare, dueCare, isLeoSeason, birthdayInfo, dayKey } from './iqlima.mjs';
 
 const keys = { wins: 'mimi-wins-v1', out: 'mimi-out-v1', lega: 'mimi-lega-v1', care: 'mimi-selfcare-v1', me: 'mimi-iqlima-v1' };
@@ -74,7 +75,12 @@ function openDump(api) {
   };
   cancel.onclick = () => box.close();
   const actions = make('div', '', 'row dump-actions'); actions.append(cancel, save);
-  box.append(head, area, preview, actions);
+  const mic = make('button', '', 'mic'); mic.type = 'button'; mic.setAttribute('aria-label', 'Dikte pikiran'); mic.setAttribute('aria-pressed', 'false');
+  mic.append(make('span', '🎤'));
+  const stopMic = mountMic(mic, area, text => api.notice(text), { lines: true });
+  box.addEventListener('close', () => stopMic());
+  const write = make('div', '', 'with-mic'); write.append(area, mic);
+  box.append(head, write, preview, actions);
   box.showModal(); area.focus();
 }
 

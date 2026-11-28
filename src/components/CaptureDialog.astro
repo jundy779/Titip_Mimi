@@ -4,14 +4,34 @@
     <label>Jenis titipan
       <select id="jenis"><option value="note">Catatan</option><option value="account">Akun digital</option><option value="agenda">Agenda</option></select>
     </label>
+    <div class="capture-tools" id="ocr-row">
+      <label class="file-pick"><input type="file" id="ocr-file" accept="image/*" class="visually-hidden"><span aria-hidden="true">📷</span> Baca dari foto undangan</label>
+      <p id="ocr-status" role="status" aria-live="polite"></p>
+    </div>
     <label><span id="title-label">Judul catatan</span><input id="judul" required maxlength="100"></label>
     <fieldset id="account-fields" hidden>
       <legend>Petunjuk masuk</legend>
       <label>Email atau label akun<input id="identity" maxlength="160" placeholder="Misalnya, akun kampus" autocomplete="off"></label>
       <label>Cara masuk<select id="method"><option>Google</option><option>Email dan kata sandi</option><option>Apple</option><option>Nomor HP</option><option>Lainnya</option><option>Belum diisi</option></select></label>
-      <p>Demo ini menyimpan petunjuk di browser ini. Simpan kata sandi, PIN, dan kode pemulihan di pengelola kata sandimu.</p>
+      <label>Kata sandinya disimpan di<select id="vault">
+        <option value="">Belum dipilih</option>
+        <option value="google">Google Password Manager</option>
+        <option value="apple">Kata Sandi iPhone/Mac (iCloud)</option>
+        <option value="samsung">Samsung Pass</option>
+        <option value="bitwarden">Bitwarden</option>
+        <option value="onepassword">1Password</option>
+        <option value="browser">Disimpan di browser</option>
+        <option value="other">Tempat lain</option>
+      </select></label>
+      <p>Mimi cuma mencatat petunjuknya. Kata sandi, PIN, dan kode pemulihan tetap di pengelola kata sandimu.</p>
     </fieldset>
-    <label id="note-field">Catatan<textarea id="isi" placeholder="Tulis seadanya, yaa" rows="3"></textarea></label>
+    <div class="with-mic" id="note-field">
+      <label for="isi">Catatan</label>
+      <textarea id="isi" placeholder="Tulis seadanya, yaa" rows="3"></textarea>
+      <button type="button" class="mic" id="isi-mic" aria-label="Dikte catatan" aria-pressed="false" hidden><span aria-hidden="true">🎤</span></button>
+    </div>
+    <p class="secret-warning" id="secret-warning" role="alert" hidden>Sepertinya ada kata sandi atau kode di sini. Lebih aman simpan di pengelola kata sandi, lalu tulis di sini cukup petunjuknya, ya.</p>
+    <label id="place-field">Tempat (boleh kosong)<input id="tempat" maxlength="160" placeholder="Misalnya, Gedung Serbaguna Melati" autocomplete="off"></label>
     <label id="date-field"><span id="date-label">Ingatkan kapan? (boleh kosong)</span><input id="waktu" type="datetime-local"></label>
     <label id="repeat-field" hidden>Ulangi<select id="ulang"><option value="">Tidak</option><option value="daily">Setiap hari</option><option value="weekly">Setiap minggu</option><option value="monthly">Setiap bulan</option></select></label>
     <div class="chips" id="quick-days" aria-label="Pilih hari"><button type="button">Hari ini</button><button type="button">Besok</button></div>

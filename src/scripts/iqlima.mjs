@@ -223,3 +223,99 @@ export function parseSetupHash(hash) {
   if (ig) out.igUser = ig;
   return Object.keys(out).length ? out : null;
 }
+
+// ---------- Baca undangan dari foto ----------
+// Teks hasil OCR biasanya berantakan: huruf kapital acak, spasi hilang, baris terpotong.
+// Fungsi ini mencari jenis acara, nama, tanggal, jam, dan tempat, lalu menyusun usulan agenda.
+const monthWords = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des'];
+const eventKinds = [
+  [/akad\s*nikah/, 'Akad nikah'], [/resepsi/, 'Resepsi pernikahan'], [/walimat\w*|pernikahan|wedding|ngunduh\s*mantu/, 'Pernikahan'],
+  [/khitan\w*|sunatan/, 'Khitanan'], [/aqiqah|akikah/, 'Aqiqah'], [/ulang\s*tahun|birthday/, 'Ulang tahun'], [/wisuda/, 'Wisuda'],
+  [/tasyakuran|syukuran/, 'Syukuran'], [/pengajian|tahlil/, 'Pengajian'], [/arisan/, 'Arisan'], [/reuni/, 'Reuni'],
+  [/lamaran|tunangan|khitbah/, 'Lamaran'], [/seminar|webinar|workshop/, 'Seminar'], [/rapat|meeting/, 'Rapat'],
+];
+const placeLead = /^(?:bertempat(?:\s+di)?|tempat|lokasi|alamat|venue|di\s+(?=gedung|masjid|hotel|aula|rumah|balai|ballroom|kediaman|restoran|cafe|kafe))\s*[:\-]?\s*/i;
+const placeWords = /^(gedung|masjid|hotel|aula|balai|ballroom|kediaman|rumah|restoran|cafe|kafe|jl\.?|jalan)\b/i;
+
+export function parseInvitation(text, now = new Date()) {
+  const lines = String(text || '').replace(/\r/g, '').slice(0, 6000).split('\n').map(l => l.replace(/[|_~]+/g, ' ').replace(/\s+/g, ' ').trim()).filter(Boolean);
+  const flat = lines.join('\n').toLowerCase();
+  const found = eventKinds.find(([re]) => re.test(flat));
+  const kind = found?.[1] || '';
+  const kindLine = found && lines.find(l => l.length <= 60 && found[0].test(l.toLowerCase()) && !/^(undangan|the wedding of)$/i.test(l));
+  const couple = lines.find(l => /^[A-Za-z][A-Za-z.'’ ]{1,28}\s(?:&|dan|and)\s[A-Za-z][A-Za-z.'’ ]{1,28}$/.test(l) && !/tanggal|pukul|jam|bapak|ibu|keluarga/i.test(l));
+  let date = null;
+  let m = new RegExp(String.raw`\b(\d{1,2})\s*(${monthWords.map(w => w + '\\w*').join('|')}|ags)\.?\s*(\d{4})?\b`).exec(flat);
+  if (m) {
+    const mi = monthWords.findIndex(w => m[2].startsWith(w) || (w === 'agu' && m[2] === 'ags'));
+    date = { d: +m[1], mo: mi, y: m[3] ? +m[3] : null };
+  } else if ((m = /\b(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})\b/.exec(flat))) {
+    date = { d: +m[1], mo: +m[2] - 1, y: +m[3] < 100 ? 2000 + +m[3] : +m[3] };
+  }
+  if (date && (date.d < 1 || date.d > 31 || date.mo < 0 || date.mo > 11)) date = null;
+  const t = /(?:pukul|pkl\.?|jam)\s*(\d{1,2})\s*[.:]\s*(\d{2})/.exec(flat) || /\b(\d{1,2})\s*[.:]\s*(\d{2})\s*(?:wib|wita|wit)\b/.exec(flat);
+  const hour = t && +t[1] < 24 && +t[2] < 60 ? { h: +t[1], min: +t[2] } : null;
+  let when = null;
+  if (date) {
+    const y = date.y || now.getFullYear();
+    when = new Date(y, date.mo, date.d, hour ? hour.h : 9, hour ? hour.min : 0);
+    if (!date.y && when < new Date(now.getFullYear(), now.getMonth(), now.getDate())) when = new Date(y + 1, date.mo, date.d, when.getHours(), when.getMinutes());
+  }
+  let place = '';
+  for (let i = 0; i < lines.length && !place; i++) {
+    if (placeLead.test(lines[i])) {
+      const rest = lines[i].replace(placeLead, '').trim();
+      place = [rest || lines[i + 1] || '', rest ? lines[i + 1] && placeWords.test(lines[i + 1]) ? lines[i + 1] : '' : lines[i + 2] && placeWords.test(lines[i + 2]) ? lines[i + 2] : ''].filter(Boolean).join(', ');
+    }
+  }
+  if (!place) place = lines.find(l => placeWords.test(l)) || '';
+  const fallback = lines.find(l => l.length >= 6 && l.length <= 60 && /[a-z]/i.test(l) && !/^(undangan|the wedding of|bismillah)/i.test(l)) || 'Undangan';
+  const title = (couple && kind ? kind + ' ' + couple.replace(/\s+(and|dan)\s+/i, ' & ') : kindLine || kind || fallback).slice(0, 100);
+  return { title, kind, time: when ? stamp(when) : '', dateFound: Boolean(date), timeFound: Boolean(hour), place: place.slice(0, 160) };
+}
+
+// ---------- Surat dan ajakan lewat tautan (tanpa server) ----------
+// #surat?d=... dan #rencana?d=... berisi JSON kecil. Bagian # tidak pernah dikirim ke server web.
+export const stickers = ['♡', '🌸', '☕', '🌙', '🧸', '✨'];
+const b64 = s => btoa(String.fromCharCode(...new TextEncoder().encode(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const unb64 = s => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0)));
+const clip = (v, n) => typeof v === 'string' ? v.replace(/\s+$/g, '').slice(0, n) : '';
+export function cleanLetter(x) {
+  const body = clip(x?.body, 1000).trim();
+  if (!body) return null;
+  return { from: clip(x.from, 40).trim() || 'Seseorang', body, sticker: stickers.includes(x.sticker) ? x.sticker : '♡', at: typeof x.at === 'string' && !Number.isNaN(Date.parse(x.at)) ? x.at : new Date().toISOString() };
+}
+export function cleanPlan(x) {
+  const title = clip(x?.title, 100).trim();
+  if (!title) return null;
+  const time = typeof x.time === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(x.time) ? x.time : '';
+  return { from: clip(x.from, 40).trim() || 'Seseorang', title, time, place: clip(x.place, 160).trim(), note: clip(x.note, 500).trim() };
+}
+export function encodeShare(kind, data) {
+  const clean = kind === 'surat' ? cleanLetter(data) : kind === 'rencana' ? cleanPlan(data) : null;
+  return clean ? '#' + kind + '?d=' + b64(JSON.stringify(clean)) : '';
+}
+export function decodeShare(hash) {
+  const m = /^#(surat|rencana)\?d=([A-Za-z0-9_-]{4,6000})$/.exec(hash || '');
+  if (!m) return null;
+  try {
+    const data = (m[1] === 'surat' ? cleanLetter : cleanPlan)(JSON.parse(unb64(m[2])));
+    return data ? { kind: m[1], data } : null;
+  } catch { return null; }
+}
+
+// ---------- Pengelola kata sandi ----------
+// Mimi hanya mencatat di mana kata sandinya disimpan, tidak pernah kata sandinya sendiri.
+export const vaults = {
+  google: { label: 'Google Password Manager', url: 'https://passwords.google.com' },
+  apple: { label: 'Kata Sandi iPhone/Mac (iCloud)', url: '', hint: 'Buka pengelola kata sandi di iPhone atau Mac, lalu cari nama layanannya.' },
+  bitwarden: { label: 'Bitwarden', url: 'https://vault.bitwarden.com' },
+  onepassword: { label: '1Password', url: 'https://my.1password.com' },
+  samsung: { label: 'Samsung Pass', url: '', hint: 'Buka Samsung Pass di HP Samsung, lalu cari nama layanannya.' },
+  browser: { label: 'Disimpan di browser', url: '', hint: 'Buka pengaturan kata sandi di browser yang biasa kamu pakai.' },
+  other: { label: 'Tempat lain', url: '' },
+};
+// Tanda kalimat yang kelihatannya berisi kata sandi, PIN, atau kode. Dipakai untuk mengingatkan, bukan memblokir.
+export function looksSecret(text) {
+  return /\b(pass(word)?|sandi|pin|otp|kode\s*(pemulihan|recovery|backup)|recovery\s*code)\s*[:=]?\s*\S{3,}/i.test(String(text || ''));
+}

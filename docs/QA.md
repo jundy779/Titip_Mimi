@@ -221,3 +221,39 @@ Ukuran iPhone Fold masih perkiraan dari bocoran resolusi (dibagi skala 3), belum
 - Teks balasan BotFather di panduan berupa terjemahan bebas; tampilan asli Telegram belum dicocokkan di HP.
 - Token dari Profil disimpan apa adanya di database dan ikut ke backup.
 - Pindah ke bot lain bisa membuat lampiran lama tidak terbuka dari web, karena `file_id` terikat ke bot penerimanya (belum diuji).
+
+## Surat, rencana berdua, foto undangan, dikte, pengelola sandi (28 November, malam)
+
+- Server: 50 tes lulus. Termasuk 8 tes baru di `partner.test.ts`:
+  - Kode sekali pakai, kode sendiri, dan sudah berpasangan.
+  - Surat hanya untuk pasangan, dibaca hanya oleh penerima, dan sembunyi per sisi.
+  - Batas 50 surat sehari.
+  - Rencana last-write-wins antar dua HP.
+  - Orang ketiga tidak bisa membaca atau mengubah.
+  - Putus lalu sambung lagi mengembalikan data.
+  - Upgrade database 1→4.
+- Web unit: 41 lulus, termasuk `iqlima-plus.test.mjs`:
+  - Baca undangan dari teks OCR berantakan.
+  - Tautan surat dan rencana bolak-balik, dengan tautan rusak ditolak.
+  - Deteksi kata sandi.
+- Uji browser `partner-e2e` (Chrome headless, 390 dan 320 px): 49 pemeriksaan lulus di tiap ukuran.
+  - Dua akun fiktif tersambung lewat kode XXXX-XXXX. Kode sendiri ditolak, dan huruf kecil serta spasi diterima.
+  - Surat dari Jundy muncul di Hari Ini Iqlima dengan stiker, lalu berhenti berstatus baru setelah dibaca.
+  - Rencana dari Iqlima muncul di Agenda Jundy. Centang selesai dari Jundy terlihat di HP Iqlima, dan Ke agendaku membawa jam serta tempat.
+  - Agenda pribadi Iqlima tidak sampai ke akun Jundy, baik di browser maupun lewat `/v1/items?q=`.
+  - Putuskan butuh dua ketukan.
+  - Tanpa akun: surat dan ajakan menjadi tautan WhatsApp. Penerima langsung melihat surat atau ajakan, hash dibersihkan, ajakan masuk agenda, dan tautan rusak diabaikan.
+  - Foto undangan buatan sendiri dibaca tesseract lokal (bahasa Indonesia) dalam beberapa detik. Hasilnya: jenis agenda, judul "Pernikahan Rina & Bagas", 12 Desember 2026 10.00, dan tempat Gedung Serbaguna Melati.
+  - Dikte (SpeechRecognition palsu) menambah di akhir catatan. Di Tumpahkan pikiran, tiap jeda menjadi satu baris, sehingga terbaca 2 titipan. Tanpa dukungan, tombol mikrofon tersembunyi.
+  - Detail agenda punya tautan Google Maps. Kartu akun menampilkan "Buka Google Password Manager". Peringatan kata sandi muncul lalu hilang.
+  - Tanpa error JavaScript.
+- Regresi diulang:
+  - `telegram-e2e` 17/17.
+  - `botsetup-e2e` 17/17.
+  - `sync-e2e` 16/16.
+  - Audit ukuran 12 viewport plus layar lipat tanpa temuan. Input file tersembunyi dikecualikan karena area ketuknya adalah label 44 px.
+
+**Risiko tersisa:**
+- OCR baru diuji pada gambar rapi; undangan asli bisa salah baca, jadi form selalu meminta Iqlima mengecek sebelum simpan.
+- Dikte belum diuji di HP nyata, dan Safari iOS belum dicoba sama sekali.
+- Isi surat lewat tautan WhatsApp terbaca oleh siapa pun yang memegang tautannya.

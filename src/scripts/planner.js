@@ -9,8 +9,10 @@ import { mimiSay, floatHearts, manjaOn, hideBubble } from './mimi-bubble.js';
 import { greeting, readState, visit, writeState } from './mimi-manja.mjs';
 import { mergeInbox, inboxMessage } from './extension-inbox.mjs';
 import { createSync } from './mimi-sync.js';
+import { createPartner } from './mimi-partner.js';
 import { mountToday, mountProfile as mountCare, openHelp, careTick, logWin, unlogWin, applySetupLink } from './iqlima-ui.js';
-import { nextOccurrence, repeats } from './iqlima.mjs';
+import { nextOccurrence, repeats, parseInvitation, vaults, looksSecret } from './iqlima.mjs';
+import { readImageText, mountMic } from './capture-extras.js';
 function addImport(card){
   const input=document.createElement('input');
   input.type='file';input.accept='.ics,text/calendar';input.hidden=true;
@@ -68,6 +70,9 @@ function configureForm(){
   el('note-field').hidden = account;
   el('date-field').hidden = account;
   el('quick-days').hidden = account;
+  el('place-field').hidden = account;
+  el('ocr-row').hidden = account || Boolean(editing);
+  checkSecret();
   el('repeat-field').hidden = kind !== 'agenda';
   el('waktu').required = kind === 'agenda';
   el('title-label').textContent = account ? 'Nama layanan' : kind === 'agenda' ? 'Nama agenda' : 'Judul catatan';
@@ -86,8 +91,43 @@ function capture(kind, item = null){
   el('method').value = item?.method || 'Google';
   el('waktu').value = item?.time || '';
   el('ulang').value = item?.repeat || '';
+  el('tempat').value = item?.place || '';
+  el('vault').value = item?.vault || '';
+  el('ocr-status').textContent = '';
+  configureForm();
   el('box').showModal();
 }
+// Ingatkan (tidak memblokir) bila catatan atau label akun kelihatannya berisi kata sandi.
+function checkSecret(){
+  const account = el('jenis').value === 'account';
+  el('secret-warning').hidden = !looksSecret(account ? el('identity').value : el('isi').value);
+}
+el('isi').addEventListener('input', checkSecret);
+el('identity').addEventListener('input', checkSecret);
+el('box').addEventListener('close', () => stopMic());
+const stopMic = mountMic(el('isi-mic'), el('isi'), text => { el('notice').textContent = text; });
+// Foto undangan: dibaca di HP ini, lalu Mimi isi judul, tanggal, jam, dan tempat. Iqlima tinggal cek.
+el('ocr-file').onchange = async () => {
+  const file = el('ocr-file').files?.[0];
+  el('ocr-file').value = '';
+  if (!file) return;
+  const out = el('ocr-status');
+  if (!file.type.startsWith('image/')) { out.textContent = 'Pilih foto, ya. Untuk PDF, screenshot dulu undangannya.'; return; }
+  try {
+    const text = await readImageText(file, msg => { out.textContent = msg; });
+    if (!text.trim()) { out.textContent = 'Tulisannya belum kebaca. Coba foto lebih terang dan lurus, ya.'; return; }
+    const got = parseInvitation(text);
+    if (got.dateFound) { el('jenis').value = 'agenda'; configureForm(); el('waktu').value = got.time; }
+    el('judul').value = got.title;
+    if (got.place) el('tempat').value = got.place;
+    const excerpt = text.replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim().slice(0, 600);
+    el('isi').value = [el('isi').value.trim(), 'Dari foto undangan:\n' + excerpt].filter(Boolean).join('\n\n');
+    checkSecret();
+    out.textContent = !got.dateFound ? 'Tanggalnya belum ketemu. Isi sendiri tanggalnya, ya.' : !got.timeFound ? 'Sudah terbaca ♡ Jamnya belum ketemu, Mimi isi jam 09.00. Cek lagi, ya.' : 'Sudah terbaca ♡ Cek lagi judul, tanggal, dan tempatnya sebelum simpan.';
+  } catch {
+    out.textContent = navigator.onLine === false ? 'Pembaca foto butuh internet saat pertama dipakai. Coba lagi saat online.' : 'Fotonya belum bisa dibaca. Coba lagi, atau ketik manual dulu, ya.';
+  }
+};
 el('jenis').onchange = configureForm;
 function dateOffset(offset, now=new Date()){
   return new Date(now.getFullYear(),now.getMonth(),now.getDate()+offset);
@@ -159,6 +199,7 @@ const p=el('page');p.replaceChildren();if(tab==='Profil'){
   p.querySelector('[data-open-agenda]').onclick=()=>{tab='Agenda';render()};
   sync.mountProfile(p.querySelector('[data-account]'));
   sync.mountTelegram(p.querySelector('[data-telegram]'));
+  partner.mountProfile(p.querySelector('[data-partner]'));
   mountCare(p.querySelector('[data-care-section]'),iqlimaApi);
   const manja=p.querySelector('[data-manja-switch]');
   manja.checked=readState(localStorage).enabled;
@@ -174,6 +215,7 @@ if(tab==='Koleksi'){collection(p);return}
 p.append(el('agenda-template').content.cloneNode(true));
 mountSystemSettings(p.querySelector('[data-system-settings]'));
 addImport(p.querySelector('[data-calendar-import]'));
+partner.mountAgenda(p.querySelector('[data-together]'));
 p.querySelector('[data-add]').onclick=()=>capture('agenda');
 agendaList(p.querySelector('[data-schedule]'),items.filter(item=>item.time).sort((a,b)=>a.time.localeCompare(b.time)));
 }
@@ -236,7 +278,7 @@ function collection(page){
     search=field.value;
     const query=search.trim().toLocaleLowerCase('id');
     const rows=items.filter(item=>(!selectedKind || kindOf(item)===selectedKind)
-      && [item.title,item.note,item.identity,item.method].join(' ').toLocaleLowerCase('id').includes(query));
+      && [item.title,item.note,item.identity,item.method,item.place].join(' ').toLocaleLowerCase('id').includes(query));
     for(const chip of filters.children)chip.setAttribute('aria-pressed',String(chip.dataset.kind===selectedKind));
     reset.hidden=!search && !selectedKind;
     summary.textContent=rows.length+' titipan';
@@ -359,8 +401,9 @@ function detail(x){
  dlg.append(title);
  if(art(x)){const img=new Image();img.src=art(x);img.alt=x.title;img.className='full';dlg.append(img)}
  dlg.setAttribute('aria-label',x.title);
- if(kindOf(x)==='account'){dlg.append(make('p',x.identity),make('p','Cara masuk: '+x.method));accountActions(dlg,x)}
+ if(kindOf(x)==='account'){dlg.append(make('p',x.identity),make('p','Cara masuk: '+x.method));if(x.vault&&vaults[x.vault])dlg.append(vaultLine(x.vault));accountActions(dlg,x)}
  else {const note=make('p',x.note);note.className='note-body';dlg.append(note)}
+ if(x.place)dlg.append(placeLine(x.place));
  if(x.attachments?.length)dlg.append(attachmentsOf(x));
  if(x.repeat)dlg.append(make('p','↻ '+repeats[x.repeat]));
  if(x.helpAskedAt)dlg.append(make('p','Udah minta tolong Jundy · '+new Date(x.helpAskedAt).toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short'})));
@@ -379,6 +422,19 @@ function detail(x){
  };dlg.append(later)}}
  const close=make('button','Tutup');close.className='quiet';close.onclick=()=>dlg.close();dlg.append(close);document.body.append(dlg);dlg.onclose=()=>dlg.remove();dlg.showModal()
 }
+// Tempat acara: satu ketukan ke Google Maps.
+function placeLine(place){
+  const p=make('p','📍 '+place+' ');p.className='place-line';
+  const a=make('a','Buka peta');a.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(place);a.target='_blank';a.rel='noopener';
+  p.append(a);return p;
+}
+// Pengelola kata sandi: tunjukkan tempatnya dan, bila ada versi web, tautan untuk membukanya.
+function vaultLine(id){
+  const v=vaults[id];const p=make('p','🔐 Kata sandi di: '+v.label+' ');p.className='vault-line';
+  if(v.url){const a=make('a','Buka '+v.label.replace(/ \(.*\)$/,''));a.href=v.url;a.target='_blank';a.rel='noopener noreferrer';p.append(a)}
+  else if(v.hint)p.append(make('small',v.hint));
+  return p;
+}
 function gallery(node,rows){
  node.replaceChildren();node.className='tiles';
  if(!rows.length)node.append(make('p','Belum ada titipan yang cocok.'));
@@ -389,6 +445,8 @@ const iqlimaApi={
   notice:text=>{el('notice').textContent=text},
   say:kind=>mimiSay(kind),
 };
+// Surat dan rencana berdua: lewat akun bila tersambung pasangan, atau lewat tautan WhatsApp.
+const partner=createPartner({sync,notify:text=>{el('notice').textContent=text},addItems:iqlimaApi.addItems});
 function mountGreeting(p){
   const title=p.querySelector('.greeting h1'), line=p.querySelector('.mimi-line');
   const pet=p.querySelector('.welcome-pet'), status=p.querySelector('#pet-status');
@@ -413,6 +471,7 @@ function home(p){
  p.querySelector('.date').textContent=today.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long'});
  mountGreeting(p);
  mountToday(p,iqlimaApi);
+ partner.mountToday(p.querySelector('[data-letters]'));
  p.querySelector('.quick').onclick=()=>capture(tab==='Agenda'?'agenda':tab==='Koleksi'&&selectedKind?selectedKind:'note');
  for(const shortcut of p.querySelectorAll('[data-capture-kind]')){
    shortcut.onclick=()=>capture(shortcut.dataset.captureKind);
@@ -447,11 +506,14 @@ el('form').onsubmit = event => {
     time:account?'':el('waktu').value,done:editing?.done || false};
   if(editing && editing.time !== entry.time)delete entry.snoozeUntil;
   if(account)Object.assign(entry,{identity,method:el('method').value});
+  delete entry.vault;delete entry.place;
+  if(account&&el('vault').value)entry.vault=el('vault').value;
+  if(!account&&el('tempat').value.trim())entry.place=el('tempat').value.trim().slice(0,160);
   delete entry.repeat;delete entry.repeatDay;
   if(kind==='agenda'&&el('ulang').value&&entry.time){entry.repeat=el('ulang').value;if(entry.repeat==='monthly')entry.repeatDay=Number(entry.time.slice(8,10))}
   if(account){
     if(!editing)entry=recordEvent(entry,'Ditambahkan');
-    else if(['title','identity','method'].some(k=>entry[k]!==editing[k]))entry=recordEvent(entry,'Diedit');
+    else if(['title','identity','method','vault'].some(k=>entry[k]!==editing[k]))entry=recordEvent(entry,'Diedit');
   }
   if(!save(editing ? items.map(item=>item===editing?entry:item) : [entry,...items]))return;
   el('box').close();
@@ -510,6 +572,7 @@ setInterval(updateClock,5000);
 document.addEventListener('visibilitychange',updateClock);
 render();ready=true;
 applySetupLink(iqlimaApi);
+partner.handleHash();
 
 function openReminder(id) {
   el('box').open && el('box').close();

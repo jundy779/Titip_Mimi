@@ -53,6 +53,15 @@ const shortcuts = [
       <ul data-proud-list></ul>
       <form class="mini-add"><input aria-label="Kemenangan kecil hari ini" placeholder="Hari ini aku berhasil…" maxlength="120" /><button>Catat</button></form>
     </article>
+    <article class="sheet letter-card" data-letters>
+      <h2>Surat untukmu <span aria-hidden="true">💌</span></h2>
+      <p data-letter-status role="status"></p>
+      <p class="letter-latest" data-letter-latest hidden></p>
+      <div class="letter-actions">
+        <button type="button" data-letter-open hidden>Baca semua</button>
+        <button type="button" class="quiet" data-letter-write>Tulis surat</button>
+      </div>
+    </article>
     <article class="sheet lega-card">
       <h2>Ruang lega</h2>
       <p>Tempat menaruh yang berat-berat. Cuma buat kamu, nggak ikut sinkron.</p>

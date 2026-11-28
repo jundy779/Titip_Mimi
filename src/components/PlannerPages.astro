@@ -20,7 +20,15 @@ import ThemeChoice from './ThemeChoice.astro';
         </details>
         <div data-schedule></div>
       </div>
-      <aside class="sheet import-calendar"><h2>Kalender lain</h2><div data-calendar-import></div></aside>
+      <div class="side-stack">
+        <section class="sheet together" data-together>
+          <h2>Rencana berdua <span aria-hidden="true">♡</span></h2>
+          <p data-plan-status role="status"></p>
+          <ul class="plan-list" data-plan-list></ul>
+          <button type="button" class="primary" data-plan-add>Ajak bikin rencana</button>
+        </section>
+        <aside class="sheet import-calendar"><h2>Kalender lain</h2><div data-calendar-import></div></aside>
+      </div>
     </div>
   </section>
 </template>
@@ -95,6 +103,20 @@ import ThemeChoice from './ThemeChoice.astro';
             <button type="button" class="quiet" data-bot-remove>Lepas bot</button>
           </details>
           <a class="quiet-link guide-link" href="/panduan-telegram">📖 Panduan Telegram dari nol</a>
+        </div>
+        <div class="partner" data-partner>
+          <h3>Pasangan</h3>
+          <p data-partner-status role="status"></p>
+          <div data-partner-invite hidden>
+            <button type="button" data-partner-make>Buat kode pasangan</button>
+            <p class="partner-code" data-partner-code hidden></p>
+            <form class="mini-add" data-partner-accept>
+              <input aria-label="Kode dari pasangan" placeholder="Kode dari pasangan, misal ABCD-2345" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" />
+              <button>Sambungkan</button>
+            </form>
+          </div>
+          <button type="button" class="quiet" data-partner-leave hidden>Putuskan pasangan</button>
+          <p class="muted">Yang terbagi hanya surat dan rencana berdua. Koleksi, akun digital, catatan, dan ruang lega tetap milikmu sendiri.</p>
         </div>
       </section>
     </div>

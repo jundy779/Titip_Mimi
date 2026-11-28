@@ -352,5 +352,12 @@ export function createSync({ getItems, setItems, notify = () => {} }) {
     if (ready()) void sync();
     if (location.search.includes('mimi-debug')) globalThis.__mimiLogin = login;
   }
-  return { stamp, schedule, sync, mountProfile, mountTelegram, media, get state() { return state; }, enabled };
+  // Panggilan API untuk fitur lain (pasangan, surat, rencana). Sesi habis berarti keluar dengan rapi.
+  async function call(path, body) {
+    if (!enabled || !state.user) throw new Error('Masuk dulu, ya.');
+    try { return await api(path, body); }
+    catch (error) { if (error.status === 401) signedOut('Sesi berakhir. Masuk lagi, ya.'); throw error; }
+  }
+
+  return { stamp, schedule, sync, call, mountProfile, mountTelegram, media, get state() { return state; }, enabled };
 }

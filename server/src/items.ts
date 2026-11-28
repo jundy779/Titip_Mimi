@@ -10,7 +10,7 @@ export interface ItemData {
   icsId?: string; allDay?: boolean; endDay?: string; startUTC?: string; endUTC?: string;
   reminderId?: string; snoozeUntil?: number; extensionId?: string;
   repeat?: 'daily' | 'weekly' | 'monthly'; repeatDay?: number; repeated?: string; helpAskedAt?: string;
-  attachments?: Attachment[]; source?: 'telegram';
+  attachments?: Attachment[]; source?: 'telegram'; vault?: string; place?: string;
 }
 // Lampiran hanya menyimpan file_unique_id. file_id Telegram tetap di server (tabel telegram_files),
 // dan proksi media hanya melayani file yang tercatat milik pemilik yang sedang masuk.
@@ -65,11 +65,14 @@ export function clean(raw: Record<string, unknown>): ItemData | string {
     if (list.length) item.attachments = list;
   }
   if (raw.source === 'telegram') item.source = 'telegram';
+  // Di mana kata sandinya disimpan (bukan kata sandinya), dan tempat acara dari undangan.
+  if (item.kind === 'account' && ['google', 'apple', 'bitwarden', 'onepassword', 'samsung', 'browser', 'other'].includes(raw.vault as string)) item.vault = raw.vault as string;
+  const place = str(raw.place, 160)?.trim(); if (place) item.place = place;
   if (typeof raw.snoozeUntil === 'number' && Number.isFinite(raw.snoozeUntil) && raw.snoozeUntil > 0) item.snoozeUntil = raw.snoozeUntil;
   return item;
 }
 
-const searchText = (i: ItemData) => [i.title, i.note, i.identity, i.method, ...(i.attachments || []).map(a => a.name)].filter(Boolean).join(' ').toLocaleLowerCase('id');
+const searchText = (i: ItemData) => [i.title, i.note, i.identity, i.method, i.place, ...(i.attachments || []).map(a => a.name)].filter(Boolean).join(' ').toLocaleLowerCase('id');
 
 interface Row { client_id: string; kind: string; data: string; deleted: number; updated_at: number; seq: number }
 const toWire = (r: Row) => ({ ...JSON.parse(r.data), clientId: r.client_id, updatedAt: r.updated_at, deleted: r.deleted === 1, seq: r.seq });

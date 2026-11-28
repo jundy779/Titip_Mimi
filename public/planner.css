@@ -810,3 +810,60 @@ dialog #form > .row:last-child, .iqlima-dialog .row:last-child {
   .journal-actions { grid-template-columns:repeat(auto-fit,minmax(min(100%,10.5rem),1fr)); }
   .journal-actions button { min-width:0; }
 }
+
+/* ---------- Surat untukmu, rencana berdua, pasangan ---------- */
+.letter-card { background:linear-gradient(160deg,#ffeef2,var(--mimi-surface-container) 62%); }
+.letter-card.has-new { box-shadow:0 0 0 2px var(--mimi-primary) inset; }
+:root[data-theme=dark] .letter-card { background:var(--mimi-surface-container); }
+.letter-latest { margin:.4rem 0; padding:.6rem .75rem; border-radius:var(--mimi-radius-field); background:var(--mimi-surface); color:var(--mimi-on-surface); font-style:italic; overflow-wrap:anywhere; }
+.letter-sticker { font-style:normal; }
+.letter-actions, .plan-actions { display:flex; flex-wrap:wrap; gap:.5rem; }
+.letter-list { list-style:none; margin:0; padding:0; display:grid; gap:.6rem; max-height:min(60vh,28rem); overflow:auto; }
+.letter-list li { padding:.75rem; border-radius:var(--mimi-radius-field); background:var(--mimi-surface-container); border:1px solid var(--line); }
+.letter-list li.unread { border-color:var(--mimi-primary); }
+.letter-head { margin:0 0 .3rem; }
+.letter-body { margin:0 0 .4rem; white-space:pre-wrap; overflow-wrap:anywhere; }
+.sticker-pick { display:flex; flex-wrap:wrap; gap:.4rem; margin:.4rem 0; }
+.sticker-pick button { min-width:var(--mimi-target,44px); min-height:var(--mimi-target,44px); font-size:1.25rem; border-radius:var(--mimi-radius-pill); }
+.sticker-pick button[aria-checked=true] { background:var(--mimi-primary-container); color:var(--mimi-on-primary-container); box-shadow:0 0 0 2px var(--mimi-primary); }
+.iqlima-dialog textarea, .iqlima-dialog input:not([type=checkbox]) { width:100%; box-sizing:border-box; }
+.side-stack { display:grid; gap:clamp(.75rem,2vw,1.25rem); align-content:start; min-width:0; }
+.side-stack > .sheet { margin:0; }
+.together { background:linear-gradient(160deg,#fff0f3,var(--mimi-surface-container) 60%); }
+:root[data-theme=dark] .together { background:var(--mimi-surface-container); }
+.plan-list { list-style:none; margin:.4rem 0 .8rem; padding:0; display:grid; gap:.5rem; }
+.plan-list li { display:grid; grid-template-columns:auto 1fr; gap:.25rem .6rem; align-items:start; padding:.6rem; border-radius:var(--mimi-radius-field); background:var(--mimi-surface); border:1px solid var(--line); }
+.plan-list li input[type=checkbox] { width:1.4rem; height:1.4rem; margin:.15rem 0 0; }
+.plan-list .plan-copy { display:grid; gap:.15rem; min-width:0; overflow-wrap:anywhere; }
+.plan-list .plan-copy small { color:var(--mimi-on-surface-variant); }
+.plan-list .plan-actions { grid-column:2; }
+.plan-list li.done .plan-copy b { text-decoration:line-through; color:var(--mimi-on-surface-variant); }
+.plan-title { font-size:1.2rem; font-weight:700; margin:.2rem 0; }
+.partner { margin-top:1.1rem; padding-top:1rem; border-top:1px dashed var(--line); }
+.partner h3 { margin:0 0 .3rem; }
+.partner-code b { font-size:1.35rem; letter-spacing:.12em; font-family:ui-monospace,monospace; }
+.partner-code .button { display:inline-flex; margin-top:.4rem; }
+
+/* ---------- Form titipan: foto undangan, dikte, tempat, pengelola sandi ---------- */
+.capture-tools { display:grid; gap:.3rem; margin-bottom:.4rem; }
+.capture-tools[hidden] { display:none; }
+.file-pick { display:inline-flex; align-items:center; justify-content:center; gap:.4rem; min-height:var(--mimi-target,44px); padding:.5rem 1rem; border:1px dashed var(--mimi-primary); border-radius:var(--mimi-radius-pill); color:var(--mimi-primary); font-weight:600; cursor:pointer; }
+.file-pick:focus-within { outline:2px solid var(--mimi-primary); outline-offset:2px; }
+#ocr-status:empty { display:none; }
+#ocr-status { margin:0; font-size:.92rem; color:var(--mimi-on-surface-variant); }
+.with-mic { position:relative; display:grid; gap:.25rem; }
+.with-mic[hidden] { display:none; }
+.with-mic textarea { padding-right:3.4rem; }
+.with-mic .mic { position:absolute; right:.4rem; bottom:.4rem; width:var(--mimi-target,44px); height:var(--mimi-target,44px); min-height:0; padding:0; border-radius:50%; display:grid; place-items:center; font-size:1.1rem; }
+.with-mic .mic[hidden] { display:none; }
+.mic.listening { background:var(--mimi-primary); color:var(--mimi-on-primary); animation:mic-pulse 1.2s ease-in-out infinite; }
+@keyframes mic-pulse { 50% { box-shadow:0 0 0 .5rem color-mix(in srgb,var(--mimi-primary) 25%,transparent); } }
+@media (prefers-reduced-motion:reduce) { .mic.listening { animation:none; } }
+.secret-warning { margin:.2rem 0; padding:.5rem .7rem; border-radius:var(--mimi-radius-field); background:#fff4d6; color:#5b4300; font-size:.92rem; }
+:root[data-theme=dark] .secret-warning { background:#3d3218; color:#ffe7a6; }
+.secret-warning[hidden] { display:none; }
+.place-line a, .vault-line a { margin-left:.2rem; font-weight:600; }
+.vault-line small { display:block; color:var(--mimi-on-surface-variant); }
+.plan-list .plan-actions { gap:.25rem .5rem; }
+.plan-list .plan-actions button { min-height:40px; padding:.3rem .6rem; }
+.plan-list .plan-actions button[hidden] { display:none; }

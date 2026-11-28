@@ -1,4 +1,4 @@
-# Model data (migrasi 3)
+# Model data (migrasi 4)
 
 SQLite dengan WAL, foreign key aktif, dan `busy_timeout` 5 detik. Migrasi berurutan di `server/src/db.ts`, masing-masing dalam transaksi, versinya di `schema_version`.
 
@@ -14,6 +14,10 @@ SQLite dengan WAL, foreign key aktif, dan `busy_timeout` 5 detik. Migrasi beruru
 | telegram_files | Kunci `(owner_id, unique_id)`, `file_id` Telegram, jenis, mime, nama, ukuran. Satu-satunya sumber untuk proksi `/v1/media`. |
 | telegram_threads | Kunci `(owner_id, key)`: `msg:<id pesan Mimi>` → titipan (untuk balasan waktu) dan `group:<media_group_id>` → titipan (album) |
 | settings | Migrasi 3. `key`, `value`, `updated_at`. Dipakai untuk bot dari Profil: `telegram.token`, `telegram.username`, `telegram.secret` (secret webhook acak), `telegram.owner` (pengguna yang memasang). Tidak pernah dikirim ke browser. |
+| partners | Migrasi 4. Satu baris per arah: `user_id` (kunci utama), `partner_id`, `pair_id` (SHA-256 dua id yang diurutkan), `since`. Seseorang hanya punya satu pasangan. Putus = hapus dua baris dengan `pair_id` yang sama. |
+| partner_codes | Migrasi 4. `code_hash` (SHA-256 kode 8 huruf), `owner_id`, kedaluwarsa (24 jam), `used_at`. Kode mentah tidak disimpan. Kode lama pemilik dihapus saat membuat yang baru. |
+| letters | Migrasi 4. `id` UUID, `from_id`, `to_id`, `body` ≤ 1000, `sticker` dari daftar tetap, `created_at`, `read_at`, `hidden_from`, `hidden_to` (sembunyikan per sisi, bukan hapus). Indeks `(to_id, created_at)`. |
+| plans | Migrasi 4. `id`, `pair_id`, `created_by`, `title` ≤ 100, `note` ≤ 500, `place` ≤ 160, `time`, `done`, `deleted`, `updated_at`, `updated_by`. Last-write-wins per rencana, sama dengan titipan. |
 | reminder_deliveries | Kunci `(owner_id, client_id, occurrence)`; `occurrence` = `"<time>\|<snoozeUntil atau 0>"`. Status `pending`, `sending`, `sent`, `retry`, `failed`, `skipped`, jumlah percobaan, `next_try`, `lease_until`, id pesan terkirim, kode error terakhir |
 
 Satu perubahan sinkron diproses dalam satu transaksi. Tombstone dipertahankan agar perangkat lain tahu titipan sudah dihapus.
@@ -23,6 +27,10 @@ Satu perubahan sinkron diproses dalam satu transaksi. Tombstone dipertahankan ag
 **Migrasi 1 → 2.** Format lama: lima tabel di atas tanpa kolom jam tenang. Migrasi 2 hanya menambah dua kolom (`ALTER TABLE ... ADD COLUMN` dengan nilai bawaan) dan enam tabel baru dalam satu transaksi; tidak ada data lama yang diubah. Bila gagal di tengah, transaksi batal dan `schema_version` tetap 1. Server versi lama tetap bisa membuka database versi 2 (kolom dan tabel tambahan diabaikan), jadi rollback cukup menjalankan image lama dengan volume yang sama. Uji `database versi 1 berisi data naik ke versi 2 tanpa kehilangan apa pun` membuat database versi 1 berisi pengguna dan titipan, menaikkannya, lalu memeriksa isi, nilai bawaan, dan pembukaan ulang.
 
 **Migrasi 2 → 3.** Hanya menambah tabel `settings` dalam satu transaksi. Server versi lama mengabaikannya; bot dari Profil berhenti sampai versi baru dipasang lagi.
+
+**Migrasi 3 → 4.** Hanya menambah empat tabel di atas beserta indeksnya dalam satu transaksi; tabel lama tidak disentuh. Bila gagal, transaksi batal dan `schema_version` tetap 3. Server versi lama mengabaikan tabel baru, jadi rollback cukup menjalankan image lama dengan volume yang sama (fitur pasangan berhenti, surat dan rencana tetap tersimpan). Uji `database versi 1 berisi data naik ke versi terbaru tanpa kehilangan apa pun` di `api.test.ts` membuka database versi 1 berisi data lalu menaikkannya sampai versi 4.
+
+**Pasangan dan privasi.** Semua kueri surat dan rencana diturunkan dari `partners` milik pengguna yang sedang masuk, tidak dari id di permintaan. Tabel `items` tidak pernah di-join dengan `partners`, jadi tidak ada jalan dari pasangan ke koleksi. Setelah putus, surat dan rencana tetap ada di database dan muncul lagi hanya bila dua orang yang sama tersambung kembali (`pair_id` sama).
 
 **Token di database.** Token bot dari Profil disimpan apa adanya di `settings`, jadi ikut ke dalam backup. Perlakukan file database dan backup sebagai rahasia. Kalau backup bocor, ganti token lewat `/token` di BotFather lalu Ganti token di Profil.
 

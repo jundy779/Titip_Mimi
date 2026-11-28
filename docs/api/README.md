@@ -43,11 +43,11 @@ Respons:
 
 `items` berisi semua titipan pemilik dengan `seq > since`, termasuk yang baru disimpan. Simpan `cursor` untuk permintaan berikutnya. Bila `more` bernilai true, ulangi dengan cursor baru.
 
-Validasi per titipan (gagal = `invalid`, titipan lain tetap diproses): judul 1–100 karakter, catatan ≤ 4000, `time` kosong atau `YYYY-MM-DDTHH:MM` (waktu lokal pengguna), kartu akun wajib `identity` ≤ 160. Kolom yang tidak dikenal, termasuk apa pun yang mirip kata sandi, dibuang.
+Validasi per titipan (gagal = `invalid`, titipan lain tetap diproses): judul 1–100 karakter, catatan ≤ 4000, `time` kosong atau `YYYY-MM-DDTHH:MM` (waktu lokal pengguna), kartu akun wajib `identity` ≤ 160. Opsional: `place` ≤ 160 (tempat acara) dan, khusus kartu akun, `vault` salah satu `google`, `apple`, `bitwarden`, `onepassword`, `samsung`, `browser`, `other` (di mana kata sandinya disimpan). Kolom yang tidak dikenal, termasuk apa pun yang mirip kata sandi, dibuang.
 
 ## Cari
 
-`GET /v1/items?q=canva` → `{ items: [...] }`, maksimal 100 hasil milik pengguna aktif, tidak termasuk yang dihapus. Mencari judul, catatan, email/label, dan cara masuk.
+`GET /v1/items?q=canva` → `{ items: [...] }`, maksimal 100 hasil milik pengguna aktif, tidak termasuk yang dihapus. Mencari judul, catatan, email/label, cara masuk, tempat, dan nama file lampiran.
 
 ## Contoh dua akun fiktif
 
@@ -102,3 +102,35 @@ Klien boleh mengirim ulang `attachments` lewat `/v1/sync` (misalnya saat menguba
 **Alur di Telegram.** Satu kiriman (teks, foto, video, dokumen, atau satu album) menjadi satu titipan tanpa jadwal. Mimi membalas dengan tombol waktu: dari caption atau teks ("jumat jam 4 sore"), atau pilihan cepat "Nanti malam 19.00" dan "Besok pagi 08.00". Membalas pesan Mimi dengan waktu ("besok jam 9 pagi") juga mengonfirmasi. Jadwal baru aktif setelah dikonfirmasi. Perintah: `/hariini`, `/besok`, `/cari kata`, `/tenang 22-6` atau `/tenang mati`, `/id` (menampilkan ID dan username Telegram, juga sebelum tersambung; ID tidak perlu diisi di mana pun karena tercatat otomatis saat menautkan), `/bantuan`, `/stop`.
 
 **Pengingat.** Saat jatuh tempo, Mimi mengirim judul, waktu dalam zona pengguna, catatan, dan lampiran pertama, dengan tombol **Sudah selesai**, **Tunda 10 menit**, **Tunda 1 jam**. Selesai dari Telegram sama dengan di web: rutinitas berulang menjadi riwayat dan jadwal berikutnya dibuat. Tunda mengisi `snoozeUntil`, sama dengan web.
+
+## Pasangan, surat, dan rencana berdua
+
+Semua di bawah `/v1/partner`, butuh sesi dan header `X-Mimi: 1` untuk POST. Identitas dan pasangan selalu diturunkan dari sesi; tidak ada parameter `userId`. Pasangan tidak pernah bisa membaca `items` milik yang lain.
+
+| Aksi | Permintaan | Respons |
+|---|---|---|
+| Status | `GET /v1/partner` | `{ "paired": true, "partner": { "name": "Uji B" }, "since": 1795870000000, "unread": 1, "me": { "name": "Uji A" } }`. Belum tersambung: `paired: false`, `partner: null`, `since: null`. |
+| Buat kode | `POST /v1/partner/invite` `{}` | `{ "code": "K7MPQ2XA", "expiresAt": 1795956400000 }` (milidetik). 8 huruf tanpa 0/O/1/I, berlaku 24 jam, sekali pakai. Kode lama pemilik batal. |
+| Pakai kode | `POST /v1/partner/accept` `{ "code": "k7mp-q2xa" }` | Status seperti di atas. Huruf kecil, spasi, dan tanda hubung diabaikan. |
+| Putus | `POST /v1/partner/leave` `{}` | `204`. Aman diulang. |
+| Surat | `GET /v1/partner/letters` | `{ "received": [{ "id", "body", "sticker", "at", "read" }], "sent": [...], "unread": 1, "from": "Uji B" }` |
+| Kirim surat | `POST /v1/partner/letters` `{ "body": "Semangat ya ♡", "sticker": "🌸" }` | `201 { "id", "body", "sticker", "at", "read": false }`. Stiker di luar daftar `♡ 🌸 ☕ 🌙 🧸 ✨` menjadi `♡`. Pasangan dikabari lewat Telegram bila tersambung dan bukan jam tenang. |
+| Tandai dibaca | `POST /v1/partner/letters/<id>/read` | `204`. Hanya penerima. |
+| Sembunyikan | `POST /v1/partner/letters/<id>/hide` | `204`. Hanya untuk sisi yang meminta. |
+| Rencana | `GET /v1/partner/plans` | `{ "plans": [{ "id", "title", "note", "place", "time", "done", "updatedAt", "byMe", "by" }] }` |
+| Simpan rencana | `POST /v1/partner/plans` `{ "id"?, "title", "time"?, "place"?, "note"?, "done"?, "updatedAt"? }` | `{ "plan": {...}, "status": "saved" }` atau `"stale"` bila versi server lebih baru (last-write-wins). Tanpa `id` = rencana baru, pasangan dikabari lewat Telegram. |
+| Hapus rencana | `POST /v1/partner/plans/<id>/remove` | `204` |
+
+| Status | `code` | Arti dan cara mencoba ulang |
+|---|---|---|
+| 400 | `bad_code` | Kode salah, kedaluwarsa, atau sudah dipakai. Minta kode baru. |
+| 400 | `own_code` | Memasukkan kode sendiri |
+| 409 | `already_paired` | Salah satu akun sudah punya pasangan. Putus dulu. |
+| 409 | `not_paired` | Fitur surat atau rencana dipakai sebelum tersambung |
+| 400 | `empty_letter`, `bad_plan` | Isi surat kosong atau rencana tanpa judul |
+| 404 | `not_found` | Surat atau rencana tidak ada atau bukan milik pasangan ini (sengaja tidak dibedakan) |
+| 429 | `too_many` | Lebih dari 50 surat sehari. Coba besok. |
+
+**Tanpa server.** Web juga bisa mengirim surat dan ajakan tanpa akun: isinya dikemas di bagian `#` alamat (`/#surat?d=<base64url JSON>` atau `/#rencana?d=...`), dikirim lewat WhatsApp, lalu disimpan di browser penerima. Bagian `#` tidak pernah sampai ke server web. Isi divalidasi ulang saat dibuka (panjang, stiker, format waktu); tautan rusak diabaikan.
+
+Contoh dua akun fiktif: `iqlima.uji@contoh.id` membuat kode, `jundy.uji@contoh.id` memasukkannya, lalu keduanya melihat `GET /v1/partner` → `paired: true`.

@@ -86,6 +86,46 @@ const migrations: string[] = [
    CREATE INDEX reminder_due ON reminder_deliveries(status, next_try);`,
   // 3: pengaturan server yang bisa diubah dari Profil (token bot Telegram). Tidak pernah dikirim ke browser.
   `CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at INTEGER NOT NULL);`,
+  // 4: pasangan. Dua baris per pasangan (satu per orang), kode undangan sekali pakai (hash saja),
+  // surat antarpasangan, dan rencana berdua yang terikat ke pasangan (pair_id = hash dua id terurut).
+  `CREATE TABLE partners (
+     user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+     partner_id TEXT NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+     pair_id TEXT NOT NULL,
+     since INTEGER NOT NULL
+   );
+   CREATE TABLE partner_codes (
+     code_hash TEXT PRIMARY KEY,
+     owner_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+     expires_at INTEGER NOT NULL
+   );
+   CREATE TABLE letters (
+     id TEXT PRIMARY KEY,
+     from_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+     to_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+     body TEXT NOT NULL,
+     sticker TEXT NOT NULL DEFAULT '',
+     created_at INTEGER NOT NULL,
+     read_at INTEGER,
+     hidden_from INTEGER NOT NULL DEFAULT 0,
+     hidden_to INTEGER NOT NULL DEFAULT 0
+   );
+   CREATE INDEX letters_to ON letters(to_id, created_at);
+   CREATE INDEX letters_from ON letters(from_id, created_at);
+   CREATE TABLE plans (
+     id TEXT PRIMARY KEY,
+     pair_id TEXT NOT NULL,
+     created_by TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+     title TEXT NOT NULL,
+     note TEXT NOT NULL DEFAULT '',
+     place TEXT NOT NULL DEFAULT '',
+     time TEXT NOT NULL DEFAULT '',
+     done INTEGER NOT NULL DEFAULT 0,
+     deleted INTEGER NOT NULL DEFAULT 0,
+     updated_at INTEGER NOT NULL,
+     updated_by TEXT NOT NULL
+   );
+   CREATE INDEX plans_pair ON plans(pair_id, updated_at);`,
 ];
 
 export type Db = Database.Database;

@@ -12,6 +12,7 @@ import { GOOGLE_VERIFIER, GoogleVerifier } from './google';
 import { Sessions } from './sessions';
 import { AuthController, AuthGuard } from './auth';
 import { Items, ItemsController } from './items';
+import { Partner, PartnerController } from './partner';
 import { TELEGRAM_API, TelegramApi } from './telegram/api';
 import { ApiFactory, TELEGRAM_FACTORY, TelegramRuntime } from './telegram/runtime';
 import { TelegramService } from './telegram/service';
@@ -40,14 +41,14 @@ export function appModule(config: Config, db: Db, google: GoogleVerifier, telegr
   }
   return {
     module: Root,
-    controllers: [AuthController, ItemsController, TelegramController, MediaController],
+    controllers: [AuthController, ItemsController, TelegramController, MediaController, PartnerController],
     providers: [
       { provide: CONFIG, useValue: config },
       { provide: DB, useValue: db },
       { provide: GOOGLE_VERIFIER, useValue: google },
       { provide: TELEGRAM_API, useValue: telegram },
       { provide: TELEGRAM_FACTORY, useValue: factory },
-      Sessions, Items, AuthGuard, TelegramRuntime, TelegramBot, Reminders, TelegramService,
+      Sessions, Items, AuthGuard, TelegramRuntime, TelegramBot, Reminders, TelegramService, Partner,
     ],
   };
 }
