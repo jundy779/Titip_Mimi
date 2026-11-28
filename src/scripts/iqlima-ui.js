@@ -30,29 +30,41 @@ function dialog(title, cls = '') {
 // ---------- Tumpahkan pikiran ----------
 function openDump(api) {
   const box = dialog('Tumpahkan pikiran ♡', 'dump');
-  const intro = make('p', 'Tulis semua yang lagi kepikiran, satu baris satu hal. Misalnya “bayar kos besok” atau “jemput adik jam 4 sore”. Mimi yang rapikan.');
-  const area = make('textarea'); area.rows = 7; area.setAttribute('aria-label', 'Isi pikiran'); area.placeholder = 'bayar kos besok\njemput adik jam 4 sore\nbeli kado ibu tgl 5';
-  const preview = make('div', '', 'dump-preview');
-  const split = button('Pecah jadi titipan', 'primary');
-  const save = button('Titip yang dicentang', 'primary'); save.hidden = true;
+  const head = make('div', '', 'dump-head');
+  const art = new Image(64, 64); art.src = '/mimi/letter.webp'; art.alt = '';
+  head.append(art, make('p', 'Tulis semua yang lagi kepikiran, satu baris satu hal. Mimi yang rapikan jadi titipan.'));
+  const area = make('textarea'); area.rows = 4; area.setAttribute('aria-label', 'Isi pikiran');
+  area.placeholder = 'bayar kos besok\njemput adik jam 4 sore\nbeli kado ibu tgl 5';
+  const preview = make('div', '', 'dump-preview'); preview.setAttribute('aria-live', 'polite');
+  const save = button('Titip', 'primary'); save.disabled = true;
   const cancel = button('Batal', 'quiet');
-  let rows = [];
-  split.onclick = () => {
+  let rows = [], skip = new Set(), timer = 0;
+  function count() {
+    const n = rows.length - skip.size;
+    save.disabled = n === 0;
+    save.textContent = n ? 'Titip ' + n + ' titipan' : 'Titip';
+  }
+  function render() {
     rows = parseDump(area.value);
+    skip = new Set([...skip].filter(i => i < rows.length));
     preview.replaceChildren();
-    if (!rows.length) { preview.append(make('p', 'Belum ada yang bisa Mimi pecah. Tulis minimal satu baris, ya.')); return; }
-    preview.append(make('p', 'Mimi pecah jadi ' + rows.length + ' titipan. Hapus centang kalau ada yang nggak perlu.'));
+    if (rows.length) preview.append(make('p', 'Mimi pecah jadi ' + rows.length + ' titipan. Ketuk untuk melewatkan yang nggak perlu.', 'dump-summary'));
     rows.forEach((r, i) => {
       const label = make('label', '', 'dump-row');
-      const check = document.createElement('input'); check.type = 'checkbox'; check.checked = true; check.value = String(i);
-      const when = r.time ? new Date(r.time).toLocaleString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Catatan';
-      label.append(check, make('span', r.title), make('small', when, r.time ? 'chip agenda' : 'chip'));
+      const check = document.createElement('input'); check.type = 'checkbox'; check.checked = !skip.has(i);
+      check.onchange = () => { if (check.checked) skip.delete(i); else skip.add(i); label.classList.toggle('skipped', !check.checked); count(); };
+      const text = make('span', '', 'dump-text');
+      const when = r.time ? new Date(r.time).toLocaleString('id-ID', { weekday: 'long', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).replace(' pukul ', ' · ') : 'Catatan tanpa jadwal';
+      text.append(make('b', r.title), make('small', (r.time ? '🗓 ' : '📝 ') + when, r.time ? 'dump-when is-scheduled' : 'dump-when'));
+      label.append(check, text);
+      label.classList.toggle('skipped', skip.has(i));
       preview.append(label);
     });
-    save.hidden = false; split.textContent = 'Pecah ulang';
-  };
+    count();
+  }
+  area.oninput = () => { clearTimeout(timer); timer = setTimeout(render, 250); };
   save.onclick = () => {
-    const chosen = [...preview.querySelectorAll('input:checked')].map(c => rows[+c.value]);
+    const chosen = rows.filter((_, i) => !skip.has(i));
     if (!chosen.length) return;
     const fresh = chosen.map(r => ({ kind: r.kind, title: r.title, note: '', time: r.time, done: false }));
     if (!api.addItems(fresh)) return;
@@ -61,8 +73,8 @@ function openDump(api) {
     api.say('saved');
   };
   cancel.onclick = () => box.close();
-  const actions = make('div', '', 'row'); actions.append(cancel, split, save);
-  box.append(intro, area, preview, actions);
+  const actions = make('div', '', 'row dump-actions'); actions.append(cancel, save);
+  box.append(head, area, preview, actions);
   box.showModal(); area.focus();
 }
 
