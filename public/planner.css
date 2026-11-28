@@ -779,3 +779,34 @@ dialog #form > .row:last-child, .iqlima-dialog .row:last-child {
 .bot-manage summary { min-height:44px; display:flex; align-items:center; cursor:pointer; color:var(--mimi-primary); font-weight:600; }
 .bot-manage p { color:var(--mimi-on-surface-variant); font-size:.9rem; }
 .guide-link { display:inline-flex; align-items:center; min-height:44px; margin-top:.75rem; color:var(--mimi-primary); font-weight:600; }
+
+/* Tablet dan panel samping (601–959px): header tidak pernah terpecah.
+   Muat satu baris: nama di kiri, menu di kanan. Tidak muat (font Windows, zoom, panel sempit):
+   menu turun utuh ke baris kedua sebagai empat tab sama lebar. */
+@media (min-width:601px) and (max-width:959px) {
+  body > header.room-menu { container-type:inline-size; display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; column-gap:1rem; row-gap:.6rem; }
+  body > header.room-menu strong { white-space:nowrap; }
+  body > header.room-menu nav { display:flex; flex-wrap:nowrap; justify-content:flex-end; gap:.2rem; min-width:0; }
+  body > header.room-menu nav button { white-space:nowrap; flex:none; }
+  @container (max-width: 44rem) {
+    .room-menu nav { grid-column:1 / -1; display:grid !important; grid-template-columns:repeat(4,minmax(0,1fr)); justify-content:stretch !important; }
+    .room-menu nav button { justify-content:center; padding-inline:.4rem; }
+  }
+  /* Kartu pengingat melayang: tanpa menu bawah, cukup 1rem dari tepi bawah. */
+  #reminder.floating-reminder:not([hidden]) { bottom:max(1rem,env(safe-area-inset-bottom)); width:min(23rem,calc(100vw - 2rem)); }
+}
+@media (min-width:960px) {
+  #reminder.floating-reminder:not([hidden]) { bottom:max(1.25rem,env(safe-area-inset-bottom)); }
+}
+
+/* Profil: kartu Jaga diri membentang dua baris supaya Koneksi Mimi langsung di bawah Ruang pribadimu. */
+@media (min-width:741px) {
+  .planner-columns:has(> .care-settings) { grid-template-rows:auto 1fr; }
+  .planner-columns > .care-settings { grid-column:2; grid-row:1 / span 2; }
+  .planner-columns:has(> .care-settings) > .preferences { grid-column:1; grid-row:1; }
+  .planner-columns:has(> .care-settings) > .connections { grid-column:1; grid-row:2; }
+}
+@media (min-width:601px) and (max-width:959px) {
+  .journal-actions { grid-template-columns:repeat(auto-fit,minmax(min(100%,10.5rem),1fr)); }
+  .journal-actions button { min-width:0; }
+}
